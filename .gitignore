@@ -1,0 +1,10 @@
+# Downloaded data: never committed. French's files are fetched at run time.
+data/
+# Vendor adapter and raw pull pointers for version 2: never leave the machine.
+local/
+# Python and notebook noise
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+.DS_Store
