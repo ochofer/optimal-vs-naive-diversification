@@ -1,0 +1,5 @@
+# The paper's title, quoted as a title; its words are not this repository's terms.
+Optimal Versus Naive Diversification
+How Inefficient is the 1/N Portfolio Strategy\?
+# The header word of the paper's tables, read from the PDF as data by tests/test_dgu_published.py.
+_rows\(.*"Strategy"

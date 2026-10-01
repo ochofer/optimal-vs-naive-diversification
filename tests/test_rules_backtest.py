@@ -11,7 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from bp import backtest as B  # noqa: E402
-from bp import strategies as S  # noqa: E402
+from bp import rules as S  # noqa: E402
 
 
 def _simulated(n_assets=5, months=200_000, seed=1):
@@ -178,3 +178,50 @@ def test_bayes_stein_phi_form_and_limit():
     _, _, phi_long = S.bayes_stein_moments(R_long)
     assert phi_long < phi and phi_long < 0.05
     assert np.abs(S.bs(R_long) - S.mv(R_long)).max() < 0.05
+
+
+# ---------------------------------------------------------------------------
+# Moment-based rules and the running-moment rolling evaluation (notebook 04)
+# ---------------------------------------------------------------------------
+
+def test_moment_rules_equal_window_rules():
+    rng = np.random.default_rng(21)
+    N, M = 8, 120
+    mu_t, Sigma_t, _ = _simulated(n_assets=5)
+    A = rng.normal(size=(N, N)); Sigma_t = A @ A.T / N * 0.002 + 0.0005 * np.eye(N)
+    R = rng.multivariate_normal(rng.normal(0.005, 0.003, N), Sigma_t, size=M)
+    mu, Sigma = S.sample_moments(R)
+    pairs = [("ew", S.ew), ("mv", S.mv), ("bs", S.bs), ("min", S.min_variance),
+             ("mv-c", S.mv_c), ("bs-c", S.bs_c), ("min-c", S.min_c), ("g-min-c", S.g_min_c)]
+    for name, window_rule in pairs:
+        w_window = window_rule(R)
+        w_moment = S.MOMENT_RULES[name](mu, Sigma, M)
+        assert np.abs(w_window - w_moment).max() < 1e-9, name
+
+
+def test_rolling_moments_equals_rolling():
+    rng = np.random.default_rng(22)
+    idx = pd.period_range("2000-01", periods=400, freq="M")
+    R = pd.DataFrame(rng.normal(0.005, 0.04, size=(400, 4)), index=idx)
+    fast = B.rolling_moments(R, {"mv": S.mv_m, "min-c": S.min_c_m, "bs": S.bs_m}, window=60, refresh_every=50)
+    for name, rule in [("mv", S.mv), ("min-c", S.min_c), ("bs", S.bs)]:
+        slow = B.rolling(R, rule, window=60)
+        assert np.abs(fast[name].oos.to_numpy() - slow.oos.to_numpy()).max() < 1e-9, name
+        assert np.nanmax(np.abs(fast[name].turnover.to_numpy() - slow.turnover.to_numpy())) < 1e-9, name
+
+
+def test_subperiod_slices_every_series_and_keeps_the_measures_consistent():
+    rng = np.random.default_rng(3)
+    idx = pd.period_range("1990-01", periods=200, freq="M")
+    R = pd.DataFrame(rng.normal(0.005, 0.04, size=(200, 4)), index=idx, columns=list("abcd"))
+    bt = B.rolling(R, S.ew, window=60)
+    sub = B.subperiod(bt, "2000-01", "2004-12")
+    assert sub.oos.index[0] == pd.Period("2000-01", "M") and sub.oos.index[-1] == pd.Period("2004-12", "M")
+    assert len(sub.oos) == 60 and len(sub.weights) == 60 and len(sub.turnover) == 60 and len(sub.drifted) == 60
+    # the sliced returns are the same numbers as the corresponding months of the full run
+    np.testing.assert_array_equal(sub.oos.to_numpy(), bt.oos.loc["2000-01":"2004-12"].to_numpy())
+    # the whole period is the identity
+    whole = B.subperiod(bt)
+    assert whole.oos.equals(bt.oos) and whole.turnover.equals(bt.turnover)
+    # the first month of a sub-period has a rebalance; the first month of the whole period does not
+    assert np.isnan(bt.turnover.iloc[0]) and not np.isnan(sub.turnover.iloc[0])

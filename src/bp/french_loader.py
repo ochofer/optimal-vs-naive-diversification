@@ -2,7 +2,7 @@
 Ken French data library: download, record, parse.
 
 The library serves each dataset as a zip holding one CSV. The CSV is not a
-single table. It is a text file with several blocks, each announced by a title
+single table. It is a text file with between two and ten blocks, each announced by a title
 line ("  Average Value Weighted Returns -- Monthly"), followed by a header row
 that starts with a comma, followed by rows that start with a date: six digits
 for monthly data (192607), four for annual (1927). Missing values are coded

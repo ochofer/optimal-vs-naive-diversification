@@ -1,13 +1,13 @@
 """
-Replicated numbers beside published ones, with the pre-committed tolerance
+Replicated numbers beside published ones, with the pre-committed band
 applied where one exists.
 
 Every table has one row per (rule, dataset): the replicated value, DGU's
 value from src/bp/dgu_published.py, the difference, and a verdict column.
-The verdict is "pass" or "MISS" where a tolerance applies (Sharpe ratios,
+The verdict is "pass" or "MISS" where a band applies (Sharpe ratios,
 turnover below the relative level in constants), "report" where the number
-is shown for the record with no pass or fail (CEQ, return-loss, the explosive
-unconstrained turnovers), and "check" for rows with no published counterpart.
+is shown beside the published one with no pass or fail (CEQ, return-loss, the
+explosive unconstrained turnovers), and "check" for rows with no published counterpart.
 """
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def sharpe_is_gated(rule: str, dataset: str) -> bool:
     rel = _published(P.TURNOVER_RELATIVE, rule, dataset)
     if np.isnan(rel):
         return True
-    return rel < C.TOL_SHARPE_APPLIES_BELOW_RELATIVE
+    return rel < C.BAND_SHARPE_APPLIES_BELOW_RELATIVE
 
 
 def _sharpe_verdict(rule: str, dataset: str, diff: float) -> str:
@@ -62,7 +62,7 @@ def _sharpe_verdict(rule: str, dataset: str, diff: float) -> str:
         return "check"
     if not sharpe_is_gated(rule, dataset):
         return "report"
-    return "pass" if abs(diff) <= C.TOL_SHARPE_ABS else "MISS"
+    return "pass" if abs(diff) <= C.BAND_SHARPE_ABS else "MISS"
 
 
 def ceq_table(results: dict[str, pd.DataFrame]) -> pd.DataFrame:
@@ -88,12 +88,12 @@ def turnover_table(results: dict[str, pd.DataFrame]) -> pd.DataFrame:
                 rep, pub = frame.loc[rule, "turnover_rel"], _published(P.TURNOVER_RELATIVE, rule, dataset)
             if np.isnan(pub):
                 verdict = "check"
-            elif rule != "ew" and pub >= C.TOL_TURNOVER_APPLIES_BELOW_RELATIVE:
+            elif rule != "ew" and pub >= C.BAND_TURNOVER_APPLIES_BELOW_RELATIVE:
                 verdict = "report"
             elif pub == 0.0:
                 verdict = "pass" if rep == 0.0 else "MISS"
             else:
-                verdict = "pass" if abs(rep / pub - 1.0) <= C.TOL_TURNOVER_REL else "MISS"
+                verdict = "pass" if abs(rep / pub - 1.0) <= C.BAND_TURNOVER_REL else "MISS"
             rows.append({"rule": rule, "dataset": dataset, "replicated": rep, "published": pub,
                          "relative_error": np.nan if (np.isnan(pub) or pub == 0.0) else rep / pub - 1.0,
                          "verdict": verdict})

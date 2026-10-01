@@ -8,3 +8,5 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 .DS_Store
+# The checker's banned-synonym list: a working file, not part of the public text
+.public_text_terms

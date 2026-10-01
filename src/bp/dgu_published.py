@@ -3,7 +3,7 @@ The published numbers of DeMiguel, Garlappi and Uppal (2009), Review of
 Financial Studies 22(5), transcribed from Tables 3, 4, 5 and 6, for the four
 datasets built from Ken French's library.
 
-The comparison tables in notebooks 02 to 05 are built from this module, never
+The comparison tables in the notebooks are built from this module, never
 typed into a notebook. tests/test_dgu_published.py re-reads the numbers from
 the journal PDF when it is present on the machine (papers/, not committed) and
 fails on any digit that differs.
@@ -11,8 +11,8 @@ fails on any digit that differs.
 Monthly figures throughout. Sharpe ratios and CEQ returns are for the
 out-of-sample period 1973-07 to 2004-11 with a 120-month window (Tables 3 and
 4); "mv (in sample)" uses the full sample. Turnover (Table 5) is the 1/N
-strategy's absolute monthly turnover and every other strategy's turnover
-relative to it; return-loss is the extra monthly return a strategy needs to
+rule's absolute monthly turnover and every other rule's turnover
+relative to it; return-loss is the extra monthly return a rule needs to
 match 1/N's Sharpe ratio net of a 50 basis point proportional cost.
 """
 
@@ -55,7 +55,7 @@ CEQ = {
     "ew-min":          ((0.0052, 0.0039, 0.0093, -0.0002), (0.42, 0.43, 0.12, 0.00)),
 }
 
-# Table 5, p. 1935. TURNOVER_1N is absolute; TURNOVER_RELATIVE is each strategy's
+# Table 5, p. 1935. TURNOVER_1N is absolute; TURNOVER_RELATIVE is each rule's
 # turnover divided by 1/N's; RETURN_LOSS is panel B.
 TURNOVER_1N = (0.0216, 0.0237, 0.0162, 0.0198)
 TURNOVER_RELATIVE = {
@@ -108,7 +108,7 @@ SIM_SHARPE = {
 
 
 def table(name: str):
-    """A pandas DataFrame of one published table, strategies by dataset."""
+    """A pandas DataFrame of one published table, rules by dataset."""
     import pandas as pd
     if name == "sharpe":
         return pd.DataFrame({k: v[0] for k, v in SHARPE.items()}, index=DATASETS).T
