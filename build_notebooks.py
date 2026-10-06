@@ -44,6 +44,12 @@ def writefile(relpath: str) -> dict:
     return code(f"%%writefile src/bp/{relpath}\n{body}")
 
 
+def writefile_path(relpath: str) -> dict:
+    """A cell that writes one small record file from the repository, so the notebook can read it in Colab."""
+    body = (ROOT / relpath).read_text()
+    return code(f"%%writefile {relpath}\n{body}")
+
+
 def notebook(cells: list[dict]) -> dict:
     return {
         "cells": cells,
@@ -71,9 +77,28 @@ NB01 = [
     md("""
 # 01. The data: Ken French's library, downloaded and counted
 
-**Terms used in this notebook.** Vintage: the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202607 is the July 2026 release). Provenance: the record of what was downloaded, when, with its checksum and vintage. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Risk-free rate: the return on a one-month US Treasury bill, the closest thing to a return with no risk. Excess return: a return minus the risk-free rate over the same month. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Sharpe ratio: the average monthly return above the risk-free rate, divided by the standard deviation of that return; the reward earned per unit of risk taken. Turnover: the fraction of the portfolio bought and sold at a rebalance, summed over the assets. Band: the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover. Gated: said of a cell the band applies to. Verdict: pass or MISS for a gated cell.
+**Terms used in this notebook.**
 
-**What this notebook does.** It downloads the six Ken French files this project uses, records what it downloaded (date, URL, SHA-256 of the zip, and the CRSP vintage French prints at the top of each file), parses each file into monthly tables, and counts what is in them against what DeMiguel, Garlappi and Uppal (2009) say they used.
+| Term | Meaning |
+|---|---|
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202607 is the July 2026 release) |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Value-weighted return | the return of a group of firms in which each firm counts in proportion to its market capitalisation at the start of the month |
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Sharpe ratio | the average monthly return above the risk-free rate, divided by the standard deviation of that return; the reward earned per unit of risk taken |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets |
+| Band | the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover |
+| Gated | said of a cell the band applies to |
+| Verdict | pass or MISS for a gated cell |
+
+**What this notebook does.** It downloads the ten Ken French files this project uses (six monthly files for the replication, four daily files for the extension from notebook 10 on), records what it downloaded (date, URL, SHA-256 of the zip, and the CRSP vintage French prints at the top of each file), parses each file into monthly tables, and counts what is in them against what DeMiguel, Garlappi and Uppal (2009) say they used.
 
 **Why it comes first.** Every number in the project is computed from these files, and French revises history: a return from 1985 can differ between the file served today and the one served last year. A replication that misses a published number by 0.01 has to be able to say whether the code or the vintage moved. The provenance record written here makes that possible, and it is attached to every later output.
 
@@ -83,6 +108,7 @@ NB01 = [
 - DGU's sample is 1963-07 to 2004-11 (their Table 2), which is **497 months**. With their 120-month estimation window the out-of-sample period is 1973-07 to 2004-11, **377 months**. Both counts are asserted below.
 - Their four French-sourced datasets have N = 11, 3, 21 and 24 assets (Table 2). The 21 and 24 come from 20 of the 25 size-and-value portfolios: DGU drop the five largest-size portfolios (their footnote 24), because the market, SMB and HML are almost a linear combination of all 25.
 - In French's 49-industry file nine industries have gaps coded -99.99 in the early decades. All 49 are populated from **1969-07**; the extension in later notebooks starts there.
+- The four daily files (49 industries, three factors and momentum from 1926, five factors from 1963-07) are downloaded and recorded here and first used in notebook 10; their counts are checked there, where the daily windows are built.
 - One number that is already a replication check: DGU's Table 3 reports the Sharpe ratio of the value-weighted market, "vw", as 0.1138 in every French-sourced column. That is the monthly Sharpe ratio of French's Mkt-RF over the out-of-sample window. The same calculation on today's vintage is printed beside it. The two differ because the vintages differ, and the size of the difference shows how much revision the sample has absorbed since 2009.
 """),
     md("""
@@ -105,7 +131,7 @@ A French CSV holds between two and ten blocks, each announced by a title line, t
     md("""
 ## Download and record
 
-Six files. The table shows what was fetched and the vintage line French prints at the top of each. The record is written to `outputs/provenance_french.json`, which later notebooks read so that every output can name the vintage it was computed on.
+Ten files. The table shows what was fetched and the vintage line French prints at the top of each. The record is written to `outputs/provenance_french.json`, which later notebooks read so that every output can name the vintage it was computed on.
 """),
     code("""
 import sys
@@ -211,7 +237,7 @@ print(f"difference to the published 0.1138: {sr_oos - 0.1138:+.4f}  (band for th
     md("""
 ## What this notebook established, and what could be wrong
 
-The six files parse, the DGU window holds 497 months with no gaps, the asset counts match Table 2, and all 49 industries are populated from 1969-07. The market Sharpe ratio on today's vintage sits within 0.0025 of the 0.1138 DGU printed, which is the size of revision to expect on the rule rows too.
+The ten files parse, the DGU window holds 497 months with no gaps, the asset counts match Table 2, and all 49 industries are populated from 1969-07. The market Sharpe ratio on today's vintage sits within 0.0025 of the 0.1138 DGU printed, which is the size of revision to expect on the rule rows too.
 
 Three things this does not settle. French's risk-free rate is the one-month Treasury bill; DGU describe theirs as the 90-day bill taken from French's site, and French's site only carries the one-month series, so I use that. The vintage line names the CRSP cut French built the file from and nothing else; two files with the same vintage line can still differ if French changed a method. And the checks above count rows and columns; they do not verify a single return value, which only the replication itself can do.
 """),
@@ -226,7 +252,40 @@ NB02 = [
     md("""
 # 02. 1/N against sample-based mean-variance: the rolling out-of-sample test
 
-**Terms used in this notebook.** Risk-free rate: the return on a one-month US Treasury bill, the closest thing to a return with no risk. Excess return: a return minus the risk-free rate over the same month. Sharpe ratio: the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken. Certainty-equivalent return (CEQ): the average return minus half the variance (times a risk aversion of one); the sure monthly return an investor would accept in place of the risky one. Turnover: the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.02 means that 2% of the portfolio changes hands in the month. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Estimation error: the difference between a mean or covariance estimated from a window and its true value. Band: the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover. Gated: said of a cell the band applies to. Verdict: pass or MISS for a gated cell. Fragility test: adding small random noise to every return and rerunning a rule fifty times, to see how far its result can move on a slightly different version of the data. Basis point: one hundredth of a percentage point, so 10 basis points is 0.1%. Vintage: the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202607 is the July 2026 release). Provenance: the record of what was downloaded, when, with its checksum and vintage. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Upper bound: the Sharpe ratio a mean-variance investor would earn with no estimation error, from a rule estimated on the whole sample and judged on the same sample. Simulated history: the 24,000 months of returns the simulation produces. Seed: the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers. Draw: one simulated history, produced from one seed. Standard error: the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M. P-value: the probability of a difference at least as large as the one observed if the two rules were equally good; below 0.05 the difference is unlikely to be chance. Jobson-Korkie: the standard test of whether two Sharpe ratios measured on the same months differ; its result is reported as a p-value. Delta method: a standard way to obtain a standard error for a quantity built from means and variances, used for the CEQ. Near-singular: said of a covariance matrix in which one asset's return is almost a combination of the others', so that the matrix carries almost no information about the difference between them; inverting it then divides by a number close to zero.
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Certainty-equivalent return (CEQ) | the average return minus half the variance (times a risk aversion of one); the sure monthly return an investor would accept in place of the risky one |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.02 means that 2% of the portfolio changes hands in the month |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Band | the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover |
+| Gated | said of a cell the band applies to |
+| Verdict | pass or MISS for a gated cell |
+| Fragility test | adding small random noise to every return and rerunning a rule fifty times, to see how far its result can move on a slightly different version of the data |
+| Basis point | one hundredth of a percentage point, so 10 basis points is 0.1% |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202607 is the July 2026 release) |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Value-weighted return | the return of a group of firms in which each firm counts in proportion to its market capitalisation at the start of the month |
+| Upper bound | the Sharpe ratio a mean-variance investor would earn with no estimation error, from a rule estimated on the whole sample and judged on the same sample |
+| Simulated history | the 24,000 months of returns the simulation produces |
+| Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
+| Draw | one simulated history, produced from one seed |
+| Standard error | the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M |
+| P-value | the probability of a difference at least as large as the one observed if the two rules were equally good; below 0.05 the difference is unlikely to be chance |
+| Jobson-Korkie | the standard test of whether two Sharpe ratios measured on the same months differ; its result is reported as a p-value |
+| Delta method | a standard way to obtain a standard error for a quantity built from means and variances, used for the CEQ |
+| Covariance matrix | the table of all variances and covariances of a set of assets; the covariance of two assets says how they move together, positive when both tend to be above their averages in the same months |
+| Near-singular | said of a covariance matrix in which one asset's return is almost a combination of the others', so that the matrix carries almost no information about the difference between them; inverting it then divides by a number close to zero |
 
 **What this notebook does.** It builds the four DGU datasets from French's files, runs the 1/N rule and the sample-based mean-variance rule through DGU's rolling 120-month window, and puts the out-of-sample Sharpe ratio, certainty-equivalent return and turnover beside Tables 3, 4 and 5 of the paper, with the verdict of the band I wrote down before the run.
 
@@ -399,7 +458,37 @@ NB03 = [
     md("""
 # 03. Shrink the means, ignore the means, or impose the short-sale constraint: the rest of the paper's rules
 
-**Terms used in this notebook.** Risk-free rate: the return on a one-month US Treasury bill, the closest thing to a return with no risk. Excess return: a return minus the risk-free rate over the same month. Sharpe ratio: the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken. Certainty-equivalent return (CEQ): the average return minus half the variance (times a risk aversion of one); the sure monthly return an investor would accept in place of the risky one. Turnover: the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.02 means that 2% of the portfolio changes hands in the month. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Estimation error: the difference between a mean or covariance estimated from a window and its true value. Band: the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover. Gated: said of a cell the band applies to. Verdict: pass or MISS for a gated cell. Fragility test: adding small random noise to every return and rerunning a rule fifty times, to see how far its result can move on a slightly different version of the data. Basis point: one hundredth of a percentage point, so 10 basis points is 0.1%. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Bayes-Stein: the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage. Minimum variance: the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns. Short-sale constraint: no weight may be negative. Budget constraint: the weights must sum to one. Corner solution: a portfolio with all wealth in a single asset. Lagrangian: the expression an optimisation problem is written as when it has constraints. Non-negative least squares: a standard algorithm for least-squares problems whose unknowns may not be negative. Simulated history: the 24,000 months of returns the simulation produces. Seed: the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers. Draw: one simulated history, produced from one seed.
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Certainty-equivalent return (CEQ) | the average return minus half the variance (times a risk aversion of one); the sure monthly return an investor would accept in place of the risky one |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.02 means that 2% of the portfolio changes hands in the month |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Band | the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover |
+| Gated | said of a cell the band applies to |
+| Verdict | pass or MISS for a gated cell |
+| Fragility test | adding small random noise to every return and rerunning a rule fifty times, to see how far its result can move on a slightly different version of the data |
+| Basis point | one hundredth of a percentage point, so 10 basis points is 0.1% |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Covariance matrix | the table of all variances and covariances of a set of assets; the covariance of two assets says how they move together, positive when both tend to be above their averages in the same months |
+| Bayes-Stein | the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage |
+| Minimum variance | the rule that holds the minimum-variance portfolio, the fully invested portfolio with the lowest variance under the estimated covariance, and uses no expected returns |
+| Short-sale constraint | no weight may be negative |
+| Budget constraint | the weights must sum to one |
+| Corner solution | a portfolio with all wealth in a single asset |
+| Lagrangian | the expression an optimisation problem is written as when it has constraints |
+| Non-negative least squares | a standard algorithm for least-squares problems whose unknowns may not be negative |
+| Simulated history | the 24,000 months of returns the simulation produces |
+| Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
+| Draw | one simulated history, produced from one seed |
 
 **What this notebook does.** It adds the rules DGU built to tame the estimation error that notebook 02 exposed, runs all nine rules through the same rolling test, and completes the comparison with Tables 3, 4 and 5 of the paper, including the pre-committed check that the top three rules on each dataset come out in the paper's order.
 
@@ -573,7 +662,40 @@ NB04 = [
     md("""
 # 04. The amount of data mean-variance needs: DGU's analytical result and their simulation
 
-**Terms used in this notebook.** Risk-free rate: the return on a one-month US Treasury bill, the closest thing to a return with no risk. Excess return: a return minus the risk-free rate over the same month. Sharpe ratio: the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Estimation error: the difference between a mean or covariance estimated from a window and its true value. Tangency portfolio: the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known. Critical window: the window length at which sample-based mean-variance starts to beat 1/N on average. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Beta: how much an asset moves with the factor. Alpha: the part of an asset's expected return that its beta on the factor does not explain, zero in this simulation. Idiosyncratic: an asset's own noise, unrelated to the factor. Simulated history: the 24,000 months of returns the simulation produces. Seed: the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers. Draw: one simulated history, produced from one seed. Turnover: the fraction of the portfolio bought and sold at a rebalance, summed over the assets. Band: the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover. Gated: said of a cell the band applies to. Verdict: pass or MISS for a gated cell. Standard error: the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M. P-value: the probability of a difference at least as large as the one observed if the two rules were equally good; below 0.05 the difference is unlikely to be chance. Bayes-Stein: the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage. Minimum variance: the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns. Short-sale constraint: no weight may be negative. Budget constraint: the weights must sum to one. Corner solution: a portfolio with all wealth in a single asset. Lagrangian: the expression an optimisation problem is written as when it has constraints. Non-negative least squares: a standard algorithm for least-squares problems whose unknowns may not be negative.
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Tangency portfolio | the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known |
+| Critical window | the window length at which sample-based mean-variance starts to beat 1/N on average |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Beta | how much an asset moves with the factor |
+| Alpha | the part of an asset's expected return that its beta on the factor does not explain, zero in this simulation |
+| Idiosyncratic | an asset's own noise, unrelated to the factor |
+| Simulated history | the 24,000 months of returns the simulation produces |
+| Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
+| Draw | one simulated history, produced from one seed |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets |
+| Band | the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover |
+| Gated | said of a cell the band applies to |
+| Verdict | pass or MISS for a gated cell |
+| Standard error | the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M |
+| P-value | the probability of a difference at least as large as the one observed if the two rules were equally good; below 0.05 the difference is unlikely to be chance |
+| Bayes-Stein | the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage |
+| Minimum variance | the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns |
+| Short-sale constraint | no weight may be negative |
+| Budget constraint | the weights must sum to one |
+| Corner solution | a portfolio with all wealth in a single asset |
+| Lagrangian | the expression an optimisation problem is written as when it has constraints |
+| Non-negative least squares | a standard algorithm for least-squares problems whose unknowns may not be negative |
 
 **What this notebook does.** The paper does two things after its empirical tables, both with known answers. The first is Proposition 1: a formula for the number of months of data the sample-based mean-variance rule needs before it beats 1/N on average, as a function of the number of assets and of how much better the tangency portfolio is than 1/N. The paper states thirteen values of that formula in its text, and this notebook checks each of them. The second is Table 6: one simulated history of 24,000 months from a one-factor model, with the rules of notebooks 02 and 03 run through windows of 120, 360 and 6,000 months on universes of 10, 25 and 50 assets. In the simulation the true means and covariances are known, so the effect of the window length and of the number of assets can be measured against the true answer.
 
@@ -759,9 +881,40 @@ NB05 = [
     md("""
 # 05. Beyond the paper: the same simulated market with fat tails
 
-**Terms used in this notebook.** Risk-free rate: the return on a one-month US Treasury bill. Excess return: a return minus the risk-free rate over the same month. Sharpe ratio: the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Estimation error: the difference between a mean or covariance estimated from a window and its true value. Tangency portfolio: the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known. Critical window: the window length at which sample-based mean-variance starts to beat 1/N on average. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Beta: how much an asset moves with the factor. Alpha: the part of an asset's expected return that its beta on the factor does not explain, zero in this simulation. Idiosyncratic: an asset's own noise, unrelated to the factor. Simulated history: the 24,000 months of returns the simulation produces. Seed: the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers. Draw: one simulated history, produced from one seed. Standard error: the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M. Fat tails: extreme months more frequent and more extreme than a normal distribution allows. Kurtosis: a measure of how heavy the tails of a distribution are; excess kurtosis is zero for the normal distribution. Student-t: a fat-tailed relative of the normal distribution. Degrees of freedom: the Student-t's tail parameter, fewer meaning fatter tails. Scale mixture: a fat-tailed variable built by multiplying a normal one by a random scale. Crossing: in the simulation, the first window tested at which mean-variance's out-of-sample Sharpe ratio reaches 1/N's. Slack: the allowance of 0.01 within which a comparison still counts as in the expected direction. Bayes-Stein: the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage. Minimum variance: the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns.
+**Terms used in this notebook.**
 
-**What this notebook does.** The formula and the simulation of notebook 04 assume that returns are normally distributed and independent from month to month. The paper chose that setting because most portfolio rules are derived in it and it should favour mean-variance. This notebook reruns the Table 6 simulation with fat-tailed shocks and nothing else changed, and measures what the normality assumption is worth. The paper has no table for this, so the pre-committed statements are three expectations, written in `constants.py` before the run and each reported as a count of cells.
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill |
+| Excess return | a return minus the risk-free rate over the same month |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Tangency portfolio | the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known |
+| Critical window | the window length at which sample-based mean-variance starts to beat 1/N on average |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Beta | how much an asset moves with the factor |
+| Alpha | the part of an asset's expected return that its beta on the factor does not explain, zero in this simulation |
+| Idiosyncratic | an asset's own noise, unrelated to the factor |
+| Simulated history | the 24,000 months of returns the simulation produces |
+| Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
+| Draw | one simulated history, produced from one seed |
+| Standard error | the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M |
+| Covariance matrix | the table of all variances and covariances of a set of assets; the covariance of two assets says how they move together, positive when both tend to be above their averages in the same months |
+| Fat tails | extreme months more frequent and more extreme than a normal distribution allows |
+| Kurtosis | a measure of how heavy the tails of a distribution are; excess kurtosis is zero for the normal distribution |
+| Student-t | a fat-tailed relative of the normal distribution |
+| Degrees of freedom | the Student-t's tail parameter, fewer meaning fatter tails |
+| Scale mixture | a fat-tailed variable built by multiplying a normal one by a random scale |
+| Crossing | in the simulation, the first window tested at which mean-variance's out-of-sample Sharpe ratio reaches 1/N's |
+| Slack | the allowance of 0.01 within which a comparison still counts as in the expected direction |
+| Bayes-Stein | the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage |
+| Minimum variance | the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns |
+
+**What this notebook does.** The formula and the simulation of notebook 04 assume that returns are normally distributed and independent from month to month. The paper chose that setting because most portfolio rules are derived in it and it should favour mean-variance. This notebook reruns the Table 6 simulation with fat-tailed shocks and nothing else changed, and measures what the normality assumption is worth. The paper has no table for this, so the pre-committed statements are three expectations, written in `constants.py` before the run and each reported as a count of cells. One test was added after the run, with its expectation written before its code: the same fat tails with a scale factor per asset in place of one per month, so that the shape of the estimated covariance moves as well as its level.
 
 **Fat tails.** A normal distribution says a month more than three standard deviations below the mean happens about once in 370 months, once in a working life. On French's US market series from 1926 to 2026 (1,202 months), months more than three standard deviations below the mean occurred 11 times, against 1.6 expected under a normal distribution, about seven times more often. Fat tails means that extreme months are more frequent and more extreme than a normal distribution allows. Fat tails matter for estimation because the extreme months pull the sample mean and the sample covariance around: one crash month inside a 120-month window changes every covariance in the window and stays in it for ten years. For the same window, estimation error is larger under fat tails, and a rule that trusts its estimates should lose more.
 
@@ -927,7 +1080,67 @@ print("the gap, mean-variance minus 1/N, by window: negative means 1/N is ahead"
 pd.DataFrame(gap_rows).set_index(["N", "shocks", "M"])["gap"].unstack("M").round(4)
 """),
     md("""
+## Added after the run: fat tails with a scale per asset (P1)
+
+The fat tails above use one scale factor per month for every asset, so an extreme month multiplies every entry of that month's contribution to the sample covariance by the same number: the level of the estimated covariance moves and its shape, the ratios between its entries, hardly does, and the weights of the paper's rules depend only on the shape. This test, added after the run with its expectation fixed in `constants.py` first, reruns the fat-tailed market with one scale factor per shock series: the factor's shock and each asset's own shock get their own independent scale each month. In a month where one asset's scale is large and another's is small, their estimated variances and their estimated correlations with the other assets move apart, so the shape of the estimated covariance moves as well as its level. The covariance of returns is still exactly the normal market's, because each scale has a mean square of one and the shocks are independent, so expectation 1 and the formula's numbers are unchanged. The expectation, written before the code: P1a, the mean change in Sharpe ratio across the seven estimated rules and the nine cells is more negative than under the common scale at both degrees of freedom; P1b, the minimum-variance rules (min, min-c, g-min-c), whose weights depend on the shape of the covariance and use no means, lose more on average than the other estimated rules. Running time: about four minutes, two runs of the grid.
+"""),
+    code("""
+# Added after the run (6 October 2026): P1, fat tails with one scale per shock series.
+markets_pa = {(N, label): SIM.build_market(N, dof=dof, common_scale=False) for N in C.SIM_N for label, dof in DISTS[1:]}
+grid_pa = {}
+t_all = time.time()
+for label, dof in DISTS[1:]:
+    for N in C.SIM_N:
+        mkt = markets_pa[(N, label)]
+        w_true = mkt.true_tangency_weights
+        r_true, r_ew = mkt.returns @ w_true, mkt.returns.mean(axis=1)
+        for M in C.SIM_M:
+            bts = B.rolling_moments(mkt.returns, S.MOMENT_RULES, window=M)
+            row = {"mv (true)": B.sharpe(pd.Series(r_true)), "ew": B.sharpe(pd.Series(r_ew))}
+            row.update({k: B.sharpe(bt.oos) for k, bt in bts.items() if k != "ew"})
+            grid_pa[(label, N, M)] = row
+    print(f"{label:14s} per-asset scale done, {time.time() - t_all:.0f}s so far")
+tables_pa = pd.DataFrame(grid_pa).T
+tables_pa.index.names = ["shocks", "N", "M"]
+
+kurt = {label: {"common scale": SIM.excess_kurtosis(markets[(10, label)].returns[:, 3]), "per-asset scale": SIM.excess_kurtosis(markets_pa[(10, label)].returns[:, 3])} for label, _ in DISTS[1:]}
+print("excess kurtosis of one asset's return (asset 4 of the 10-asset universe) under each construction:")
+print(pd.DataFrame(kurt).T.round(2).to_string())
+print()
+
+shape_rules = list(C.FAT_TAIL_SHAPE_RULES)
+other_rules = [k for k in estimated if k not in shape_rules]
+p1_rows, p1a, p1b = [], [], []
+for label, dof in DISTS[1:]:
+    d_common = diffs[label]
+    d_pa = (tables_pa.loc[label] - normal)[estimated]
+    row = {"shocks": label, "mean change, common scale": d_common.values.mean(), "mean change, per-asset scale": d_pa.values.mean(),
+           "shape rules, per-asset": d_pa[shape_rules].values.mean(), "other rules, per-asset": d_pa[other_rules].values.mean(),
+           "cells in the expected direction, per-asset": int((d_pa <= C.FAT_TAIL_DIRECTION_SLACK).values.sum()), "largest fall, per-asset": d_pa.values.min()}
+    p1a.append(bool(row["mean change, per-asset scale"] < row["mean change, common scale"]))
+    p1b.append(bool(row["shape rules, per-asset"] < row["other rules, per-asset"]))
+    p1_rows.append(row)
+    print(f"{label}, per-asset scale minus normal, by rule and cell:")
+    print(d_pa.round(4).to_string())
+    print()
+p1 = pd.DataFrame(p1_rows).set_index("shocks")
+print(p1.round(4).to_string())
+print()
+print(f"P1a (the mean change is more negative with a scale per asset than with the common scale, both degrees of freedom): {sum(p1a)} of {len(p1a)}: {'MET' if all(p1a) else 'NOT MET'}")
+print(f"P1b (the minimum-variance rules lose more than the other estimated rules, both degrees of freedom): {sum(p1b)} of {len(p1b)}: {'MET' if all(p1b) else 'NOT MET'}")
+print()
+print("mean change by rule under the per-asset scale, averaged over cells:")
+print(pd.DataFrame({label: (tables_pa.loc[label] - normal)[estimated].mean(axis=0) for label, _ in DISTS[1:]}).round(4).to_string())
+"""),
+    md("""
 ## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. The rules that estimate nothing keep their Sharpe ratios within 0.013 under fat tails | 18 of 18 | MET |
+| 2. Every estimated rule's Sharpe ratio is no higher under fat tails, slack 0.01 | 125 of 126 comparisons inside the slack; average loss 0.002 at 5 degrees of freedom, +0.002 at 10, inside sampling error | MET |
+| 3. The crossing for 10 assets comes later under fat tails; none for 25 and 50 within 12,000 months | 3,000 months under normal shocks, 4,000 under both fat-tailed markets, against the formula's 4,536; none for 25 and 50 | MET |
+| P1 (added after the run). With a scale per asset, the mean loss is larger than under the common scale (P1a) and the minimum-variance rules lose most (P1b) | mean change +0.0011 and -0.0000 at 10 and 5 degrees of freedom against +0.0017 and -0.0022 under the common scale (P1a 1 of 2); the minimum-variance rules +0.0015 and +0.0013 against +0.0007 and -0.0010 for the other rules (P1b 0 of 2); 63 of 63 cells inside the slack at both levels | NOT MET; every change inside one-draw noise |
 
 All three expectations are met, and the effect is small. Expectation 1: 18 of 18, so the fat-tailed markets are the same market with different tails. Expectation 2: 125 of 126 comparisons inside the slack, and the changes are small. With 5 degrees of freedom the estimated rules lose 0.002 in Sharpe ratio on average, 0.004 at the 120-month window and nothing at 6,000, and the largest single fall is 0.015; with 10 degrees of freedom the average change is +0.002, inside sampling error, so no effect is detectable. Expectation 3: for 10 assets the crossing moves from 3,000 months under normal shocks to 4,000 under both fat-tailed markets, against the formula's 4,536. The crossing is known only to the nearest window tested (the windows were 120, 240, 360, 600, 1,000, 2,000, 3,000, 4,000, 6,000, 9,000 and 12,000 months), and the gap between mean-variance and 1/N at 3,000 months under normal shocks is 0.0003, so the move is one step of that list and inside sampling error. For 25 and 50 assets no crossing occurs within 12,000 months under any distribution, as the formula says (17,753 months and none).
 
@@ -939,15 +1152,14 @@ The covariances. The sample covariance between two assets is the average, over t
 
 Together: the inputs that carry most of the cost, the means, are exactly as uncertain as under normal shocks, and the inputs that became noisier, the covariances, became noisier in a way the weights hardly respond to. The paper's conclusion therefore does not depend on the normality assumption.
 
-What this notebook does not settle. Four limits remain.
+P1, the test added after the run, was written to close the second limit below, and its two expectations were both wrong. With one scale per shock series the mean change in Sharpe ratio is +0.0011 at 10 degrees of freedom and -0.0000 at 5, against +0.0017 and -0.0022 under the common scale, so the loss is larger at one level and smaller at the other (P1a, 1 of 2); the minimum-variance rules change by +0.0015 and +0.0013 against +0.0007 and -0.0010 for the other estimated rules, so they lose less, not more (P1b, 0 of 2); every one of the 126 cells is inside the slack. Two things explain the miss, and both were foreseeable. First, the size. Notebook 04 measured how much a Sharpe ratio moves between draws of the same market: a range of 0.01 to 0.02 for a rule near 0.13. Every number in the P1 table is smaller than that, as is every number in the common-scale table, so neither construction produces an effect that one draw can read, and an expectation that predicted "larger" without a size below which the comparison is noise could only be met by chance. The miss is on the design side: the expectation should have named that size, two standard errors or about 0.013, and at that size no difference between the two constructions could have been expected. Second, the shape. An asset's return is the factor part plus its own part, and with independent scales the two parts are rarely extreme in the same month, so the asset's own return has thinner tails under the per-asset construction than under the common one: the excess kurtosis of one asset's return is 0.68 against 1.02 at 10 degrees of freedom and 3.03 against 3.70 at 5. The construction that was expected to move the shape of the estimated covariance more also feeds each estimate fewer extreme months, and the two effects offset in the sample covariance. What stands after P1 is a stronger form of the result above: fat tails that hit all assets at once and fat tails that hit them separately both leave the paper's comparison where it was.
 
-First, the months in this market are still independent of one another: the volatility of one month says nothing about the next. In real markets volatility comes in waves, and turbulent months follow turbulent months. Under that pattern a covariance estimated from the last 120 months is wrong in a known direction for the month ahead, because the window averages over calm and stormy months while the next month belongs to whichever regime the market is in now. Notebook 06 builds a market with that pattern and repeats this notebook's three expectations on it.
+**What this notebook does not settle.**
 
-Second, in this market the same scale factor multiplies every asset's shock in a given month, so an extreme month moves all assets together. A covariance matrix carries two kinds of information: the overall level of risk (how large the variances are) and the pattern of relative risk (which assets are more volatile than which others, and how strongly each pair moves together). A common scale changes the level and leaves the pattern almost intact, and the previous paragraph showed that the rules' weights depend only on the pattern. A market in which each asset had its own scale factor each month would change the pattern as well: in a month where one asset's scale is large and another's is small, their estimated variances and their estimated correlations with the other assets move apart. Fat tails of that kind would move the estimated weights, and the loss for the rules would be larger than the loss measured here. This notebook does not test that kind.
-
-Third, the fat tails here are symmetric. The scale factor multiplies the shock whatever its sign, so an extreme month is as likely to be an extreme gain as an extreme loss. In real markets extreme losses are more common than extreme gains of the same size. A one-sided version would need a different construction and is not run.
-
-Fourth, every number in this notebook comes from one draw of each market, that is, from one 24,000-month simulated history per distribution, all built from the same seed. A different seed would give slightly different Sharpe ratios for every rule with nothing else changed. Notebook 04 measured how much a Sharpe ratio moves between draws by building its market eight more times: for a rule with a Sharpe ratio near 0.13, the eight values spread over a range of about 0.01 to 0.02. That repetition was not done here, because it would cost eight further runs of the whole grid. A difference of about 0.005 between two cells of the tables above is therefore of the size that a change of seed alone produces, and it should not be read as an effect of the tails. The averages over many cells, and the counts in the three expectations, are the informative numbers.
+- The months in this market are still independent of one another: the volatility of one month says nothing about the next. In real markets volatility comes in waves, and turbulent months follow turbulent months. Under that pattern a covariance estimated from the last 120 months is wrong in a known direction for the month ahead, because the window averages over calm and stormy months while the next month belongs to whichever regime the market is in now. Notebook 06 builds a market with that pattern and repeats this notebook's three expectations on it.
+- In this market the same scale factor multiplies every asset's shock in a given month, so an extreme month moves all assets together. A covariance matrix carries two kinds of information: the overall level of risk (how large the variances are) and the pattern of relative risk (which assets are more volatile than which others, and how strongly each pair moves together). A common scale changes the level and leaves the pattern almost intact, and the previous paragraph showed that the rules' weights depend only on the pattern. A market in which each asset has its own scale factor each month changes the pattern as well: in a month where one asset's scale is large and another's is small, their estimated variances and their estimated correlations with the other assets move apart. P1 ran that market and found no larger loss; the paragraph on P1 above says why, and the limit is closed for this calibration.
+- The fat tails here are symmetric. The scale factor multiplies the shock whatever its sign, so an extreme month is as likely to be an extreme gain as an extreme loss. In real markets extreme losses are more common than extreme gains of the same size. A one-sided version would need a different construction and is not run.
+- Every number in this notebook comes from one draw of each market, that is, from one 24,000-month simulated history per distribution, all built from the same seed. A different seed would give slightly different Sharpe ratios for every rule with nothing else changed. Notebook 04 measured how much a Sharpe ratio moves between draws by building its market eight more times: for a rule with a Sharpe ratio near 0.13, the eight values spread over a range of about 0.01 to 0.02. That repetition was not done here, because it would cost eight further runs of the whole grid. A difference of about 0.005 between two cells of the tables above is therefore of the size that a change of seed alone produces, and it should not be read as an effect of the tails. The averages over many cells, and the counts in the three expectations, are the informative numbers.
 """),
 ]
 
@@ -959,7 +1171,44 @@ NB06 = [
     md("""
 # 06. Beyond the paper: volatility that changes through time
 
-**Terms used in this notebook.** Risk-free rate: the return on a one-month US Treasury bill. Excess return: a return minus the risk-free rate over the same month. Sharpe ratio: the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Estimation error: the difference between a mean or covariance estimated from a window and its true value. Tangency portfolio: the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known. Critical window: the window length at which sample-based mean-variance starts to beat 1/N on average. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Beta: how much an asset moves with the factor. Alpha: the part of an asset's expected return that its beta on the factor does not explain, zero in this simulation. Idiosyncratic: an asset's own noise, unrelated to the factor. Simulated history: the 24,000 months of returns the simulation produces. Seed: the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers. Draw: one simulated history, produced from one seed. Standard error: the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M. Fat tails: extreme months more frequent and more extreme than a normal distribution allows. Kurtosis: a measure of how heavy the tails of a distribution are; excess kurtosis is zero for the normal distribution. Student-t: a fat-tailed relative of the normal distribution. Degrees of freedom: the Student-t's tail parameter, fewer meaning fatter tails. Crossing: in the simulation, the first window tested at which mean-variance's out-of-sample Sharpe ratio reaches 1/N's. Slack: the allowance of 0.01 within which a comparison still counts as in the expected direction. Volatility clustering: volatility that persists from month to month, so that a turbulent month is usually followed by another. GARCH(1,1): the standard model of volatility clustering, in which next month's variance is a constant plus a weight times this month's squared shock plus a weight times this month's variance. Persistence: the sum of the two GARCH weights, which sets how slowly a volatility shock fades. Autocorrelation: the correlation of a series with its own value one month earlier. Regime: a stretch of months with a similar level of volatility. Leverage effect: volatility rising more after a fall than after a rise of the same size. Oracle: a rule given the truth it could never know in practice, run to find the ceiling on what knowing it would be worth. Unconditional: the long-run average of a variance or correlation. Conditional: its value in a given month, given what is known then. Bayes-Stein: the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage. Minimum variance: the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns.
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill |
+| Excess return | a return minus the risk-free rate over the same month |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Tangency portfolio | the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known |
+| Critical window | the window length at which sample-based mean-variance starts to beat 1/N on average |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Beta | how much an asset moves with the factor |
+| Alpha | the part of an asset's expected return that its beta on the factor does not explain, zero in this simulation |
+| Idiosyncratic | an asset's own noise, unrelated to the factor |
+| Simulated history | the 24,000 months of returns the simulation produces |
+| Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
+| Draw | one simulated history, produced from one seed |
+| Standard error | the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M |
+| Fat tails | extreme months more frequent and more extreme than a normal distribution allows |
+| Kurtosis | a measure of how heavy the tails of a distribution are; excess kurtosis is zero for the normal distribution |
+| Student-t | a fat-tailed relative of the normal distribution |
+| Degrees of freedom | the Student-t's tail parameter, fewer meaning fatter tails |
+| Crossing | in the simulation, the first window tested at which mean-variance's out-of-sample Sharpe ratio reaches 1/N's |
+| Slack | the allowance of 0.01 within which a comparison still counts as in the expected direction |
+| Volatility clustering | volatility that persists from month to month, so that a turbulent month is usually followed by another. GARCH(1,1): the standard model of volatility clustering, in which next month's variance is a constant plus a weight times this month's squared shock plus a weight times this month's variance |
+| Persistence | the sum of the two GARCH weights, which sets how slowly a volatility shock fades |
+| Autocorrelation | the correlation of a series with its own value one month earlier |
+| Regime | a stretch of months with a similar level of volatility |
+| Leverage effect | volatility rising more after a fall than after a rise of the same size |
+| Oracle | a rule given the truth it could never know in practice, run to find the ceiling on what knowing it would be worth |
+| Unconditional | the long-run average of a variance or correlation |
+| Conditional | its value in a given month, given what is known then |
+| Bayes-Stein | the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage |
+| Minimum variance | the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns |
 
 **What this notebook does.** The formula and the simulation of notebook 04 assume normally distributed returns and independent months. Notebook 05 relaxed the first assumption and found that it changes little. This notebook relaxes the second. It reruns the Table 6 simulation with volatility that clusters through time, with the unconditional means and covariances held exactly where they were, the same seed, and nothing else changed. The paper has no table for this, so three expectations were written in `constants.py` before the run, and each is reported as a count of cells.
 
@@ -1188,13 +1437,27 @@ pd.DataFrame(rows).set_index("N")
     md("""
 ## What this notebook established, and what could be wrong
 
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. The rules that estimate nothing keep their Sharpe ratios within 0.013 under clustering | 12 of 12 | MET |
+| 2. Every estimated rule's Sharpe ratio is no higher under clustering, slack 0.01, with a visible loss expected | 63 of 63 inside the slack; average change +0.0015, so the loss the expectation predicted did not appear | MET as written, wrong in substance |
+| 3. The crossing for 10 assets comes later than in the normal market; none for 25 and 50 | 3,000 to 4,000 months, one step of the grid; none for 25 and 50 | MET |
+| Oracle check (added after the run) | knowing each month's covariance is worth 0.003 to 0.005 in Sharpe ratio to a rule that only splits wealth; scaling the whole position by the inverse of current variance is worth 0.010 | reported |
+
 The three expectations are met as written. The second one predicted a visible loss, and no loss appears. The construction check: 12 of 12. The direction: 63 of 63 comparisons inside the slack, but the average change is +0.0015, the rules that depend on the shape of the covariance (minimum variance and its constrained versions) change by +0.001 to +0.002, and the only falls beyond noise are mean-variance and Bayes-Stein at the 120-month window on 10 and 50 assets (0.007 and 0.016), set against a rise of 0.005 on 25. The crossing for 10 assets moves from 3,000 to 4,000 months, as in notebook 05: one step of the grid, with the gap at 3,000 months within 0.001 of zero either way. Volatility that clusters at textbook strength, with the true correlation between assets moving from 0.31 in the calmest tenth of months to 0.59 in the stormiest, does not change the paper's comparison.
 
 The oracle table explains the result. The paper's rules decide how to split a fixed sum between the assets, with all of it invested at every date. Two investors run minimum variance in the clustered market. The first holds one set of weights for all 2,000 years, the weights that are best on average. The second knows each month's true covariance in advance, recomputes the weights every month and moves 0.6 to 0.8 of the portfolio to follow them. The second earns a Sharpe ratio 0.003 to 0.005 higher, about 0.014 a year, which on a portfolio with 15% annual volatility is about 0.2% of extra return a year. This is the most that perfect knowledge of changing risk can be worth to a rule that only decides the split. A rule that estimates the covariance from 120 noisy months cannot come near that ceiling, so no loss could show. The ceiling is low because the Sharpe ratio changes very little when the weights move a little away from the best ones; the loss grows with the square of the error in the weights. A two-asset example shows the size of the effect. Two assets have the same expected return, the same volatility and no correlation, so the best split is 50/50. A 60/40 split has a Sharpe ratio 2% lower than the best one, a 70/30 split 7% lower, and a 90/10 split 22% lower. Being ten points off costs almost nothing, and only a large error costs much. The same fact lets 1/N do well throughout this project: its weights are wrong, and they are not wrong enough to matter.
 
 A third investor holds only the factor and changes how much of it she holds: half the usual position in the stormiest months, more than usual in the calmest, so that the risk she carries is the same from month to month. In this market the factor's expected return does not change with its volatility, so she keeps the return and sheds the risk. She earns 0.010 more than holding the factor fixed, about 0.035 a year, or half a percent of return a year on the same portfolio, two to three times the second investor's gain, with no change in what she holds. Predictable volatility pays in the size of the whole position. None of the paper's rules can collect this gain, because all of them are fully invested at every date and decide only how to divide the money. The second study in this series, volatility-managed portfolios, is about the rule that does.
 
-The paper's conclusion therefore depends on neither assumption of notebook 04. Fat tails of the same variance leave the means exactly as noisy as under normal shocks (notebook 05); volatility clustering moves the best weights, and the Sharpe ratio is insensitive to the move (this notebook). What this notebook does not settle. Three limits remain, and a fourth carries over from notebook 05. First, the clustering here is symmetric: a large gain raises next month's volatility exactly as much as a large loss of the same size, because the GARCH recursion uses the squared shock and the square has no sign. In real markets a loss raises volatility more than a gain does (the leverage effect), so turbulent periods follow falls more than rises; this market has no such asymmetry. Second, in this market the correlations between assets move for one reason only: when the factor's volatility rises relative to the assets' own volatility, more of each asset's movement is the common movement, so the correlations rise. In real markets correlations also change for reasons that have nothing to do with the factor's volatility, for example when investors sell many assets at once in a crisis. Third, the GARCH parameters, alpha 0.10 and beta 0.85, were fixed before the run and no others were tried, so the result holds for clustering of textbook strength and says nothing about stronger or weaker clustering. Fourth, every number comes from one draw of each market, as in notebook 05, so a difference of about 0.005 between two cells is of the size that a change of seed alone produces.
+The paper's conclusion therefore depends on neither assumption of notebook 04. Fat tails of the same variance leave the means exactly as noisy as under normal shocks (notebook 05); volatility clustering moves the best weights, and the Sharpe ratio is insensitive to the move (this notebook).
+
+**What this notebook does not settle.**
+
+- The clustering here is symmetric: a large gain raises next month's volatility exactly as much as a large loss of the same size, because the GARCH recursion uses the squared shock and the square has no sign. In real markets a loss raises volatility more than a gain does (the leverage effect), so turbulent periods follow falls more than rises; this market has no such asymmetry, and building one would need a different recursion, which this study does not run.
+- In this market the correlations between assets move for one reason only: when the factor's volatility rises relative to the assets' own volatility, more of each asset's movement is the common movement, so the correlations rise. In real markets correlations also change for reasons that have nothing to do with the factor's volatility, for example when investors sell many assets at once in a crisis. The real-data notebooks of the extension (09 to 12) measure the industries' co-movement as it is, with no model of why it moves.
+- The GARCH parameters, alpha 0.10 and beta 0.85, were fixed before the run and no others were tried, so the result holds for clustering of textbook strength and says nothing about stronger or weaker clustering; a sweep of parameters after the result would be tuning, and is not run.
+- Every number comes from one draw of each market, as in notebook 05, so a difference of about 0.005 between two cells is of the size that a change of seed alone produces.
 """),
 ]
 
@@ -1206,7 +1469,36 @@ NB07 = [
     md("""
 # 07. The same test on twenty-one more years of data
 
-**Terms used in this notebook.** Risk-free rate: the return on a one-month US Treasury bill, the closest thing to a return with no risk. Excess return: a return minus the risk-free rate over the same month. Sharpe ratio: the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken. Certainty-equivalent return (CEQ): the average return minus half the variance (times a risk aversion of one); the sure monthly return an investor would accept in place of the risky one. Turnover: the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.02 means that 2% of the portfolio changes hands in the month. Estimation window: the M months of past returns a rule sees when it forms its weights, 120 here. Rolling evaluation: moving the window forward one month at a time, forming the weights, and recording the return of the month after the window. Out-of-sample: measured on months the rule had not seen when it formed its weights. In-sample: measured on the same months that were used to form the weights. Estimation error: the difference between a mean or covariance estimated from a window and its true value. Band: the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover. Gated: said of a cell the band applies to. Verdict: pass or MISS for a gated cell. Vintage: the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202607 is the July 2026 release). Provenance: the record of what was downloaded, when, with its checksum and vintage. Factor: a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones. Upper bound: the Sharpe ratio a mean-variance investor would earn with no estimation error, from a rule estimated on the whole sample and judged on the same sample. Standard error: the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M. P-value: the probability of a difference at least as large as the one observed if the two rules were equally good; below 0.05 the difference is unlikely to be chance. Jobson-Korkie: the standard test of whether two Sharpe ratios measured on the same months differ; its result is reported as a p-value. Delta method: a standard way to obtain a standard error for a quantity built from means and variances, used for the CEQ. Sub-period: a slice of the out-of-sample months of one rolling evaluation; the weights at each date are the same whichever period they are reported in. Bayes-Stein: the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage. Minimum variance: the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns. Tangency portfolio: the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known. Critical window: the window length at which sample-based mean-variance starts to beat 1/N on average.
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Certainty-equivalent return (CEQ) | the average return minus half the variance (times a risk aversion of one); the sure monthly return an investor would accept in place of the risky one |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.02 means that 2% of the portfolio changes hands in the month |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 here |
+| Rolling evaluation | moving the window forward one month at a time, forming the weights, and recording the return of the month after the window |
+| Out-of-sample | measured on months the rule had not seen when it formed its weights |
+| In-sample | measured on the same months that were used to form the weights |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Band | the interval, fixed before any code ran, within which a replicated number counts as matching the published one, 0.03 for a Sharpe ratio and 25% for turnover |
+| Gated | said of a cell the band applies to |
+| Verdict | pass or MISS for a gated cell |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202607 is the July 2026 release) |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors SMB and HML are the returns of small firms over large ones and of cheap firms over expensive ones |
+| Upper bound | the Sharpe ratio a mean-variance investor would earn with no estimation error, from a rule estimated on the whole sample and judged on the same sample |
+| Standard error | the uncertainty of an estimate; for an average over M months it is the standard deviation of the months divided by the square root of M |
+| P-value | the probability of a difference at least as large as the one observed if the two rules were equally good; below 0.05 the difference is unlikely to be chance |
+| Jobson-Korkie | the standard test of whether two Sharpe ratios measured on the same months differ; its result is reported as a p-value |
+| Delta method | a standard way to obtain a standard error for a quantity built from means and variances, used for the CEQ |
+| Sub-period | a slice of the out-of-sample months of one rolling evaluation; the weights at each date are the same whichever period they are reported in |
+| Bayes-Stein | the rule of Jorion (1986) that pulls each estimated mean towards one common value; this pulling is called shrinkage |
+| Minimum variance | the rule that holds the fully invested portfolio with the lowest variance and uses no expected returns |
+| Tangency portfolio | the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known |
+| Critical window | the window length at which sample-based mean-variance starts to beat 1/N on average |
 
 **What this notebook does.** The paper's sample ends in November 2004. French's files run to the present, so the nine rules of notebooks 02 and 03 can be run through the same rolling evaluation on every month the vintage carries, from July 1963 to its last month, and the measures reported for three periods: the paper's own out-of-sample period (1973-07 to 2004-11, which reproduces notebooks 02 and 03), the months since the paper (from 2004-12, every one of them out of sample for a window that began 120 months earlier), and the whole period. No published number exists for the new months, so four expectations were written in `constants.py` before the run, each reported as a count.
 
@@ -1409,6 +1701,13 @@ pd.DataFrame({"in sample, whole sample": pd.Series(in_sample), "out of sample, w
     md("""
 ## What this notebook established, and what could be wrong
 
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 758 months from 1963-07 to 2026-08 on every dataset, 638 out of sample, 261 since the paper; the paper's period on this vintage: 29 of 30 gated Sharpe cells and 30 of 30 turnover cells inside the bands | holds |
+| 2. Each short-sale-constrained rule beats its unconstrained version over the whole period, 12 comparisons | 11 of 12; the exception is minimum variance on FF-1-factor | 11 of 12 |
+| 3. 1/N above sample-based mean-variance on every dataset, new period and whole period, 8 cells | 6 of 8; mean-variance ahead in the new period on MKT/SMB/HML and FF-1-factor by 0.06 and 0.03, p-values 0.46 and 0.72 | 6 of 8, the two misses inside noise |
+| 4. Cells in the new period in which a rule beats 1/N at the 5% level | 1 of 32, the market itself on MKT/SMB/HML; no optimising rule | reported |
+
 Expectation 1 holds. On the 202608 vintage every dataset runs without a gap from 1963-07 to 2026-08: 758 months, 638 of them out of sample, 261 since the paper. The paper's own period, rerun on this vintage, gives 29 of 30 gated Sharpe cells and 30 of 30 turnover cells inside the bands, the same counts as notebooks 02 and 03 found on the 202607 vintage, with the same single miss, minimum variance on FF-4-factor. One month of revisions changed no verdict.
 
 Expectation 2 holds in 11 of 12 comparisons: over the whole period each short-sale-constrained rule beats its unconstrained version, except minimum variance on FF-1-factor, where the unconstrained rule (0.236) beats the constrained one (0.166) and is the best rule on that dataset over fifty-three years of out-of-sample months. Expectation 3 holds in 6 of 8 cells: 1/N is above sample-based mean-variance on every dataset over the whole period, and in the new period on Industry and FF-4-factor; on MKT/SMB/HML and FF-1-factor mean-variance is ahead in the new period by 0.06 and 0.03, with p-values of 0.46 and 0.72, so the data cannot tell the two apart. Expectation 4: one of 32 cells beats 1/N at the 5% level in the new period, and it is the market itself, vw, on MKT/SMB/HML. No optimising rule beats 1/N significantly on any dataset in the 261 new months. mv-c and bs-c sit within 0.02 of 1/N on Industry, FF-1-factor and FF-4-factor and 0.08 above it on MKT/SMB/HML with p-values above 0.10; the unconstrained mean-variance rule on Industry earns 0.04 against 1/N's 0.19.
@@ -1417,12 +1716,1962 @@ The new period adds one thing the paper's period did not show. Minimum variance 
 
 The in-sample upper bound on the whole sample, 0.19 to 0.42 across the datasets, against out-of-sample mean-variance of -0.01 to 0.13, shows the cost of estimation on sixty-three years of data. Twenty-one more years did not shrink it, as the formula of notebook 04 predicts.
 
-What this notebook does not settle. The new period is 261 months, and 261 months is a short sample for comparing Sharpe ratios. A monthly Sharpe ratio measured on 261 months has a standard error of about 0.06, so the difference between two rules has to reach about 0.12 before its p-value falls below 0.05, that is, before it would arise by chance less than one time in twenty if the two rules were equally good. Most of the differences in the new-period table are smaller than that, so they cannot be told from chance, and the ranking of two rules 0.03 apart could reverse in another 261 months. The three periods were fixed before the run: the paper's own period, the months since, and the whole. A sub-period chosen after looking at the results could be made to favour almost any rule, and none was chosen. The last limit is the data vintage. French rebuilds his files every month from the latest CRSP database, and each rebuild revises some past returns slightly. This notebook ran on the 202608 vintage and notebooks 02 and 03 on the 202607 vintage, so the numbers for the paper's period differ in the third or fourth decimal between them; the provenance file written by each run records which vintage it used.
+**What this notebook does not settle.**
+
+- The new period is 261 months, and 261 months is a short sample for comparing Sharpe ratios. A monthly Sharpe ratio measured on 261 months has a standard error of about 0.06, so the difference between two rules has to reach about 0.12 before its p-value falls below 0.05, that is, before it would arise by chance less than one time in twenty if the two rules were equally good. Most of the differences in the new-period table are smaller than that, so they cannot be told from chance, and the ranking of two rules 0.03 apart could reverse in another 261 months.
+- The three periods were fixed before the run: the paper's own period, the months since, and the whole. A sub-period chosen after looking at the results could be made to favour almost any rule, and none was chosen.
+- The data vintage. French rebuilds his files every month from the latest CRSP database, and each rebuild revises some past returns slightly. This notebook ran on the 202608 vintage and notebooks 02 and 03 on the 202607 vintage, so the numbers for the paper's period differ in the third or fourth decimal between them; the provenance file written by each run records which vintage it used.
+"""),
+]
+
+
+# ---------------------------------------------------------------------------
+# 08: the cap-weight check, the benchmark of the extension
+# ---------------------------------------------------------------------------
+
+NB08 = [
+    md("""
+# 08. The cap-weight check: building the index the extension will track
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month; French's Mkt-RF is the excess return of the whole US stock market |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money; market equity is the same quantity |
+| Value-weighted return | the return of a group of firms in which each firm counts in proportion to its market capitalisation at the start of the month, so a firm twice as large counts twice as much |
+| Cap-weighted | weighted by market capitalisation; a cap-weighted index of industries gives each industry the share of the total that its firms' market capitalisation amounts to |
+| Benchmark | in the extension, the index the portfolio tracks |
+| Tracking error | the standard deviation of the monthly difference between two return series, times the square root of 12, so that it reads in return units per year; a tracking error of 0.50% a year means the two series differ by about 0.14% in a typical month (0.50% divided by the square root of 12) |
+| Basis point | one hundredth of a percentage point, so 50 basis points is 0.50% |
+| Look-ahead | using, for month t, a number that was not known when month t began; a weight set with the end-of-month price is look-ahead |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from (202608 is the August 2026 release) |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+| SIC code | the Standard Industrial Classification, a four-digit number that names a firm's line of business; French assigns each firm to one of the 49 industries by its SIC code at the end of June |
+| Firm-level data | one row per firm per month (price, shares, return), as opposed to French's files, which carry one number per portfolio per month |
+
+**What this notebook does.** The extension (notebooks 09 to 13) asks the paper's question of an index-tracking mandate on French's 49 industry portfolios: a portfolio that must stay close to an index of those industries. That index has to be built first, because French publishes the 49 industries' returns and the market's return, and no index of the 49. French's 49-industry file carries, for every industry and month, the number of firms and the average firm size (market capitalisation in millions of dollars). Their product is the industry's total market capitalisation, and dividing by the sum over the 49 gives each industry's share of the whole: its cap weight. The cap-weighted combination of the 49 industry returns should then equal, or nearly equal, the value-weighted return of all the firms in the 49 portfolios, and that is close to French's market return. This notebook builds the weights, computes the combination, and measures its tracking error against the market, Mkt-RF plus RF, from 1969-07 (the first month in which all 49 industries exist, asserted in notebook 01) to the last month the vintage carries.
+
+**The check, fixed in `constants.py` on 10 September 2026, before any extension code existed.** If the tracking error is at most 50 basis points a year (`CAPW_TE_MAX_ANNUAL`), the derived weights are the benchmark of the extension, both its return series and its industry weights. If not, the benchmark return is the market series, and the question of which industry weights the constraints refer to goes back to the design before notebook 09 is written.
+
+**Why the timing of the weights matters, and how it is checked.** A value-weighted return for month t weights each firm by its market capitalisation at the start of the month, because an investor who holds the market buys at the start of the month and the weights she holds are those prices times shares. French's firm count and average size for month t are measured at the same time, the start of month t, so the product for month t is the weight that goes with month t's return, and it uses nothing that was unknown when the month began. The other reading, that French's numbers describe the end of the month, would make the same-month weight look-ahead. The two readings give different combinations, so both are run: the same-month weights, which are the design (`CAPW_WEIGHT_TIMING`), and the previous-month weights (the count and size of month t-1 applied to month t's return). Under the design's reading, the same-month combination must track the market more closely. If it does not, the reading is wrong, the notebook stops, and the extension is not built on a benchmark with look-ahead.
+
+**What I expect to see, written before the run (`constants.py`, 1 October 2026).** First, count first: from 1969-07 to the last month, every industry has a return, a firm count and an average size in every month, and the three blocks share the same months. Second, the same-month weights track the market more closely than the previous-month weights. Third, the gate: the same-month combination's tracking error is at most 50 basis points a year. Fourth, reported with no pass or fail: the annualised mean difference between the combination and the market, their correlation, and the largest and smallest weights with their industries at the first month, at 2004-11 and at the last month. Running time: seconds.
+"""),
+    md("""
+## Modules
+
+`constants` and `french_loader` are those of notebook 01. `benchmark` is new: the weights, the combination and the tracking error, each a short function with a hand-computed test in `tests/test_benchmark.py`.
+"""),
+    code("""
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    md("""
+## Count first: the three blocks of the 49-industry file
+
+The file has eight blocks. Three are used here: the value-weighted monthly returns, the number of firms, and the average firm size. The cell loads them, restricts them to the extension sample, asserts expectation 1 and records the vintage.
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import benchmark as BM
+
+pd.set_option("display.width", 180)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 60)
+pd.set_option("display.float_format", lambda v: f"{v:,.4f}")
+
+print(fl.block_summary("ind49").to_string())
+inputs = BM.load_inputs()
+start = pd.Period(C.EXT_SAMPLE_START, "M")
+returns = inputs["returns"].loc[start:]
+firms = inputs["firms"].loc[start:]
+size = inputs["size"].loc[start:]
+market = inputs["market"].loc[start:]
+LAST = returns.index[-1]
+
+# Expectation 1: the same months in all three blocks, no missing value anywhere in the sample.
+assert returns.index.equals(firms.index) and returns.index.equals(size.index), "the three blocks do not share the same months"
+full = pd.period_range(start, LAST, freq="M")
+assert len(returns) == len(full), f"{len(full) - len(returns)} months missing inside the sample"
+for name, frame in (("returns", returns), ("firm counts", firms), ("average sizes", size)):
+    assert frame.shape[1] == 49, f"{name}: {frame.shape[1]} industries"
+    assert not frame.isna().any().any(), f"{name}: missing values inside the sample"
+assert (firms > 0).all().all(), "an industry with no firms inside the sample"
+assert market.loc[start:LAST].notna().all(), "the market series has a gap inside the sample"
+records = [fl.download(key) for key in ("ind49", "factors3")]
+fl.write_provenance(records)
+print()
+print(f"extension sample {start} to {LAST}: {len(returns)} months, 49 industries, 3 blocks, no missing value (expectation 1 holds)")
+print(f"firms in the 49 portfolios: {int(firms.loc[start].sum()):,} in {start}, {int(firms.loc['2004-11'].sum()):,} in 2004-11, {int(firms.loc[LAST].sum()):,} in {LAST}")
+total_me = (firms * size).sum(axis=1)
+print(f"total market capitalisation of the 49 (millions of dollars): {total_me.loc[start]:,.0f} in {start}, {total_me.loc[LAST]:,.0f} in {LAST}")
+print("vintage:", "; ".join(sorted({r["vintage_line"] for r in records})), "(provenance written to", C.PROVENANCE_FILE + ")")
+"""),
+    md("""
+## The weights and the combination, under both timings
+
+`cap_weights` divides each industry's firm count times average size by the sum over the 49, per month. `combination_return` multiplies each month's weights by that month's industry returns and sums. The same-month timing is the design; the previous-month timing shifts the weights forward by one month and is run only to check the reading of French's timing.
+"""),
+    code("""
+w_same = BM.cap_weights(firms, size, C.CAPW_WEIGHT_TIMING)
+w_prev = BM.cap_weights(inputs["firms"], inputs["size"], C.CAPW_WEIGHT_TIMING_ALTERNATIVE).loc[start:]
+# Under the previous-month timing the first month of the sample takes its weights from 1969-06, in which
+# one industry has no firms yet, so that month has no weights; the timing check runs on the months both timings cover.
+common = w_prev.dropna(how="all").index
+assert np.allclose(w_same.sum(axis=1), 1.0) and np.allclose(w_prev.loc[common].sum(axis=1), 1.0)
+combo_same = BM.combination_return(returns, w_same)
+combo_prev = BM.combination_return(returns, w_prev)
+assert combo_same.notna().all() and combo_prev.loc[common].notna().all()
+print(f"same-month weights cover {combo_same.notna().sum()} months from {combo_same.index[0]}; previous-month weights cover {len(common)} months from {common[0]}")
+side_by_side = pd.DataFrame({"market (Mkt-RF + RF)": market.loc[start:LAST], "same-month weights": combo_same, "previous-month weights": combo_prev})
+print("first six months:")
+print(side_by_side.head(6).to_string())
+print()
+print("last six months:")
+print(side_by_side.tail(6).to_string())
+"""),
+    md("""
+## Expectations 2 and 3: the timing check and the gate
+
+Tracking error is the standard deviation of the monthly difference, times the square root of 12. The level the gate uses, 50 basis points a year, corresponds to a typical monthly difference of 0.14%.
+"""),
+    code("""
+cmp_same = BM.compare(combo_same, market)                        # the gate: every month of the sample
+cmp_same_common = BM.compare(combo_same.loc[common], market)     # the timing check: the months both timings cover
+cmp_prev = BM.compare(combo_prev.loc[common], market)
+table = pd.DataFrame({"same-month weights, all months": cmp_same, "same-month weights, common months": cmp_same_common, "previous-month weights": cmp_prev})
+print(table.to_string())
+print()
+te_same, te_prev = cmp_same_common["tracking_error_annual"], cmp_prev["tracking_error_annual"]
+print(f"tracking error, same-month weights   : {te_same * 1e4:6.1f} basis points a year")
+print(f"tracking error, previous-month weights: {te_prev * 1e4:6.1f} basis points a year")
+assert te_same < te_prev, ("expectation 2 fails: the previous-month weights track the market more closely, so French's count and size "
+                           "would describe the end of the month and the same-month weights would carry look-ahead; stop here")
+print(f"expectation 2 holds: the same-month weights track the market more closely ({te_same * 1e4:.1f} against {te_prev * 1e4:.1f} basis points)")
+te_gate = cmp_same["tracking_error_annual"]
+gate = te_gate <= C.CAPW_TE_MAX_ANNUAL
+print(f"expectation 3, the gate: {te_gate * 1e4:.1f} basis points over all {cmp_same['months']} months against the level of {C.CAPW_TE_MAX_ANNUAL * 1e4:.0f}: {'MET' if gate else 'NOT MET'}")
+if gate:
+    print("decision: the derived cap weights are the benchmark of notebooks 09 to 13, return series and industry weights alike")
+else:
+    print("decision: the benchmark return is the market series; the industry weights for the constraints go back to the design before notebook 09")
+"""),
+    md("""
+## Expectation 4: what the benchmark looks like
+
+The largest and smallest industry weights at three dates, and the twelve months in which the combination and the market differ most.
+"""),
+    code("""
+report_months = [start if m == "first" else (LAST if m == "last" else pd.Period(m, "M")) for m in C.CAPW_REPORT_MONTHS]
+extremes = pd.DataFrame([BM.weight_extremes(w_same, m) for m in report_months]).set_index("month")
+print(extremes.to_string())
+print()
+top = pd.DataFrame({m: w_same.loc[m].sort_values(ascending=False).head(8) for m in report_months})
+top.columns = [str(c) for c in top.columns]
+print("the eight largest industries at each date (weights):")
+print(top.to_string())
+print()
+diff = (combo_same - market.loc[start:LAST]).rename("combination minus market")
+worst = diff.abs().sort_values(ascending=False).head(12).index
+print("the twelve months of largest absolute difference:")
+print(pd.DataFrame({"market": market.loc[worst], "combination": combo_same.loc[worst], "difference": diff.loc[worst]}).sort_index().to_string())
+print()
+print(f"annualised mean difference: {cmp_same['mean_difference_annual'] * 1e4:+.1f} basis points a year; correlation {cmp_same['correlation']:.5f}")
+"""),
+    md("""
+## Where the difference comes from
+
+This cell was written after the run, to describe the difference the gate measured; it changes no decision. French forms the industry portfolios once a year, at the end of June, from the firms that have an SIC code at that time. A firm that lists in, say, October joins the market return in November and joins an industry portfolio only the next July. If that is the source of the difference, the difference should be smallest in July and grow through the year, and it should be largest in the years with the most new listings. The cell prints the tracking error by calendar month and by decade.
+"""),
+    code("""
+by_month = diff.groupby(diff.index.month).std(ddof=1) * np.sqrt(12) * 1e4
+by_month.index = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+print("tracking error by calendar month, basis points a year (July is the first month after the portfolios are re-formed):")
+print(by_month.reindex(["Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun"]).round(0).astype(int).to_string())
+print()
+by_decade = diff.groupby((diff.index.year // 10) * 10).agg(["count", "std", "mean"])
+by_decade["tracking error, bp a year"] = by_decade["std"] * np.sqrt(12) * 1e4
+by_decade["mean difference, bp a year"] = by_decade["mean"] * 12 * 1e4
+print("by decade:")
+print(by_decade[["count", "tracking error, bp a year", "mean difference, bp a year"]].to_string(float_format=lambda v: f"{v:.1f}"))
+print()
+print(f"share of months in which the two differ by less than 0.14%: {(diff.abs() < 0.0014).mean():.1%}; by less than 0.30%: {(diff.abs() < 0.003).mean():.1%}")
+"""),
+    md("""
+## A direct test of the explanation, on firm-level data
+
+The explanation above predicts two patterns and both appear, and a prediction that comes true is weaker evidence than a direct test: another cause could produce the same two patterns. The direct test needs the list of firms in each portfolio each month, which French does not publish, so it ran on the CRSP monthly stock file, the database French builds his files from, accessed through WRDS under Queen Mary University of London's subscription (Center for Research in Security Prices, LLC; download date in the results file). This is the one exception to this project's rule of using French's files only, decided for this test alone. The CRSP data stay on the machine that holds them: the script `checks/crsp_direct_test.py` reads them there, this notebook never reads them, and only the aggregate results are in the repository, in `checks/results_crsp_direct_test.json`, written into the working folder by the next cell so that this notebook can print them. The design and the four expectations were fixed in `constants.py` before the script was written (the `DIRECT_TEST_` constants).
+
+The test. For every month, two sets of firms are built from CRSP. The market universe: every firm with CRSP share code 10 or 11 (ordinary common shares of US companies) on the NYSE, AMEX or NASDAQ (exchange codes 1, 2 and 3), with a price and shares outstanding at the end of the previous month and a return in the month. Weighted by that start-of-month market capitalisation, this is how French builds his market return. The June-formed universe: the firms of the market universe that were already in it at the end of the last June and had an SIC code then; this is who can be in an industry portfolio. The firms in the first set and not in the second are the ones the explanation blames: listed since June, or without an SIC code. The predicted gap is the value-weighted return of the market universe minus that of the June-formed universe. The observed gap is French's market return minus the 49-industry combination of this notebook. Expectation 1 checks that the CRSP market universe reproduces French's market return (tracking error at most 20 basis points a year; if not, the universe is built wrongly and the test stops). Expectation 2 is the test: the predicted gap explains the observed one, with a correlation of at least 0.8 and a slope of observed on predicted between 0.8 and 1.2. Expectation 3 reports, with no pass or fail, the share of market capitalisation outside the industries by calendar month and by year. Expectation 4 asks what remains after the prediction: a tracking error below 25 basis points a year.
+"""),
+    code("""
+os.makedirs("checks", exist_ok=True)
+"""),
+    writefile_path("checks/results_crsp_direct_test.json"),
+    code("""
+import json
+R = json.load(open("checks/results_crsp_direct_test.json"))
+print(R["firm_level_source"])
+print(f"{R['months']} months, {R['first_month']} to {R['last_month']} (the CRSP monthly file on the machine ends in {R['last_month']}); French vintage: {R['french_vintage']}")
+e1, e2, e4 = R["expectation_1_validation"], R["expectation_2_predicted_vs_observed"], R["expectation_4_residual"]
+print()
+print(f"expectation 1: the CRSP market universe against French's market return: tracking error {e1['tracking_error_annual'] * 1e4:.1f} bp a year, "
+      f"correlation {e1['correlation']:.5f}, mean difference {e1['mean_difference_annual'] * 1e4:+.1f} bp a year (level {e1['level'] * 1e4:.0f} bp): {'MET' if e1['met'] else 'NOT MET'}")
+print(f"expectation 2: correlation between predicted and observed gap {e2['correlation']:.3f} (at least {R['design']['DIRECT_TEST_MIN_CORRELATION']}), "
+      f"slope {e2['slope']:.2f} (in {R['design']['DIRECT_TEST_SLOPE_RANGE'][0]} to {R['design']['DIRECT_TEST_SLOPE_RANGE'][1]}): {'MET' if e2['met'] else 'NOT MET'}")
+print(f"   tracking error of the observed gap {e2['te_observed_annual'] * 1e4:.1f} bp a year, of the predicted gap {e2['te_predicted_annual'] * 1e4:.1f} bp, "
+      f"of what remains {e2['te_residual_annual'] * 1e4:.1f} bp; the prediction accounts for {e2['share_of_variance_explained']:.0%} of the variance of the observed gap")
+e3 = R["expectation_3_reported"]
+table = pd.DataFrame({"share of market capitalisation outside the industries, %": e3["omega_by_calendar_month_percent"],
+                      "tracking error, observed gap, bp": e3["te_observed_by_calendar_month_bp"],
+                      "tracking error, predicted gap, bp": e3["te_predicted_by_calendar_month_bp"],
+                      "tracking error, what remains, bp": e3["te_residual_by_calendar_month_bp"]})
+print()
+print("expectation 3, by calendar month, July first:")
+print(table.to_string(float_format=lambda v: f"{v:.1f}"))
+print()
+print("share of market capitalisation outside the industries, by decade, %:", e3["omega_by_decade_percent"])
+print("the five years with the largest share, %:", e3["omega_by_year_percent_top5"])
+print("firms in the market universe, average per month, by decade:", {k: int(v) for k, v in e3["firms_market_by_decade_mean"].items()})
+print("of which outside the industries:", {k: int(v) for k, v in e3["firms_outside_industries_by_decade_mean"].items()})
+print()
+print(f"expectation 4: what remains, {e4['te_residual_annual'] * 1e4:.1f} bp a year (level {e4['level'] * 1e4:.0f}): {'MET' if e4['met'] else 'NOT MET'}")
+print()
+print("the twelve months of largest observed gap, with the prediction beside each:")
+print(pd.DataFrame(R["largest_observed_gaps"]).T.to_string(float_format=lambda v: f"{v:.4f}"))
+"""),
+    md("""
+## Save the benchmark for the later notebooks
+
+The weights and the two return series are written to `outputs/`, with the vintage in the file name, so that notebooks 09 to 13 can read them or rebuild them from the same module; rebuilding gives the same numbers on the same vintage.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+vintage = records[0]["vintage_line"].split("using the ")[1].split(" ")[0]
+w_same.to_csv(f"{C.OUTPUT_DIR}/benchmark_weights_{vintage}.csv", float_format="%.8f")
+pd.DataFrame({"benchmark": combo_same, "market": market.loc[start:LAST]}).to_csv(f"{C.OUTPUT_DIR}/benchmark_returns_{vintage}.csv", float_format="%.8f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("benchmark")))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 686 months from 1969-07 to 2026-08, 49 industries with a return, a firm count and an average size in every month, the market series without a gap | holds |
+| 2. The same-month weights track the market more closely than the previous-month weights | 46.7 against 58.7 basis points a year | MET |
+| 3. The gate: tracking error at most 50 basis points a year | 46.7 | MET |
+| 4. Description of the benchmark | mean difference +9 basis points a year, correlation 0.9996, 93% of months within 0.14%; largest industry 14% in 1969-07, 13% in 2004-11, 22% in 2026-08 | reported |
+| Direct test on CRSP, expectations 1 to 4 | the market universe within 7.6 basis points a year of French's market; the predicted gap explains the observed one with correlation 0.93, slope 1.19, 84% of the variance; what remains 18.7 basis points against 25 | MET, 4 of 4 |
+
+Expectation 1 holds. On the 202608 vintage the three blocks share the same 686 months from 1969-07 to 2026-08, all 49 industries have a return, a firm count and an average size in every one of them, and the market series has no gap. The 49 portfolios held 2,152 firms in 1969-07, 4,663 in 2004-11 and 3,170 in 2026-08, with a total market capitalisation that grew from 641 billion dollars to 71 trillion.
+
+Expectation 2 holds. The same-month weights give a tracking error of 46.7 basis points a year against the market and the previous-month weights 58.7, on the 685 months both cover. French's firm count and average firm size for a month therefore describe the start of that month, and the same-month weights carry no look-ahead: a weight for month t is known when month t begins.
+
+Expectation 3, the gate, is met: 46.7 basis points a year over all 686 months against the level of 50 fixed on 10 September. The derived cap weights are the benchmark of notebooks 09 to 13, return series and industry weights alike. Those notebooks rebuild the benchmark from the same module on the same files, so the two CSV files written here are a record and not an input.
+
+Expectation 4, the description. The combination earns 9 basis points a year more than the market on average, the correlation between the two is 0.9996, and in 93% of months they differ by less than 0.14%. The largest monthly difference is 1.75%, in March 2000. The benchmark is concentrated and its concentration moves: the largest industry held 14% in 1969-07 (Oil), 13% in 2004-11 (Banks) and 22% in 2026-08 (Chips); Oil reached 25% in December 1980 and Chips 23% in June 2026; in 2026-08 the eight largest industries hold 68% of the benchmark and 21 of the 49 industries hold less than 0.5% each. This is why the extension's active weight bound is set relative to each industry's benchmark weight (2 percentage points either side of it, `ACTIVE_WEIGHT_BOUND`): one absolute cap for all 49 would be meaningless for an industry at 0.1% and binding for one at 22%.
+
+Where the 47 basis points come from. French forms the industry portfolios once a year, at the end of June, from the firms that have an SIC code at that time, while the market return takes in a new firm from its first full month of trading. A firm that lists in October is in the market from November and in an industry portfolio from the following July, so between July and June the market gains firms the industries do not have, and the gap between the two returns grows. The data show that pattern: the tracking error is 2 basis points a year in July months, 7 in August, 14 in October, 54 in February and 84 in March, and it falls back to 2 the next July. The data also show the other side of the same mechanism: 96 basis points a year in the 2000s, the decade with the most new listings, against 15 in the 2010s. Twelve months around the peak of the technology boom, 1999-07 to 2000-12, account for most of the total; without them the tracking error would be 24 basis points; this number describes the gap and decides nothing. The gate was met with little room, 46.7 against 50. The level was fixed before any of this was computed and is not revisited after the fact; had the level been 40, the derived weights would have been rejected and the benchmark return would be the market series.
+
+The direct test confirms the explanation. On the CRSP monthly stock file, 666 months from 1969-07 to 2024-12, the market universe built from share codes 10 and 11 on the three exchanges reproduces French's market return to within 7.6 basis points a year (correlation 0.99999), so the universes are built the way French builds his. The gap that the June-formed universe predicts has a correlation of 0.93 with the observed gap, a slope of 1.19, and it accounts for 84% of the observed gap's variance; what remains has a tracking error of 18.7 basis points a year against the level of 25. All four expectations are met. The share of market capitalisation held by firms outside the industries rises from 0.6% in July months to 2.3% in June months, the shape the formation rule implies. Its largest values are in 1973, when CRSP added the NASDAQ stocks to its database: the market universe went from 2,505 firms in December 1972 to 5,364 in January 1973, and the 2,960 new firms, 13% of market capitalisation, were in no industry portfolio until July 1973; the two largest gaps of the 1970s, April and May 1973, are reproduced by the prediction to within 0.06 of a percentage point. In March 2000 the firms outside the industries held 5.3% of market capitalisation and the prediction gives -1.45% against the observed -1.75%.
+
+**What this notebook does not settle.**
+
+- What remains after the prediction, 18.7 basis points a year, and the slope above one: the observed gap is about a fifth larger than the predicted one. Three differences between the test's universes and French's construction can account for it, and the test does not separate them. French assigns industries by Compustat's SIC code where one exists and by CRSP's only otherwise, while the test uses CRSP's alone, so a firm with a CRSP code of zero and a Compustat code is outside the industries in the test and inside them for French; in July 1973, 677 of the 5,161 market firms had no CRSP SIC code. French's returns include the return a firm earns in the month it is delisted, which the CRSP monthly file carries in a separate table the test does not read. And French's average firm size is rounded to two decimals of a million dollars. Separating the three would need Compustat and the delisting table, which the study does not use.
+- The CRSP file on the machine ends in December 2024, so the last twenty months of the 49-industry combination are outside the test.
+- The level of 50 basis points was a judgement about how close to the market an index of the 49 industries has to be to stand in for it; nothing in the extension depends on that closeness, because every later tracking error is measured against this benchmark, so the 47 basis points do not enter any later number.
+- A cap-weighted index rebalances itself: when an industry's prices rise, its weight rises with them and no trade is needed. The portfolios of notebooks 11 and 12 have to trade to follow it, a limit on turnover (the fraction of the portfolio traded each month) caps how much they may trade, and notebook 12 measures what that costs."""),
+]
+
+
+# ---------------------------------------------------------------------------
+# 09: the principal components of the 49 industries
+# ---------------------------------------------------------------------------
+
+NB09 = [
+    md("""
+# 09. What moves the 49 industries together: principal components
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same month |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Value-weighted return | the return of a group of firms in which each firm counts in proportion to its market capitalisation at the start of the month |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Fat tails | extreme months more frequent and more extreme than a normal distribution allows |
+| Volatility clustering | volatility that persists from month to month, so that a turbulent month is usually followed by another |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves |
+| Covariance | a number that says how two series move together, positive when they tend to be above their averages in the same months and negative when one is above while the other is below; the covariance of a series with itself is its variance |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 rows by 49 columns here, 1,225 distinct numbers |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can; the second component does the same among combinations uncorrelated with the first, and so on; in mathematics the components are called the eigenvectors of the covariance matrix and their variances are called its eigenvalues |
+| Loading | an asset's weight in a component |
+| Score | a component's monthly return, the assets' excess returns combined with the loadings as weights |
+| Variance share | the component's variance divided by the total variance of all assets; the shares of all 49 components add up to one |
+| Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
+| Draw | one panel of made-up returns produced from one seed |
+| Parallel analysis | the comparison of each component's variance with the variance the same component would have if the assets had nothing in common and moved independently; a component above that bar carries shared movement that chance cannot imitate |
+| Estimation error | the difference between a number estimated from a window of returns and its true value |
+| Standard error | the typical size of the estimation error in an estimate; for a correlation measured on T months it is about (1 minus the squared correlation) divided by the square root of T |
+| Estimation window | the M months of past returns a rule sees when it forms its weights, 120 in the extension |
+| Factor | a return series that moves many assets at once, for example the return of the whole market |
+| Beta | how much an asset moves with a factor; an industry with a beta of 1.5 to the benchmark moves 1.5 times as much as the benchmark on average |
+| Idiosyncratic | an asset's own movement, unrelated to the factors |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; the extension compares four in notebook 10 |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** The key ingredient of every risk-based portfolio is the covariance matrix of the assets' returns. The natural estimate is the sample covariance, and it fails when the assets are many relative to the months of data: for 49 industries and 120 months it has fewer than five observations per number, and the rule that inverts it (notebooks 02 and 03) trades on its errors. The literature answers with a long list of alternative estimators, and the three ideas behind them are shrinkage (pulling the estimate part of the way towards a simpler target), time dynamics (weighting recent data more) and factor structure (Dom, Howard, Jansen and Lohre, 2024, whose introduction this paragraph follows). Factor structure is the idea this notebook prepares: describe the 1,225 numbers by five or fewer common sources of movement plus each industry's own variance, so that fewer numbers are estimated from the same data. Whether that is a good idea for the 49 industries depends on a fact about the data, whether five sources account for most of their shared movement and whether the first of them is the market, which is what this notebook measures before notebook 10 builds the estimator on it.
+
+**What this notebook does.** The paper estimates the covariance matrix from a 120-month window of monthly returns. For 49 industries that is 49 variances and 1,176 covariances, 1,225 numbers, from 49 times 120 equals 5,880 monthly returns: fewer than five observations per number. Notebooks 02 and 03 showed what estimation error does to a rule that inverts such a matrix. Practitioners meet this problem in two ways, and the extension uses both. The first is more observations: estimating from daily returns, where three years hold about 756 trading days and 49 times 756 equals 37,044 observations, 30 per number; notebook 10 builds every estimator at both frequencies, the paper's 120 monthly returns and three years of daily returns, and `constants.py` records the design (`EXT_COV_FREQUENCIES`). The second is fewer numbers: describe the matrix by the few combinations of industries that account for most of the shared movement, keep those, and treat what is left as each industry's own noise. Those combinations are the principal components, and they are this notebook's subject. The components here are taken from monthly returns, the paper's data, so that what they show about the industries' structure is the structure the paper's estimator faced. Before that estimator is built, this notebook asks three things of the 49 industries over 1969-07 to the vintage's last month: how much of the total variance the first few components explain; whether the first component is the market, measured as the correlation of its score with the benchmark's excess return; and whether the components found in one period are still the components of another, because an estimator that keeps five components assumes that the five found in the window still describe the next month.
+
+**Why it comes ninth.** The benchmark exists since notebook 08, and the first component is checked against it. The question of how many numbers a covariance matrix really needs is the bridge from the paper (where the sample covariance was one of the things that made mean-variance fail) to the extension (where four ways of estimating it are compared on a portfolio that is told what to hold).
+
+**What I expect to see, written before the run (`constants.py`, 1 October 2026).** First, count first: 686 months by 49 industries with no gap, and the benchmark rebuilt from the same module over the same months. Second, the first component is the market: its score has a correlation of at least 0.95 with the benchmark's excess return over the full sample and in each of three windows fixed in advance (to 2019-12, 2020-01 to 2022-12, from 2023-01). Below the level in any window the notebook reports which, and notebook 10's PCA estimator is built with the market factor imposed as the first component. Third, reported with no pass or fail: the variance share of each of the first ten components, the share of the first five together (the number notebook 10 keeps), and the number of components above the parallel-analysis bar. Fourth, reported: the stability of the first five components' loadings between the three windows, and how much of each window's variance the full-sample components explain compared with the window's own. Fifth, reported: what the estimator will see, the first component's variance share and its correlation with the benchmark in every 120-month window. Running time: about two minutes, most of it the parallel analysis.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader` and `benchmark` are those of notebook 08. `pca` is new: the components with a sign rule, their scores and variance shares, a similarity measure between two sets of loadings, the parallel analysis, and the rolling view. Each function has a test on a made-up one-factor market in `tests/test_pca.py`.
+"""),
+    code("""
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("pca.py"),
+    md("""
+## Count first: the panel of excess returns and the benchmark
+
+The industries' value-weighted returns minus the one-month Treasury bill rate, from 1969-07, and the benchmark of notebook 08 rebuilt from the same module.
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import benchmark as BM
+from bp import pca as P
+
+pd.set_option("display.width", 180)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 60)
+pd.set_option("display.float_format", lambda v: f"{v:,.4f}")
+
+inputs = BM.load_inputs()
+f3 = fl.load_monthly("factors3", 0)
+start = pd.Period(C.EXT_SAMPLE_START, "M")
+returns = inputs["returns"].loc[start:]
+rf = f3["RF"].loc[start:returns.index[-1]]
+excess = returns.sub(rf, axis=0)
+weights = BM.cap_weights(inputs["firms"].loc[start:], inputs["size"].loc[start:], C.CAPW_WEIGHT_TIMING)
+benchmark = BM.combination_return(returns, weights)
+benchmark_excess = (benchmark - rf).rename("benchmark_excess")
+LAST = excess.index[-1]
+
+assert excess.shape[1] == 49 and not excess.isna().any().any(), "a gap in the excess returns"
+assert len(excess) == len(pd.period_range(start, LAST, freq="M")), "months missing"
+assert benchmark_excess.index.equals(excess.index) and benchmark_excess.notna().all(), "the benchmark does not cover the same months"
+assert rf.notna().all()
+records = [fl.download(key) for key in ("ind49", "factors3")]
+fl.write_provenance(records)
+reference = weights.mean().to_numpy()      # the sign rule: each component's loading on the average benchmark weights is positive
+print(f"{len(excess)} months, {start} to {LAST}, 49 industries, no gap; benchmark rebuilt over the same months (expectation 1 holds)")
+print(f"covariance matrix: 49 variances and {49 * 48 // 2:,} covariances, {49 * 50 // 2:,} numbers; a 120-month window holds {49 * 120:,} monthly returns, {49 * 120 / (49 * 50 // 2):.1f} per number")
+print("vintage:", "; ".join(sorted({r["vintage_line"] for r in records})))
+"""),
+    md("""
+## The components over the full sample, and whether the first is the market
+
+The first table lists the first ten components: the variance each explains, its share of the total, and the cumulative share. The variance and standard deviation columns are in the component's own units: the loadings are scaled so that their squares sum to one, which makes the first component's monthly return about seven times the average industry's excess return (its 49 loadings are each about 0.14 and add up to about 7), so only ratios between components and correlations carry meaning, and the variance share is the ratio that matters. The last line of the cell is expectation 2 over the full sample: the correlation between the first component's score and the benchmark's excess return.
+"""),
+    code("""
+full = P.fit(excess, reference)
+table = pd.DataFrame({
+    "variance (monthly)": full.eigenvalues[:C.PCA_REPORT_COMPONENTS],
+    "standard deviation (monthly)": np.sqrt(full.eigenvalues[:C.PCA_REPORT_COMPONENTS]),
+    "variance share": full.shares[:C.PCA_REPORT_COMPONENTS],
+    "cumulative share": np.cumsum(full.shares)[:C.PCA_REPORT_COMPONENTS],
+}, index=[f"PC{k + 1}" for k in range(C.PCA_REPORT_COMPONENTS)])
+print(table.to_string())
+print()
+print(f"total variance of the 49 industries: {full.eigenvalues.sum():.5f} a month; the first {C.PCA_N_COMPONENTS} components explain {full.shares[:C.PCA_N_COMPONENTS].sum():.1%} of it, the first alone {full.shares[0]:.1%}")
+print(f"the average industry has a monthly standard deviation of {np.sqrt(np.diag(P.covariance(excess))).mean():.4f}; the first component's is {np.sqrt(full.eigenvalues[0]):.4f}")
+sc = P.scores(excess, full, C.PCA_N_COMPONENTS)
+corr_full = float(np.corrcoef(sc["PC1"], benchmark_excess)[0, 1])
+print()
+print(f"expectation 2, full sample: correlation between the first component's score and the benchmark's excess return {corr_full:.4f} "
+      f"(level {C.PCA_PC1_MARKET_CORR_MIN}): {'MET' if corr_full >= C.PCA_PC1_MARKET_CORR_MIN else 'NOT MET'}")
+print("correlation of each of the first five scores with the benchmark's excess return:", {c: round(float(np.corrcoef(sc[c], benchmark_excess)[0, 1]), 3) for c in sc.columns})
+"""),
+    md("""
+## What the first component is made of
+
+Each industry's loading on the first component, beside two things that could explain it: the industry's own monthly standard deviation and its average benchmark weight. If the first component were the benchmark, the loadings would follow the weights. If it is the market factor as a statistical object, they follow how much each industry moves with the market, which is larger for volatile industries whatever their size.
+"""),
+    code("""
+L = full.frame(C.PCA_N_COMPONENTS)
+sd = pd.Series(np.sqrt(np.diag(P.covariance(excess))), index=excess.columns, name="monthly standard deviation")
+avg_w = weights.mean().rename("average benchmark weight")
+beta = pd.Series({c: np.cov(excess[c], benchmark_excess, ddof=1)[0, 1] / benchmark_excess.var(ddof=1) for c in excess.columns}, name="beta to the benchmark")
+view = pd.concat([L["PC1"].rename("PC1 loading"), sd, beta, avg_w], axis=1).sort_values("PC1 loading", ascending=False)
+print("the ten largest and the ten smallest loadings on the first component:")
+print(pd.concat([view.head(10), view.tail(10)]).to_string())
+print()
+print(f"correlation across industries between the PC1 loading and: the standard deviation {view['PC1 loading'].corr(view['monthly standard deviation']):.2f}, "
+      f"the beta to the benchmark {view['PC1 loading'].corr(view['beta to the benchmark']):.2f}, the benchmark weight {view['PC1 loading'].corr(view['average benchmark weight']):.2f}")
+print(f"loadings on PC1 that are negative: {int((L['PC1'] < 0).sum())} of 49")
+print()
+print("the second and third components, five largest positive and five most negative loadings each:")
+for c in ("PC2", "PC3"):
+    s_ = L[c].sort_values()
+    print(f"  {c}: positive {{{', '.join(f'{k}: {v:.3f}' for k, v in s_.tail(5)[::-1].items())}}}; negative {{{', '.join(f'{k}: {v:.3f}' for k, v in s_.head(5).items())}}}")
+"""),
+    md("""
+## Expectation 2 in the three windows fixed in advance
+
+The same fit inside each window, and the first component's correlation with the benchmark's excess return there.
+"""),
+    code("""
+def window_slice(frame, lo, hi):
+    return frame.loc[(pd.Period(lo, "M") if lo else frame.index[0]):(pd.Period(hi, "M") if hi else frame.index[-1])]
+
+fits, rows = {}, []
+for name, (lo, hi) in C.PCA_WINDOWS.items():
+    ex = window_slice(excess, lo, hi)
+    be = window_slice(benchmark_excess, lo, hi)
+    p = P.fit(ex, reference)
+    s1 = P.scores(ex, p, 1)["PC1"]
+    corr = float(np.corrcoef(s1, be)[0, 1])
+    fits[name] = (ex, p)
+    rows.append({"window": name, "months": len(ex), "first month": str(ex.index[0]), "last month": str(ex.index[-1]),
+                 "PC1 variance share": p.shares[0], f"first {C.PCA_N_COMPONENTS} share": p.shares[:C.PCA_N_COMPONENTS].sum(),
+                 "PC1 corr. with benchmark": corr, "verdict": "MET" if corr >= C.PCA_PC1_MARKET_CORR_MIN else "NOT MET"})
+e2 = pd.DataFrame(rows).set_index("window")
+print(e2.to_string())
+n_met = int((e2["verdict"] == "MET").sum())
+print()
+print(f"expectation 2: {n_met} of {len(e2)} windows at or above {C.PCA_PC1_MARKET_CORR_MIN}, and the full sample {'MET' if corr_full >= C.PCA_PC1_MARKET_CORR_MIN else 'NOT MET'}")
+if n_met < len(e2) or corr_full < C.PCA_PC1_MARKET_CORR_MIN:
+    print("design consequence: notebook 10's PCA estimator imposes the market factor as its first component")
+else:
+    print("design consequence: none; notebook 10's PCA estimator takes its components from the data")
+"""),
+    md("""
+## Expectation 3: how many components are more than noise
+
+Parallel analysis draws 200 panels of independent normal returns with the same number of months and industries and the same variances as the data, so that nothing moves together in them, and takes the variance of each component in each draw. The bar for a component is the 95th percentile of its variance across the draws. A component of the data above its bar carries shared movement that independent noise does not produce one time in twenty.
+"""),
+    code("""
+pa = P.parallel_analysis(excess)
+show = pa.head(C.PCA_REPORT_COMPONENTS).copy()
+show["ratio to the bar"] = show["eigenvalue"] / show[f"noise_p{C.PCA_PARALLEL_PERCENTILE}"]
+print(show.to_string())
+print()
+print(f"components above the noise bar, counted from the first until the first one below it: {pa.attrs['n_above_noise']} of 49 "
+      f"(the estimator of notebook 10 keeps {C.PCA_N_COMPONENTS})")
+print(f"components above the bar anywhere in the list: {int(pa['above_noise'].sum())}")
+"""),
+    md("""
+## Expectation 4: do the components of one period still describe another
+
+Two views. The first table gives, for each of the first five components, the similarity of its loadings between each pair of windows: the absolute correlation across the 49 industries of the two loading vectors, 1 for the same combination of industries and 0 for unrelated ones. The second table asks the question the estimator cares about: inside each window, how much of the variance do the full-sample components explain, against how much the window's own components explain, for one component and for five. The window's own components are the best possible for that window, so the gap between the two columns is the cost of using components estimated on other months.
+"""),
+    code("""
+names = list(C.PCA_WINDOWS)
+pairs = [(names[0], names[1]), (names[1], names[2]), (names[0], names[2])]
+sim = pd.DataFrame({f"{a} vs {b}": [P.loading_similarity(fits[a][1].loadings[:, k], fits[b][1].loadings[:, k]) for k in range(C.PCA_N_COMPONENTS)] for a, b in pairs},
+                   index=[f"PC{k + 1}" for k in range(C.PCA_N_COMPONENTS)])
+print("similarity of loadings between windows (absolute correlation across the 49 industries):")
+print(sim.to_string())
+print()
+rows = []
+for name, (ex, p) in fits.items():
+    rows.append({"window": name,
+                 "own PC1": P.explained_in_window(ex, p.loadings, 1), "full-sample PC1": P.explained_in_window(ex, full.loadings, 1),
+                 f"own first {C.PCA_N_COMPONENTS}": P.explained_in_window(ex, p.loadings, C.PCA_N_COMPONENTS),
+                 f"full-sample first {C.PCA_N_COMPONENTS}": P.explained_in_window(ex, full.loadings, C.PCA_N_COMPONENTS)})
+ex4 = pd.DataFrame(rows).set_index("window")
+ex4["gap, five components"] = ex4[f"own first {C.PCA_N_COMPONENTS}"] - ex4[f"full-sample first {C.PCA_N_COMPONENTS}"]
+print("share of each window's variance explained by its own components and by the full-sample components:")
+print(ex4.to_string())
+"""),
+    md("""
+## Expectation 5: what the estimator will see, window by window
+
+The first component's variance share and its correlation with the benchmark's excess return in every 120-month window, 567 of them, summarised by their minimum, median and maximum with the months at which the extremes end.
+"""),
+    code("""
+roll = P.rolling_first_component(excess, benchmark_excess, C.EXT_ESTIMATION_WINDOW, reference)
+summary = pd.DataFrame({
+    "minimum": roll.min(), "month of minimum": roll.idxmin().astype(str), "median": roll.median(),
+    "maximum": roll.max(), "month of maximum": roll.idxmax().astype(str),
+})
+print(f"{len(roll)} windows of {C.EXT_ESTIMATION_WINDOW} months, ending {roll.index[0]} to {roll.index[-1]}:")
+print(summary.to_string())
+print()
+below = roll[roll["pc1_corr_benchmark"] < C.PCA_PC1_MARKET_CORR_MIN]
+print(f"windows in which the first component's correlation with the benchmark is below {C.PCA_PC1_MARKET_CORR_MIN}: {len(below)} of {len(roll)}"
+      + (f", ending {below.index[0]} to {below.index[-1]}" if len(below) else ""))
+print("first component's variance share by decade of the window's last month (median):")
+print((roll["pc1_share"].groupby((roll.index.year // 10) * 10).median()).to_string())
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 686 months from 1969-07 to 2026-08, 49 industries, no gap; the benchmark rebuilt over the same months | holds |
+| 2. The first component is the market: correlation at least 0.95 with the benchmark's excess return, full sample and three windows | 0.956 over the full sample; 0.959 to 2019-12, 0.971 in 2020 to 2022, 0.837 from 2023-01 | NOT MET in the window from 2023; the pre-registered consequence applies |
+| 3. Components above the parallel-analysis bar | 2 | reported |
+| 4. Stability of the loadings between windows | first component similarity 0.53 to 0.68; the full-sample components explain 0.2, 9.3 and 11.4 points less than each window's own | reported |
+| 5. The rolling view, 567 windows of 120 months | first component share 37% to 69%, median 61%; correlation with the benchmark below 0.95 in 130 windows, all ending after 2000-05 | reported |
+
+Expectation 1 holds: 686 months from 1969-07 to 2026-08, 49 industries, no gap, and the benchmark rebuilt over the same months.
+
+What the components are. The first component explains 55% of the total variance of the 49 industries over the full sample, the second 6%, the third 4%, and the first five together 72%. Every one of the 49 loadings on the first component is positive: when it moves, all industries move the same way, which is what a market factor does. Its loadings follow how much each industry moves with the market and not how large the industry is: across industries the loading has a correlation of 0.97 with the industry's beta to the benchmark and of -0.30 with its benchmark weight. Software, Steel, Fun, Construction and Real Estate load most; Utilities, Food, Tobacco, Drugs and Gold load least. The second component sets the commodity producers (Gold, Coal, Mines, Oil, Steel, all with negative loadings) against retail, software, entertainment and clothing, so it is the component that moves when raw-material prices move against the rest of the economy; the third separates Gold from Coal.
+
+Expectation 2, the first component is the market: met over the full sample (correlation 0.956) and in the windows to 2019-12 (0.959) and 2020-01 to 2022-12 (0.971), and not met in the window from 2023-01 (0.837, 44 months). The loadings table explains the miss. The benchmark weights industries by size, and since 2023 Chips and Software hold a third of it between them; the first component weights industries by how much they move with the others, which gives Chips and Software about 3% each of a component whose loadings are all between 0.07 and 0.20. In a period in which the largest industries move on their own, the two series part. The rolling view says the same: in 130 of the 567 windows of 120 months, all of them ending after May 2000, the correlation is below 0.95, with a minimum of 0.93 in the window ending December 2000. The pre-registered consequence applies, and `constants.py` records it: notebook 10's PCA estimator takes the benchmark's excess return as its first factor and finds the remaining components in what the market leaves unexplained, so that its first component is the market by construction in every window.
+
+Expectation 3, how many components are more than noise: two. The first component's variance is 8.7 times what 200 panels of independent returns with the same variances produce at the 95th percentile; the second is 1.15 times; the third is below the bar, the fourth 1.02 times and the fifth below. The number the estimator of notebook 10 keeps, five, was fixed on 10 September; this count says that components three to five carry about as much shared movement as chance would, over the full sample. The constant stays at five, and notebook 10 reports the two-component estimator beside it, with neither declared right or wrong.
+
+Expectation 4, stability. The first component's loadings have a similarity of 0.68 between the window to 2019 and the window 2020 to 2022, 0.61 between the second and the third, and 0.53 between the first and the third; the loadings of components two to five are mostly unrelated between windows (0.02 to 0.55). The second table asks what that costs. Inside the window to 2019 the full-sample components explain 72.9% of the variance against 73.1% for the window's own, a gap of 0.2 points, because that window is most of the full sample. Inside 2020 to 2022 the gap is 9.3 points (73.7% against 83.0%) and inside the window from 2023 it is 11.4 points (61.9% against 73.3%). The first component alone moves less: gaps of 0.1, 2.1 and 4.8 points. So the combinations of industries that moved together in one period explain a good part of another, and the smaller components are the ones that do not carry over.
+
+Expectation 5, the rolling view. Across the 567 windows of 120 months, the first component's variance share runs from 37% (the window ending February 2001, the ten years of the technology boom, when technology moved on its own) to 69% (the window ending December 1987, which holds the crash of October 1987, a month in which everything fell together), with a median of 61%; by decade of the window's last month the median is 67% in the 1970s, 41% in the 2000s and 55% in the 2020s. The first five components explain between 66% and 84%.
+
+**What this notebook does not settle.**
+
+- The 44-month window from 2023 is short: a correlation measured on 44 months has a standard error of about 0.05 when its true value is near 0.9, so 0.837 against the level of 0.95 is two standard errors below it, and the rolling view confirms that the fall is real and not a feature of one short window.
+- A variance share says how much of the industries' movement a component explains over the months it was estimated on; how well a covariance built from it serves a portfolio in the following month is notebook 10's question, and the gaps of expectation 4 are the first measure of it.
+- Parallel analysis compares the data with independent returns of the same variances and nothing else; returns with fat tails or volatility clustering (notebooks 05 and 06) produce slightly larger extreme eigenvalues by chance, so the bar is slightly too low and the count of two is a generous one.
+- The components were extracted from the covariance of excess returns, so an industry with twice the volatility weighs four times as much in the total variance; extracting them from the correlation matrix instead would treat every industry alike and give a different second and third component. The choice was fixed before the run because the estimator of notebook 10 works with covariances.
+"""),
+]
+
+
+# ---------------------------------------------------------------------------
+# 10: the four covariance estimators
+# ---------------------------------------------------------------------------
+
+NB10 = [
+    md("""
+# 10. Four ways to estimate a covariance matrix, and how to tell which is better
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves; volatility is the standard deviation of returns, stated per year here by multiplying the monthly figure by the square root of 12 |
+| Covariance | a number that says how two series move together, positive when both tend to be above their averages in the same periods |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here, 1,225 distinct numbers |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Estimation error | the difference between a number estimated from a window and its true value |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error; the shrinkage intensity is the fraction of the way it is pulled |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors are long-short portfolios built to isolate one such source each |
+| Beta | how much an asset moves with a factor on average |
+| Idiosyncratic | an asset's own movement, unrelated to the factors |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09); its variance is called an eigenvalue of the covariance matrix |
+| Parallel analysis | the comparison of each component's variance with what independent noise would produce, used in notebook 09 to count the components that are more than noise |
+| Minimum-variance portfolio | the fully invested portfolio with the lowest variance under a given covariance matrix; long-only when no weight may be negative, unconstrained when weights may be negative |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets; a turnover of 0.76 means that 76% of the portfolio changes hands in the month |
+| Basis point | one hundredth of a percentage point, so 50 basis points is 0.50% |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken; stated per year here as the annual excess return over the annual volatility |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Tracking error | the standard deviation of the difference between two return series, stated per year |
+| Bias statistic | the standard deviation of realised return divided by forecast standard deviation, over many periods; 1 when the forecasts of risk are right on average, above 1 when risk is under-forecast, below 1 when over-forecast |
+| Condition number | the largest eigenvalue of a matrix divided by the smallest; it says how much inverting the matrix amplifies errors in it |
+| Autocorrelation | the correlation of a series with its own value one period earlier |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** The key ingredient of every risk-based portfolio is the covariance matrix of the assets' returns. The natural estimate is the sample covariance, and it fails when the assets are many relative to the observations: for 49 industries and 120 monthly returns it has fewer than five observations per number. The literature answers with a long list of alternative estimators built on three ideas, shrinkage, time dynamics and factor structure, and it tests them almost always in one way, by the realised volatility of the unconstrained minimum-variance portfolio built from each. Dom, Howard, Jansen and Lohre (2024), whose introduction this paragraph follows, point out that such a portfolio is one no practitioner holds: it is leveraged, concentrated and trades a large part of its value every month, so the test rewards an estimator for what it does in positions nobody takes. They propose to judge estimators instead on realistic portfolios, long-only, weight-constrained and charged for trading, after costs, and they find that under those constraints the differences between estimators shrink, that time dynamics (recent days weighted more, as in RiskMetrics) matter more than shrinkage or structure, and that a simple dynamic estimator does as well as a complex one. This notebook takes their perspective. It builds four estimators at two data frequencies, judges each by the calibration of its risk forecasts and by both the unconstrained and the long-only minimum-variance portfolio it produces, and, in a section added after the first run, charges the portfolios for their trading, which is where the unconstrained portfolio's lower volatility turns out to be bought at a price no investor pays.
+
+**What this notebook does.** The paper estimated the covariance matrix of its assets by the sample covariance of 120 monthly returns, and notebooks 02, 03 and 09 showed what that costs for 49 assets: 1,225 numbers from fewer than five observations each. This notebook builds four estimators and judges them on the 49 industries. The sample covariance uses every number the window offers. Ledoit-Wolf shrinkage pulls the sample covariance part of the way towards a simple target. The factor model describes the covariance by each industry's betas to six Fama-French factors plus its own variance. The principal-component model takes the market as its first factor and finds four more components in what the market leaves. Each is built at two data frequencies: the paper's 120 monthly returns, and three years of daily returns scaled to monthly, which is what practitioners use (Dom, Howard, Jansen and Lohre, 2024, estimate from daily returns over three years and rebalance monthly). Every estimate is built on the data before a month and judged on that month's realised returns, for every month from 1979-07 to the vintage's last month.
+
+**How a covariance estimator is judged.** A covariance matrix makes two kinds of promise. The first is a forecast of risk: for any portfolio with weights w, w' Sigma w is the variance it predicts for next month. The bias statistic tests the promise over many months: divide each month's realised return by the forecast standard deviation, and take the standard deviation of those ratios; a calibrated forecaster gets 1, one that under-forecasts risk gets more than 1. The notebook tests it on each of the 49 industries, on 1/N, on the benchmark, and on 200 random active portfolios (weights that sum to zero, largest 2 percentage points, the extension's active weight bound), which is the tracking-error forecast the extension will rely on. The second promise is in the inverse: the minimum-variance portfolio uses Sigma^-1, and errors in the small directions of Sigma blow up there. Following Dom, Howard, Jansen and Lohre (2024), the notebook builds the minimum-variance portfolio from each estimate every month, with and without the long-only constraint, holds it for a month, and reports the volatility it realised over all months; a better covariance gives a lower one. The condition number of each estimate says how much its inverse amplifies errors.
+
+**What I expect to see, written before the run (`constants.py`, 3 October 2026).**
+
+1. Count first: the daily panel from 1969-07 has one missing day (Software on 1971-03-11), the daily factor files cover every day of every window, and the evaluation months are counted and the same for every estimator.
+2. The frequency question: for the sample estimator, three years of daily returns give a bias statistic closer to 1 than 120 monthly returns for the benchmark and for the active portfolios, and a lower realised volatility of the unconstrained minimum-variance portfolio.
+3. The finding of Dom, Howard, Jansen and Lohre: with daily data, the long-only minimum-variance portfolios of the four estimators realise volatilities within one percentage point a year of each other, and the unconstrained portfolio of the sample estimator on monthly data realises the highest volatility of all.
+4. The scaling check: the benchmark's realised monthly variance over a three-year window divided by 21 times its daily variance over the same window averages between 0.8 and 1.25 over the windows; outside that, the daily estimators are still used as designed and the notebook says by how much and in which direction the scaling misses.
+5. Reported with no pass or fail: the shrinkage intensity over time at both frequencies, the sensitivities (one- and five-year daily windows, exponential weighting with a one-year half-life, the constant-correlation shrinkage target, a two-component model), and the condition numbers.
+
+Running time: about one minute. Three further tests, P1 to P3, were added after the run and are labelled as such below; their expectations were fixed in `constants.py` on 4 October 2026 before their code was written.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader`, `benchmark` and `rules` are those of earlier notebooks; `rules` supplies the exact long-only minimum-variance solver of notebook 03. `covariance` is new: the four estimators, the sensitivities, the windows and the tests, each with a test on a made-up market with a known covariance in `tests/test_covariance.py`.
+"""),
+    code("""
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    md("""
+## Count first: monthly and daily panels, factors and the benchmark at both frequencies
+
+The 49 industries' excess returns monthly from 1969-07 and daily from 1969-07-01; the six factors (Mkt-RF, SMB, HML, RMW, CMA, Mom) at both frequencies; the benchmark of notebook 08 monthly, and daily with each month's weights applied to that month's days.
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import benchmark as BM
+from bp import covariance as CV
+
+pd.set_option("display.width", 220)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 40)
+pd.set_option("display.float_format", lambda v: f"{v:,.4f}")
+
+inputs = BM.load_inputs()
+f3 = fl.load_monthly("factors3", 0)
+f5 = fl.load_monthly("factors5", 0)
+mom = fl.load_monthly("momentum", 0)
+start = pd.Period(C.EXT_SAMPLE_START, "M")
+returns_m = inputs["returns"].loc[start:]
+LAST = returns_m.index[-1]
+rf_m = f3["RF"].loc[start:LAST]
+excess_m = returns_m.sub(rf_m, axis=0)
+weights = BM.cap_weights(inputs["firms"].loc[start:], inputs["size"].loc[start:], C.CAPW_WEIGHT_TIMING)
+bench_m = (BM.combination_return(returns_m, weights) - rf_m).rename("benchmark_excess")
+factors_m = pd.concat([f5[["Mkt-RF", "SMB", "HML", "RMW", "CMA"]], mom["Mom"]], axis=1).loc[start:LAST]
+
+returns_d = fl.load_monthly("ind49_daily", r"Value Weighted Returns -- Daily").loc[start.asfreq("D", "start"):]
+f3d = fl.load_monthly("factors3_daily", 0)
+f5d = fl.load_monthly("factors5_daily", 0)
+momd = fl.load_monthly("momentum_daily", 0)
+rf_d = f3d["RF"].reindex(returns_d.index)
+excess_d = returns_d.sub(rf_d, axis=0)
+factors_d = pd.concat([f5d[["Mkt-RF", "SMB", "HML", "RMW", "CMA"]], momd["Mom"]], axis=1).reindex(returns_d.index)
+bench_d = CV.daily_benchmark_excess(returns_d, rf_d, weights)
+
+eval_months = pd.period_range(C.COV_EVAL_START, LAST, freq="M")
+first_daily_day = (eval_months[0] - 12 * max(C.EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY + (C.EXT_COV_DAILY_WINDOW_YEARS,))).asfreq("D", "start")
+
+# Expectation 1
+assert excess_m.shape == (len(pd.period_range(start, LAST, freq="M")), 49) and not excess_m.isna().any().any()
+missing_days = excess_d.index[excess_d.isna().any(axis=1)]
+assert len(missing_days) == 1 and str(missing_days[0]) == "1971-03-11" and excess_d.loc[missing_days[0]].isna().sum() == 1
+assert rf_d.notna().all(), "the daily risk-free rate has a gap"
+assert not factors_d.loc[first_daily_day:].isna().any().any(), "a daily factor is missing inside the daily windows"
+assert not factors_m.loc[eval_months[0] - C.EXT_ESTIMATION_WINDOW:].isna().any().any()
+assert bench_m.loc[eval_months].notna().all() and bench_d.loc[first_daily_day:].notna().sum() == excess_d.loc[first_daily_day:].dropna().shape[0]
+provenance = [fl.download(key) for key in ("ind49", "factors3", "factors5", "momentum", "ind49_daily", "factors3_daily", "factors5_daily", "momentum_daily")]
+fl.write_provenance(provenance)
+print(f"monthly panel: {len(excess_m)} months, {start} to {LAST}; daily panel: {len(excess_d):,} trading days, {excess_d.index[0]} to {excess_d.index[-1]}, "
+      f"{len(missing_days)} day with a missing industry return ({missing_days[0]}, {excess_d.columns[excess_d.loc[missing_days[0]].isna()][0]}), left out of every window")
+print(f"evaluation months: {len(eval_months)}, {eval_months[0]} to {eval_months[-1]}; the 120-month window of the first ends {eval_months[0] - 1}, its three-year daily window starts {(eval_months[0] - 36).asfreq('D', 'start')}")
+print(f"a three-year daily window holds about {int(round(len(excess_d.loc['2000-01-01':'2002-12-31']) ))} trading days (2000 to 2002), {int(round(len(excess_d.loc['2000-01-01':'2002-12-31']) * 49))} observations for 1,225 numbers; the monthly window holds {120 * 49:,}")
+print("expectation 1 holds; CRSP vintage of the eight files:", ", ".join(sorted({r["vintage_line"].split("the ")[1].split(" ")[0] for r in provenance})))
+"""),
+    md("""
+## The four estimators, in words
+
+- **Sample covariance.** Each of the 1,225 numbers is the average over the window of the product of two industries' deviations from their means. It is unbiased and it uses every number; with few observations per number it is noisy, and its smallest directions, the combinations of industries that happened to move least in the window, are the noisiest of all.
+
+- **Ledoit-Wolf shrinkage.** The estimate is (1 - k) times the sample covariance plus k times a target matrix that has the same average variance on its diagonal and zero everywhere else (the scaled identity). The intensity k is computed from the data by the formula of Ledoit and Wolf (2004b): the noisier the sample covariance relative to its distance from the target, the larger k. Shrinkage lifts the smallest directions and lowers the largest, so the inverse is tamer. The target with the same variances and one common correlation (Ledoit and Wolf 2004a) is run beside it; Dom, Howard, Jansen and Lohre (2024) found it inferior, which is why the scaled identity is the design.
+
+- **Factor model.** Each industry's excess return is regressed, over the window, on six factors: the market, size, value, profitability, investment and momentum factors of Fama and French. The covariance is then the betas times the factors' covariance times the betas, plus each industry's residual variance on the diagonal. The 1,225 numbers become 49 times 6 betas, a 6 by 6 factor covariance and 49 residual variances, 364 numbers, each estimated from more information; the price is the assumption that whatever two industries share beyond the six factors is zero.
+
+- **Principal-component model.** Notebook 09 found that the first component of the 49 industries is the market and that it parts from the cap-weighted benchmark in concentrated markets, so the design (`PCA_FIRST_COMPONENT`) imposes the market: each industry is regressed on the benchmark's excess return, and the covariance of the residuals is described by its first four principal components plus the diagonal of what they leave. The estimate is the betas times the benchmark's variance times the betas, plus that residual model. A version with one residual component (the count parallel analysis found above noise in notebook 09) is run beside it.
+
+- **Two frequencies.** Each estimator sees either the last 120 monthly excess returns or the trading days of the last 36 calendar months, about 756 of them. A daily covariance is multiplied by 21, the number of trading days in an average month, to make it a monthly covariance; the step is exact when one day's return says nothing about the next day's, and expectation 4 checks it.
+"""),
+    md("""
+## The evaluation loop
+
+For every month from 1979-07, each estimator is built on the data before the month, and four things are recorded:
+
+- the variance it predicts for each test portfolio, beside the portfolio's realised excess return in the month;
+- the long-only and the unconstrained minimum-variance portfolios built from it, their realised returns in the month and their change of weights from the previous month;
+- the condition number;
+- for the shrinkage estimators, the intensity.
+"""),
+    code("""
+A = CV.random_active_weights(49)
+EW = np.ones(49) / 49
+MAIN = [(e, f) for f in C.EXT_COV_FREQUENCIES for e in C.COV_ESTIMATORS]
+SENSITIVITY = [("sample", "daily_1y"), ("sample", "daily_5y"), ("sample", "daily_5y_ewma"),
+               ("ledoit_wolf_cc", "monthly_120"), ("ledoit_wolf_cc", "daily_3y"), ("pca_2", "monthly_120"), ("pca_2", "daily_3y")]
+VARIANTS = MAIN + SENSITIVITY
+YEARS = {"daily_3y": C.EXT_COV_DAILY_WINDOW_YEARS, "daily_1y": C.EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY[0],
+         "daily_5y": C.EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY[1], "daily_5y_ewma": C.EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY[1]}
+
+
+def estimate(name, freq, month):
+    if freq == "monthly_120":
+        X = CV.monthly_window(excess_m, month); F = factors_m.loc[X.index]; mk = bench_m.loc[X.index]; scale = 1.0
+    else:
+        X = CV.daily_window(excess_d, month, YEARS[freq]); F = factors_d.loc[X.index]; mk = bench_d.loc[X.index]; scale = C.DAILY_TO_MONTHLY_SCALE
+    Xv = X.to_numpy(); intensity = np.nan
+    if name == "sample":
+        S = CV.ewma_cov(Xv, C.EXT_COV_EWMA_HALFLIFE_DAYS) if freq.endswith("ewma") else CV.sample_cov(Xv)
+    elif name == "ledoit_wolf":
+        S, intensity = CV.lw_scaled_identity(Xv)
+    elif name == "ledoit_wolf_cc":
+        S, intensity = CV.lw_constant_correlation(Xv)
+    elif name == "factor":
+        S, _ = CV.factor_cov(Xv, F.to_numpy())
+    elif name == "pca":
+        S, _ = CV.pca_cov(Xv, C.PCA_N_COMPONENTS, market=mk.to_numpy())
+    elif name == "pca_2":
+        S, _ = CV.pca_cov(Xv, C.PCA_N_COMPONENTS_SENSITIVITY, market=mk.to_numpy())
+    return S * scale, intensity, len(X)
+
+
+collected = {v: [] for v in VARIANTS}
+previous = {v: (None, None) for v in VARIANTS}
+t0 = time.time()
+for i, month in enumerate(eval_months):
+    r = excess_m.loc[month].to_numpy()
+    b = weights.loc[month].to_numpy()
+    for v in VARIANTS:
+        S, intensity, n_obs = estimate(*v, month)
+        w_lo = CV.min_variance_long_only(S)
+        w_un = CV.min_variance_unconstrained(S)
+        p_lo, p_un = previous[v]
+        collected[v].append({
+            "month": month, "n_obs": n_obs, "intensity": intensity, "condition": CV.condition_number(S),
+            "pred_industries": np.diag(S), "pred_ew": EW @ S @ EW, "pred_bench": b @ S @ b, "pred_active": np.einsum("ij,jk,ik->i", A, S, A),
+            "real_industries": r, "real_ew": EW @ r, "real_bench": b @ r, "real_active": A @ r,
+            "gmv_lo_ret": w_lo @ r, "gmv_un_ret": w_un @ r,
+            "gmv_lo_turnover": np.abs(w_lo - p_lo).sum() if p_lo is not None else np.nan,
+            "gmv_un_turnover": np.abs(w_un - p_un).sum() if p_un is not None else np.nan,
+            "gmv_lo_held": int((w_lo > 1e-6).sum()), "gmv_un_max_abs": float(np.abs(w_un).max()),
+        })
+        previous[v] = (w_lo, w_un)
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+frames = {v: pd.DataFrame(recs).set_index("month") for v, recs in collected.items()}
+print(f"{len(eval_months)} months, {len(VARIANTS)} estimator variants, {time.time() - t0:.0f}s")
+"""),
+    md("""
+## Expectations 2 and 3: the forecasts of risk and the minimum-variance portfolios
+
+One row per estimator and data frequency. Bias statistics first (1 is calibrated), then the realised volatility of the long-only and the unconstrained minimum-variance portfolios in percent a year, their average monthly turnover, how many of the 49 industries the long-only portfolio holds, and the median condition number.
+"""),
+    code("""
+def summarise(v):
+    df = frames[v]
+    ind = [CV.bias_statistic(np.stack(df.real_industries)[:, j], np.stack(df.pred_industries)[:, j]) for j in range(49)]
+    act = [CV.bias_statistic(np.stack(df.real_active)[:, j], np.stack(df.pred_active)[:, j]) for j in range(A.shape[0])]
+    return {"estimator": v[0], "data": v[1], "observations": int(df.n_obs.median()),
+            "bias: benchmark": CV.bias_statistic(df.real_bench, df.pred_bench), "bias: 1/N": CV.bias_statistic(df.real_ew, df.pred_ew),
+            "bias: industries, mean": float(np.mean(ind)), "bias: industries, range": f"{min(ind):.2f} to {max(ind):.2f}",
+            "bias: active, mean": float(np.mean(act)),
+            "GMV long-only vol %": 100 * CV.annualised_vol(df.gmv_lo_ret), "GMV unconstrained vol %": 100 * CV.annualised_vol(df.gmv_un_ret),
+            "turnover long-only": df.gmv_lo_turnover.mean(), "turnover unconstrained": df.gmv_un_turnover.mean(),
+            "industries held (long-only)": df.gmv_lo_held.mean(), "largest |weight| (unconstrained, median)": df.gmv_un_max_abs.median(),
+            "condition number (median)": df.condition.median(), "shrinkage intensity (median)": df.intensity.median()}
+
+table = pd.DataFrame([summarise(v) for v in VARIANTS]).set_index(["estimator", "data"])
+main = table.loc[[v for v in MAIN]]
+print("the four estimators at the two frequencies:")
+print(main.to_string(float_format=lambda x: f"{x:.3f}"))
+
+s_m, s_d = table.loc[("sample", "monthly_120")], table.loc[("sample", "daily_3y")]
+e2_bench = abs(s_d["bias: benchmark"] - 1) < abs(s_m["bias: benchmark"] - 1)
+e2_active = abs(s_d["bias: active, mean"] - 1) < abs(s_m["bias: active, mean"] - 1)
+e2_gmv = s_d["GMV unconstrained vol %"] < s_m["GMV unconstrained vol %"]
+print()
+print(f"expectation 2, the sample estimator on daily against monthly data: bias for the benchmark {s_d['bias: benchmark']:.3f} against {s_m['bias: benchmark']:.3f} "
+      f"({'closer to 1' if e2_bench else 'NOT closer to 1'}); bias for the active portfolios {s_d['bias: active, mean']:.3f} against {s_m['bias: active, mean']:.3f} "
+      f"({'closer to 1' if e2_active else 'NOT closer to 1'}); unconstrained minimum-variance volatility {s_d['GMV unconstrained vol %']:.1f}% against {s_m['GMV unconstrained vol %']:.1f}% "
+      f"({'lower' if e2_gmv else 'NOT lower'}): {sum([e2_bench, e2_active, e2_gmv])} of 3 parts hold")
+lo = main.xs("daily_3y", level="data")["GMV long-only vol %"]
+e3_range = (lo.max() - lo.min()) / 100
+un_all = table["GMV unconstrained vol %"]
+e3_sample_highest_main = main["GMV unconstrained vol %"].idxmax() == ("sample", "monthly_120")
+e3_sample_highest_all = un_all.idxmax() == ("sample", "monthly_120")
+print(f"expectation 3: long-only minimum-variance volatility at daily_3y runs from {lo.min():.2f}% to {lo.max():.2f}%, a range of {100 * e3_range:.2f} points "
+      f"(level {100 * C.COV_LONG_ONLY_RANGE_MAX:.0f} point): {'MET' if e3_range < C.COV_LONG_ONLY_RANGE_MAX else 'NOT MET'}; "
+      f"the sample estimator on monthly data has the highest unconstrained volatility among the eight main variants: {'yes' if e3_sample_highest_main else 'no'} ({s_m['GMV unconstrained vol %']:.1f}%), "
+      f"and among all {len(VARIANTS)} variants: {'yes' if e3_sample_highest_all else 'no'} (highest: {un_all.idxmax()}, {un_all.max():.1f}%)")
+"""),
+    md("""
+## Expectation 4: does 21 times a daily covariance equal a monthly covariance
+
+For every three-year window, the benchmark's realised monthly variance divided by 21 times its daily variance over the same window. The ratio is 1 when one day's return says nothing about the next day's. Beside it, the autocorrelation of the benchmark's daily excess return in the window (the correlation between one day's return and the next day's): positive autocorrelation makes monthly variance larger than 21 times the daily variance, negative autocorrelation makes it smaller.
+"""),
+    code("""
+rows = []
+for month in eval_months:
+    Xd = CV.daily_window(excess_d, month, C.EXT_COV_DAILY_WINDOW_YEARS)
+    bd = bench_d.loc[Xd.index]
+    bm = bench_m.loc[month - 12 * C.EXT_COV_DAILY_WINDOW_YEARS: month - 1]
+    rows.append({"month": month, "ratio": bm.var(ddof=1) / (C.DAILY_TO_MONTHLY_SCALE * bd.var(ddof=1)), "daily autocorrelation": bd.autocorr(1)})
+scaling = pd.DataFrame(rows).set_index("month")
+mean_ratio = scaling["ratio"].mean()
+lo_r, hi_r = C.COV_SCALE_RATIO_RANGE
+print(f"expectation 4: mean ratio {mean_ratio:.3f}, median {scaling['ratio'].median():.3f} (range {lo_r} to {hi_r}): {'MET' if lo_r <= mean_ratio <= hi_r else 'NOT MET'}")
+by_decade = scaling.groupby((scaling.index.year // 10) * 10).agg(["mean", "min", "max"])
+by_decade.index = [f"windows ending in the {d}s" for d in by_decade.index]
+print()
+print("by decade of the window's last month:")
+print(by_decade.to_string(float_format=lambda x: f"{x:.3f}"))
+print()
+print(f"windows with a ratio above {hi_r}: {int((scaling['ratio'] > hi_r).sum())} of {len(scaling)}; below {lo_r}: {int((scaling['ratio'] < lo_r).sum())}")
+print(f"correlation across windows between the ratio and the daily autocorrelation: {scaling['ratio'].corr(scaling['daily autocorrelation']):.2f}")
+"""),
+    md("""
+## Expectation 5: the sensitivities, the shrinkage intensity over time, and the condition numbers
+
+The sensitivities are the sample estimator on one and five years of daily returns and with exponential weighting (one-year half-life) over five years, Ledoit-Wolf shrinkage towards the constant-correlation target, and the principal-component model with one residual component. Then the shrinkage intensity by decade at both frequencies, and the condition numbers.
+"""),
+    code("""
+sens = table.loc[[v for v in SENSITIVITY]]
+print("sensitivities:")
+print(sens.to_string(float_format=lambda x: f"{x:.3f}"))
+print()
+intensity = pd.DataFrame({f"{v[0]} {v[1]}": frames[v]["intensity"] for v in [("ledoit_wolf", "monthly_120"), ("ledoit_wolf", "daily_3y"), ("ledoit_wolf_cc", "monthly_120"), ("ledoit_wolf_cc", "daily_3y")]})
+print("shrinkage intensity k (median by decade of the estimation month):")
+print(intensity.groupby((intensity.index.year // 10) * 10).median().to_string(float_format=lambda x: f"{x:.3f}"))
+print()
+cond = pd.DataFrame({f"{v[0]} {v[1]}": frames[v]["condition"] for v in MAIN})
+print("condition number (median by decade):")
+print(cond.groupby((cond.index.year // 10) * 10).median().to_string(float_format=lambda x: f"{x:,.0f}"))
+"""),
+    md("""
+## Added after the run: three open points, tested
+
+The first run of this notebook (3 October 2026) ended with a list of open points. Three of them can be tested with the data already collected, and were, on 4 October 2026, with the expectations fixed in `constants.py` before the code was written. The cells below are labelled as additions; nothing above them changed.
+
+- **P1, a scale correction that uses the autocorrelation.** Expectation 4 found that 21 times a daily variance is not a monthly variance when one day's return predicts the next day's. The correction measures how far the days are from independent inside the window and scales by that. For every window, the variance ratio is the variance of the benchmark's 21-day excess returns (every run of 21 consecutive days in the window) divided by 21 times the variance of its daily excess returns. It is 1 when days are independent, above 1 under positive autocorrelation, below 1 under negative. The corrected forecast multiplies the daily covariance by the variance ratio times 21 in place of 21. One number multiplies every entry of the matrix, so the minimum-variance weights and everything in expectations 2 and 3 about them are unchanged; only the forecasts of variance move. The correction is one number taken from the benchmark and not a matrix of autocovariances, because the matrix version (the variance of a 21-day sum of all 49 daily returns, the Newey-West estimate with 20 lags) has about fourteen times the sampling variance of the sample covariance, which would leave the equivalent of about 54 daily observations per entry and give away what daily data are for. The variance ratio inside the window is close to the ratio of expectation 4 by construction, so the test is out of window: the bias statistics on the months that follow. Main version: the variance ratio over the estimator's own three-year window. Sensitivity: over ten years of daily benchmark returns, because the autocorrelation moves over decades and a longer window trades noise for lag. Expectation P1a: for the benchmark and the sample estimator, the bias statistic by decade under the correction is closer to 1 than under the 21 rule in at least four of the five decades. P1b, reported with no verdict: the bias statistics for 1/N, the industries and the active portfolios under the correction; a portfolio whose own autocorrelation differs from the benchmark's keeps part of its miss.
+- **P2, bias statistics by decade.** A bias statistic over 566 months at once can be close to 1 for a forecaster that under-forecasts risk for thirty years and over-forecasts it for twenty-five. The decades are 1979-07 to 1989-12, then each calendar decade, then 2020-01 to the last month. Expectation P2a, derived from the ratio table of expectation 4: under the 21 rule the benchmark's bias statistic on daily data is above 1 in the first decade, below 1 in the 2010s, and higher in the first decade than in the 2000s.
+- **P3, trading costs.** The minimum-variance tests charged no trading costs, and the unconstrained portfolios trade a large part of their value every month. Here each portfolio's cost is its average monthly turnover times the cost per unit of turnover times 12, at the two cost levels of the replication (50 basis points per unit of turnover, DGU's figure, and 100 as the sensitivity), beside its gross excess return (the mean monthly excess return times 12), its net excess return (gross minus cost), its realised volatility and its Sharpe ratio net of cost (net excess return over volatility). Costs are applied after the fact and do not enter the optimisation, as in the replication. Expectations at the base cost: P3a, the long-only portfolio's net excess return exceeds the unconstrained portfolio's in at least six of the eight main variants; P3b, the same for the Sharpe ratio net of cost. P3c, arithmetic from the turnover already in the table above: the unconstrained sample portfolio on monthly data costs about 4.6% a year (0.763 times 0.005 times 12) and the long-only portfolios 0.3% to 0.5%.
+"""),
+    code("""
+# Added after the run (4 October 2026): P1 and P2.
+def decade_label(month):
+    if month.year < 1990:
+        return "1979-07 to 1989-12"
+    if month.year >= 2020:
+        return f"2020-01 to {eval_months[-1]}"
+    return f"{(month.year // 10) * 10}s"
+
+DECADES = ["1979-07 to 1989-12", "1990s", "2000s", "2010s", f"2020-01 to {eval_months[-1]}"]
+decade_of = pd.Series([decade_label(m) for m in eval_months], index=eval_months)
+
+vr_rows = []
+for month in eval_months:
+    row = {"month": month}
+    for name, years in (("variance ratio (3y)", C.EXT_COV_DAILY_WINDOW_YEARS), ("variance ratio (10y)", C.COV_SCALE_VR_WINDOW_YEARS_SENSITIVITY)):
+        bd = bench_d.loc[CV.daily_window(excess_d, month, years).index]
+        row[name] = CV.variance_ratio(bd.to_numpy(), C.COV_SCALE_VR_HORIZON_DAYS)
+    vr_rows.append(row)
+vr = pd.DataFrame(vr_rows).set_index("month")
+scaling = scaling.join(vr)
+print("the variance ratio by decade of the window's last month (1 when days are independent), beside the ratio of expectation 4:")
+print(scaling.groupby((scaling.index.year // 10) * 10)[["ratio", "variance ratio (3y)", "variance ratio (10y)"]].mean().to_string(float_format=lambda x: f"{x:.3f}"))
+print(f"correlation across windows between the in-window variance ratio (3y) and the ratio of expectation 4: {scaling['ratio'].corr(scaling['variance ratio (3y)']):.2f} (both measure the same window, so this is close to 1 by construction)")
+print()
+
+
+def bias_table(df, factor=None):
+    f = np.ones(len(df)) if factor is None else factor.loc[df.index].to_numpy()
+    out = {}
+    for lab in ["all months"] + DECADES:
+        mask = np.ones(len(df), bool) if lab == "all months" else (decade_of.loc[df.index] == lab).to_numpy()
+        sub, fs = df[mask], f[mask]
+        ind = [CV.bias_statistic(np.stack(sub.real_industries)[:, j], np.stack(sub.pred_industries)[:, j] * fs) for j in range(49)]
+        act = [CV.bias_statistic(np.stack(sub.real_active)[:, j], np.stack(sub.pred_active)[:, j] * fs) for j in range(A.shape[0])]
+        out[lab] = {"months": int(mask.sum()), "benchmark": CV.bias_statistic(sub.real_bench, sub.pred_bench * fs),
+                    "1/N": CV.bias_statistic(sub.real_ew, sub.pred_ew * fs), "industries, mean": float(np.mean(ind)), "active, mean": float(np.mean(act))}
+    return pd.DataFrame(out).T
+
+
+by_decade_bias = pd.concat({
+    "sample, monthly_120": bias_table(frames[("sample", "monthly_120")]),
+    "sample, daily_3y, 21 rule": bias_table(frames[("sample", "daily_3y")]),
+    "sample, daily_3y, corrected (3y)": bias_table(frames[("sample", "daily_3y")], vr["variance ratio (3y)"]),
+    "sample, daily_3y, corrected (10y)": bias_table(frames[("sample", "daily_3y")], vr["variance ratio (10y)"]),
+}, names=["forecast", "period"])
+print("P2, bias statistics by period (1 is calibrated; above 1, risk under-forecast):")
+print(by_decade_bias.to_string(float_format=lambda x: f"{x:.3f}"))
+print()
+
+rule = by_decade_bias.loc["sample, daily_3y, 21 rule", "benchmark"]
+corr3 = by_decade_bias.loc["sample, daily_3y, corrected (3y)", "benchmark"]
+closer = [d for d in DECADES if abs(corr3[d] - 1) < abs(rule[d] - 1)]
+print(f"P1a: the corrected benchmark forecast is closer to 1 than the 21 rule in {len(closer)} of {len(DECADES)} decades ({', '.join(closer)}); "
+      f"level {C.COV_POST_RUN_DECADES_MIN_CLOSER}: {'MET' if len(closer) >= C.COV_POST_RUN_DECADES_MIN_CLOSER else 'NOT MET'}")
+p2a = rule[DECADES[0]] > 1 and rule["2010s"] < 1 and rule[DECADES[0]] > rule["2000s"]
+print(f"P2a: under the 21 rule the benchmark's bias statistic is {rule[DECADES[0]]:.3f} in {DECADES[0]} (above 1: {rule[DECADES[0]] > 1}), {rule['2010s']:.3f} in the 2010s (below 1: {rule['2010s'] < 1}), "
+      f"{rule['2000s']:.3f} in the 2000s (first decade higher: {rule[DECADES[0]] > rule['2000s']}): {'MET' if p2a else 'NOT MET'}")
+print()
+others = pd.DataFrame({f"{v[0]}, daily_3y": {"21 rule": bias_table(frames[v]).loc["all months"], "corrected (3y)": bias_table(frames[v], vr["variance ratio (3y)"]).loc["all months"]}
+                       for v in MAIN if v[1] == "daily_3y"}).T
+others = pd.concat({k: pd.DataFrame(v.tolist(), index=v.index) for k, v in others.items()}, names=["scale", "estimator"]).swaplevel().sort_index()
+print("P1b, all months, the four daily estimators under the 21 rule and corrected (3y):")
+print(others.drop(columns="months").to_string(float_format=lambda x: f"{x:.3f}"))
+"""),
+    code("""
+# Added after the run (4 October 2026): P3, trading costs.
+cost_rows = []
+for v in MAIN:
+    df = frames[v]
+    for port, label in (("lo", "long-only"), ("un", "unconstrained")):
+        ret, to = df[f"gmv_{port}_ret"], df[f"gmv_{port}_turnover"].mean()
+        gross, vol = 12 * ret.mean(), CV.annualised_vol(ret)
+        row = {"estimator": v[0], "data": v[1], "portfolio": label, "turnover a month": to, "gross excess return % a year": 100 * gross, "volatility % a year": 100 * vol}
+        for c in C.EXT_COST_LEVELS:
+            bp = int(round(c * 1e4))
+            cost = 12 * to * c
+            row[f"cost % a year at {bp} bp"] = 100 * cost
+            row[f"net excess return % at {bp} bp"] = 100 * (gross - cost)
+            row[f"Sharpe net at {bp} bp"] = (gross - cost) / vol
+        cost_rows.append(row)
+costs = pd.DataFrame(cost_rows).set_index(["estimator", "data", "portfolio"])
+print("P3, the minimum-variance portfolios with trading costs (eight main variants):")
+print(costs.to_string(float_format=lambda x: f"{x:.2f}"))
+print()
+base = int(round(C.EXT_COST_LEVELS[0] * 1e4))
+lo_c, un_c = costs.xs("long-only", level="portfolio"), costs.xs("unconstrained", level="portfolio")
+n_ret = int((lo_c[f"net excess return % at {base} bp"] > un_c[f"net excess return % at {base} bp"]).sum())
+n_sr = int((lo_c[f"Sharpe net at {base} bp"] > un_c[f"Sharpe net at {base} bp"]).sum())
+print(f"P3a: at {base} bp the long-only portfolio's net excess return exceeds the unconstrained portfolio's in {n_ret} of {len(MAIN)} variants (level {C.COV_POST_RUN_COST_MIN_VARIANTS}): {'MET' if n_ret >= C.COV_POST_RUN_COST_MIN_VARIANTS else 'NOT MET'}")
+print(f"P3b: the same for the Sharpe ratio net of cost: {n_sr} of {len(MAIN)}: {'MET' if n_sr >= C.COV_POST_RUN_COST_MIN_VARIANTS else 'NOT MET'}")
+print(f"P3c: the unconstrained sample portfolio on monthly data costs {un_c.loc[('sample', 'monthly_120'), f'cost % a year at {base} bp']:.1f}% a year at {base} bp; "
+      f"the long-only portfolios cost {lo_c[f'cost % a year at {base} bp'].min():.1f}% to {lo_c[f'cost % a year at {base} bp'].max():.1f}%")
+"""),
+    md("""
+## Save the summary for the later notebooks
+
+The summary table, the scaling check with the variance ratios, the bias statistics by period and the cost table are written to `outputs/`, with the vintage in the file name, as a record; notebooks 11 to 13 rebuild what they need from the modules.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+table.to_csv(f"{C.OUTPUT_DIR}/covariance_estimators_{vintage}.csv", float_format="%.6f")
+scaling.to_csv(f"{C.OUTPUT_DIR}/daily_to_monthly_scaling_{vintage}.csv", float_format="%.6f")
+by_decade_bias.to_csv(f"{C.OUTPUT_DIR}/bias_by_period_{vintage}.csv", float_format="%.6f")
+costs.to_csv(f"{C.OUTPUT_DIR}/minimum_variance_costs_{vintage}.csv", float_format="%.6f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("covariance", "daily_to", "bias_by", "minimum_variance"))))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 686 months and 14,414 trading days from 1969-07, one missing day left out, 566 evaluation months for every estimator | holds |
+| 2. Daily data beat monthly data for the sample estimator | unconstrained minimum-variance volatility 11.9% against 14.1%; bias statistics 1.028 against 1.023 for the benchmark and 1.060 against 1.060 for the active portfolios | 1 of 3 parts |
+| 3. The finding of Dom, Howard, Jansen and Lohre (2024) | long-only volatility 12.11% to 12.20% across the four daily estimators, a range of 0.09 points against the level of 1; the sample covariance on monthly data has the highest unconstrained volatility of the eight main variants (14.1%), and the two-component sensitivity on daily data is higher (14.3%) | MET; the second part holds for the main variants only |
+| 4. 21 times a daily variance is a monthly variance | mean ratio 0.92, inside 0.8 to 1.25; 186 of 566 windows inside; 1.82 for windows ending in the 1970s and 0.62 in the 2000s; correlation 0.81 with the daily autocorrelation | MET on the mean, fails in 380 windows |
+| 5. Sensitivities, shrinkage intensity, condition numbers | exponential weighting gives the lowest unconstrained volatility (11.7%); median intensity 0.07 on monthly data and 0.01 on daily; condition numbers 1,859 for the sample covariance against 349 after shrinkage | reported |
+| P1a. The variance-ratio correction brings the benchmark's bias statistic closer to 1 in at least 4 of 5 decades | 4 of 5 (every decade except the 1990s) | MET |
+| P1b. The correction for 1/N, the industries and the active portfolios | 1.16, 1.16 and 1.13 under the correction against 1.12, 1.10 and 1.06 under the 21 rule | reported |
+| P2a. Under the 21 rule the benchmark's bias statistic is above 1 in the first decade, below 1 in the 2010s, and higher in the first decade than in the 2000s | 1.34, 0.78 and 0.87 | MET |
+| P3a. At 50 basis points the long-only portfolio's net excess return exceeds the unconstrained portfolio's in at least 6 of 8 variants | 8 of 8 | MET |
+| P3b. The same for the Sharpe ratio net of cost | 8 of 8 | MET |
+| P3c. The cost of the unconstrained sample portfolio on monthly data | 4.6% a year at 50 basis points; the long-only portfolios 0.3% to 0.5% | as computed |
+
+Expectation 1 holds: 686 months and 14,414 trading days from 1969-07, one missing day left out, factors on every day of every window, 566 evaluation months from 1979-07 to 2026-08 for every estimator. A three-year daily window holds about 752 days, 36,848 observations for the 1,225 numbers, against 5,880 in the monthly window.
+
+Expectation 2, the frequency question, holds in one of its three parts. Where the covariance is inverted, daily data win clearly: the unconstrained minimum-variance portfolio built from the sample covariance realises 14.1% a year of volatility on monthly data and 11.9% on daily data, with a turnover of 0.76 a month against 0.40 and a condition number of 1,859 against 691. Where the covariance is only read, as a forecast of a portfolio's risk, daily data do no better: the bias statistic for the benchmark is 1.028 on daily data against 1.023 on monthly, and for the active portfolios 1.060 against 1.060. Expectation 4 says why, and the two halves of the result are consistent with each other: the minimum-variance weights do not change when every entry of the covariance matrix is multiplied by the same number (the weights are Sigma^-1 times a vector of ones, scaled to sum to one, and the scale cancels), so the portfolio test cannot see an error in the daily-to-monthly scale, while a forecast of variance is that scale. Daily data improved what the portfolio test measures, the pattern of the matrix, and left what the forecast test measures, its level over a month, to the scaling step.
+
+Expectation 3, the finding of Dom, Howard, Jansen and Lohre (2024), holds. With the long-only constraint, the minimum-variance portfolios of the four estimators on daily data realise between 12.11% and 12.20% a year, a range of 0.09 points against the level of 1 point, and on monthly data between 12.15% and 12.32%: under the constraint, the choice of estimator and even the choice of data frequency make no visible difference. The constraint does the estimator's work, because forbidding negative weights removes the long-short positions in which the noisiest directions of the covariance are exploited; the long-only portfolio holds 8 to 10 of the 49 industries whatever the estimate. Without the constraint the estimate matters: the sample covariance on monthly data realises 14.1%, the highest of the eight main variants, against 12.1% for Ledoit-Wolf shrinkage, 12.8% for the factor model and 12.7% for the principal-component model on the same data. Among all fifteen variants, including the sensitivities, the highest is the two-component model on daily data at 14.3%, so the second part of the expectation holds for the eight main variants and fails when the sensitivities are counted. On daily data the order reverses: the sample covariance (11.9%) and shrinkage (11.9%, with a median intensity of only 0.012) are the best, and the factor model (13.2%) and the component model (13.5%) are the worst. With 756 observations the sample covariance is no longer noisy enough for shrinkage to have anything to correct, and the structured estimators pay for their assumption that whatever two industries share beyond the factors is zero.
+
+Expectation 4, the scaling check, is met on average and fails in most windows. The mean ratio of the benchmark's monthly variance to 21 times its daily variance is 0.92, inside 0.8 to 1.25; the median is 0.83, and only 186 of the 566 windows lie inside the range: 108 above 1.25 and 272 below 0.8. The ratio moves with the decade: 1.82 for windows ending in the 1970s, 1.41 in the 1980s, 1.06 in the 1990s, 0.62 in the 2000s, 0.64 in the 2010s and 0.77 in the 2020s. The autocorrelation of the benchmark's daily return explains it, with a correlation of 0.81 across windows: a day's return predicted the next day's positively in the 1970s (autocorrelation 0.21), so monthly variance was larger than 21 daily variances, and negatively since 2000 (-0.03 to -0.12), so it was smaller. The rule that variance grows in proportion to time assumes that days are independent, and for these portfolios they were not, in one direction for thirty years and in the other for twenty-five. This is why the daily-based forecasts of risk are no better calibrated than the monthly ones: on 1/N and on the single industries, where the effect is strongest, the daily-based bias statistics are 1.10 to 1.13 against 1.02 to 1.04 for the monthly-based ones, an under-forecast of risk of about ten percent that the 1970s and 1980s produce. P1 tests the remedy.
+
+Expectation 5, the sensitivities. One year of daily data gives the same unconstrained volatility as three (11.9%) with three times the turnover (1.18 a month against 0.40); five years gives 11.9% with 0.26. Exponential weighting with a one-year half-life over five years gives the lowest unconstrained volatility of all variants, 11.7%, and the best-calibrated forecast for the benchmark, a bias statistic of 0.998, at the cost of a turnover of 0.48: weighting recent days more is worth more than any choice of structure, which is what Dom, Howard, Jansen and Lohre found. The constant-correlation shrinkage target shrinks much harder (median intensity 0.27 on monthly data against 0.07 for the scaled identity) and does the same or slightly worse. The two-component model does worse than the five-component one without the constraint (13.3% against 12.7% on monthly data, 14.3% against 13.5% on daily) and the same with it. The condition numbers say what shrinkage does to the inverse: the sample covariance on monthly data has a median condition number of 1,859 and Ledoit-Wolf shrinkage 349, so the inverse of the sample covariance amplifies errors about five times more.
+
+**The tests added after the run.**
+
+P1, the scale correction. The variance ratio measured inside each three-year window follows the ratio of expectation 4 (correlation 0.91 across windows) and moves with the decade: 1.52 for windows ending in the 1970s, 0.69 for windows ending in the 2010s. Scaling the daily covariance by that ratio times 21, in place of 21, brings the benchmark's bias statistic closer to 1 in four of the five decades (1.14 against 1.34 in 1979-07 to 1989-12, 1.07 against 0.87 in the 2000s, 0.95 against 0.78 in the 2010s, 1.02 against 0.89 from 2020) and further from it in the 1990s (1.11 against 1.08), the one decade where the 21 rule was already close. Over all 566 months at once the corrected statistic is 1.07 against 1.03 under the rule, and the two numbers do not say the same thing: under the rule the under-forecasts of the first decade and the over-forecasts of the 2000s and 2010s cancel inside one statistic; under the correction every decade but the 2010s sits between 1.02 and 1.14 and nothing cancels. The ten-year variance ratio does better than the three-year one in every decade: 1.09, 1.04, 0.97, 0.95 and 1.03, a range of 0.14, against 0.78 to 1.34 under the 21 rule and 0.84 to 1.20 for the forecast from 120 monthly returns. A three-year window gives a noisy ratio (its standard error is about 0.19 when days are independent) and the autocorrelation moves over decades, so ten years of it is the better estimate. This reopens the forecast half of expectation 2 after the fact: with a scale that accounts for the autocorrelation, three years of daily data forecast the benchmark's monthly risk more evenly across the decades than 120 monthly returns do. The correction does not help 1/N, the industries or the active portfolios (1.16, 1.16 and 1.13 against 1.12, 1.10 and 1.06), because the ratio is the benchmark's: 1/N and the single industries had stronger positive autocorrelation than the cap-weighted benchmark (under the 21 rule their bias statistics reach 1.46 and 1.36 in the first decade against the benchmark's 1.34), so a correction fitted to the benchmark fits them less. The other three daily estimators move with the sample estimator, within 0.02 of it.
+
+P2, the bias statistics by decade. The 21 rule's forecast on daily data under-forecast the benchmark's risk in the first decade (1.34) and over-forecast it in the 2000s (0.87) and the 2010s (0.78), as the ratios of expectation 4 implied. The forecast from 120 monthly returns swings for a different reason: it ranges from 0.84 in the 2010s, when its window still carried 2008 and the market was calm, to 1.20 from 2020, when the fall of March 2020 met a window built on calm years. A 120-month window adapts to a change in the level of volatility over ten years; a three-year daily window adapts within three.
+
+P3, trading costs. The unconstrained portfolios earn less before costs than the long-only ones in every one of the eight variants (gross excess returns of 4.0% to 7.3% a year against 7.5% to 8.0%) and trade three to eleven times as much (0.21 to 0.76 a month against 0.05 to 0.09). At 50 basis points per unit of turnover their net excess returns are 2.3% to 5.7% a year against 7.1% to 7.5%, and their Sharpe ratios net of cost 0.17 to 0.45 against 0.58 to 0.62. The unconstrained sample portfolio on monthly data pays 4.6% a year in costs, two thirds of its gross return; at 100 basis points its net return is negative. Only two unconstrained portfolios realise less volatility than their long-only counterpart, the sample covariance and shrinkage on daily data, by 0.24 and 0.35 points of volatility, and they pay 1.9 and 1.6 points of return a year more in costs for it. This is expectation 3 seen from the cost side, and it is one reason why the extension's portfolio is long-only with a turnover cap, a limit on the fraction of the portfolio that may change hands in a month.
+
+**What this notebook does not settle.**
+
+- The extension's portfolio is long-only with bounds on active weights and turnover, and expectation 3 says that under such constraints the estimators realise the same risk to within a tenth of a percentage point. Notebook 12 measures whether that holds for tracking error against the benchmark, which is the extension's question, and the answer may be that the choice of estimator does not matter there either.
+- The scale correction is one number taken from the benchmark. A portfolio whose autocorrelation differs from the benchmark's, 1/N or a single industry, keeps part of its miss, and a correction per portfolio would need each portfolio's own variance ratio, or the matrix of autocovariances, which three years of daily data cannot estimate with useful precision. Notebook 12 reports its forecast tracking error under the 21 rule and under the ten-year variance ratio.
+- The cost figures use one proportional cost per unit of turnover for every industry and every month, as the replication does; costs differ across industries and have fallen over the decades. The cost differences between the portfolios are arithmetic on their turnover and are not noisy; the differences in gross return are, because a mean return over 566 months has a standard error of about 1.8 percentage points a year, so the gross return gaps of 0.4 to 3.6 points between long-only and unconstrained portfolios are mostly within noise, and P3a and P3b rest on the costs.
+- P1 to P3 were designed after the first run, with their expectations fixed before their code but after the outcomes of expectations 1 to 5 were known. That is weaker than fixing them before any run: P2a in particular restates what the ratio table of expectation 4 already implied, and P1a was written knowing that the 21 rule missed by a factor of 1.8 and 0.6 in the decades where a correction has most to gain.
+"""),
+]
+
+# ---------------------------------------------------------------------------
+# 11: the optimiser
+# ---------------------------------------------------------------------------
+
+NB11 = [
+    md("""
+# 11. The optimiser: the portfolio that tracks the benchmark most closely under constraints
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves; volatility is the standard deviation of returns, stated per year here by multiplying the monthly figure by the square root of 12 |
+| Covariance | a number that says how two series move together, positive when both tend to be above their averages in the same periods |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here, 1,225 distinct numbers |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Estimation error | the difference between a number estimated from a window and its true value |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error; the shrinkage intensity is the fraction of the way it is pulled |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors are long-short portfolios built to isolate one such source each |
+| Beta | how much an asset moves with a factor on average; the beta to the benchmark is how much it moves with the benchmark, one for the benchmark itself |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09) |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Tracking error | the standard deviation of the difference between two return series, stated per year; forecast (ex-ante) when computed from a covariance matrix before the month, realised (ex-post) when measured on the returns afterwards |
+| Long-only | said of a portfolio in which no weight is negative, so nothing is sold that is not held |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought when the portfolio stays fully invested; 0.02 means 2% of the portfolio changes hands |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance; 2% a month here |
+| Drifted weights | the previous month's weights after that month's returns have moved them: each weight times one plus its industry's return, divided by the portfolio's own gross return, so they still sum to one |
+| Tilt | a constraint that holds named industries below their benchmark weight; here Coal, Oil and Utilities at no more than half of it, a 50% reduction relative to the benchmark |
+| Exclusion | a constraint that holds named industries at zero weight; in the mandate's set it holds Smoke (tobacco) and Guns (weapons) at zero |
+| Beta-neutral | a constraint that holds the portfolio's beta to the benchmark equal to the benchmark's own, one; written as the active weights' beta summing to zero |
+| Mandate | the whole set of rules a fund must obey; here the carbon tilt together with the exclusions of tobacco and weapons and beta neutrality |
+| Robust portfolio | the weights whose largest forecast tracking error across a set of covariance matrices, the five estimators' here, is smallest; a portfolio that trusts no single matrix |
+| Optimiser | the extension's routine that solves the constrained tracking-error problem: the weights that minimise forecast tracking error under a named set of constraints |
+| Constraint set | one of the four cumulative sets C0 to C3 of the design: long-only; plus the active weight bound; plus the turnover cap; plus the mandate (the tilt alone in the design of 10 September; the tilt with beta neutrality and the exclusions from 4 October) |
+| Feasible | said of weights that satisfy every constraint of the set; a set is infeasible in a month when no weights satisfy all of them at once |
+| Binding | said of a constraint that holds with equality at the solution, so that relaxing it would lower the tracking error; a constraint that is not binding could be dropped without changing the answer |
+| Quadratic program | a minimisation whose objective is a quadratic function of the weights and whose constraints are linear; when the quadratic is a variance it is convex and has one global minimum, which a solver finds exactly |
+| Solver | the numerical routine that finds the minimum of a quadratic program; cvxpy with Clarabel here |
+| Effective number of holdings | one divided by the sum of squared weights; 49 for 1/N across 49 industries, 1 for a portfolio in one industry, smaller the more concentrated the portfolio |
+| Basis point | one hundredth of a percentage point, so 50 basis points is 0.50% |
+| Sharpe ratio | the average monthly excess return divided by the standard deviation of the excess return; the reward earned per unit of risk taken |
+| Active return | the portfolio's return minus the benchmark's return in the same period |
+| Attribution | splitting a portfolio's active return into the parts due to named sources, the Fama-French factors in notebook 13, plus a remainder |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** Dom, Howard, Jansen and Lohre (2024), whose framing this notebook follows, argue that covariance estimators should be judged on portfolios a practitioner would hold: long-only, with bounds on weights, charged for trading, after costs. Their test portfolio is the constrained minimum-variance portfolio. An index manager's portfolio is the same problem with a different target: in place of the lowest variance, the smallest deviation from a benchmark, measured as tracking error, under the same kind of constraints and one more, the mandate's own rules about what may and may not be held. This notebook builds that portfolio. It is the point where the covariance stops being a forecast and becomes a decision: the optimiser takes a covariance matrix and a set of rules and returns the weights, and every rule's cost can be read off in forecast tracking error, which is how enhanced-index managers quote it.
+
+**What this notebook does.** The replication asked which rule earns the best Sharpe ratio. The extension asks the question an index fund with a mandate asks: given a benchmark to track and a set of rules the fund must obey, find the weights that track the benchmark most closely. That is a minimisation. For a month with benchmark weights b and a covariance matrix Sigma, the optimiser finds the weights w that minimise the forecast tracking error, the square root of 12 times (w - b)' Sigma (w - b), subject to the constraints of the chosen set. With no constraints the minimum is at w = b and the tracking error is zero: holding the index tracks the index. Each constraint takes something away from that answer, and what it takes away is measured in forecast tracking error, which is how index managers quote the cost of a constraint. This notebook builds the optimiser (`src/bp/optimiser.py`), checks it against answers known by hand and against an independent solver (`tests/test_optimiser.py`), and runs it at three fixed months with each of notebook 10's estimators under each constraint set, to see what each constraint costs, where the tilt's weight goes, and how the turnover cap acts as a speed limit. Notebook 12 runs it in every month and judges the result on realised tracking error.
+
+**The constraints, each with a number.**
+
+- Budget: the weights sum to one. Always on; the benchmark's own weights sum to one.
+- Long-only (C0): no weight below zero. The fund does not sell what it does not hold.
+- Active weight bound (C1): each untilted industry within 2 percentage points of its benchmark weight. If Banks is 8.0% of the benchmark, the portfolio holds between 6.0% and 10.0% in Banks. The bound is around the benchmark weight because the 49 weights run from under 0.5% to over 10%, so one cap for all would be loose for the small industries and tight for the large ones.
+- Turnover cap (C2): one-way turnover at most 2% a month, measured against the drifted weights. Selling 2% of the portfolio and buying 2% in one month is about 24% a year, the range of enhanced indexing. The fund starts as the index, so the cap applies from the first rebalance.
+- Tilt (C3): Coal, Oil and Utilities each at no more than half their benchmark weight. If Oil is 3.0% of the benchmark, the portfolio holds at most 1.5%. The active weight bound does not apply to a tilted industry, because for any industry above 4% of the benchmark the two would contradict each other.
+- Exclusion: named industries at zero. Part of the mandate's C3 (the second part of this notebook), for Smoke (tobacco) and Guns (weapons), the standard exclusions of Dutch institutional mandates.
+- Beta-neutral: the portfolio's beta to the benchmark equal to one. Part of the mandate's C3, added after the first part of this notebook showed that the tilt's hedge left a beta bet standing when the covariance was noisy.
+
+**How this notebook is organised, and the two versions of C3.** The notebook has three parts, and the order is the order in which the work was done, because every expectation was written into `constants.py` before the code that tests it, and that order is the record. The first part runs the optimiser at three months under the constraint sets as first designed (10 September 2026), in which C3 is the tilt alone: long-only, the bound, the cap and the tilt. Expectations 1 to 5 belong to it. The second part is four checks on the practical problem behind the tilt's hedge (D1 to D4, 4 October), which found three problems a manager would fix, and the three fixes (F1 to F3, the same day): C3 became the mandate, the tilt with beta neutrality and the exclusions, and a robust portfolio joined the variants. The mandate's C3 is the one notebook 12 runs; the tilt-only set is kept in `constants.py` as `CONSTRAINT_SET_TILT_ONLY` so that the cost of the fixes can be measured there. The third part is one check on the solver itself (D5, 6 October), prompted by a month of notebook 12's first run.
+
+**What the optimiser does with an infeasible month.** The tilt, the active bound and long-only are hard: a month in which they contradict each other stops the notebook. The turnover cap can make a month infeasible on its own, in the first month under a tilt (the previous portfolio is the benchmark and the tilt alone demands more trading than 2%) or in a month when the benchmark's weights moved by more than the cap. The optimiser therefore finds the smallest feasible one-way turnover first, by minimising turnover subject to the other constraints; when it exceeds the cap, the cap is raised to it, the month is counted, and only then is the tracking-error problem posed, so that the solver is never handed a problem that has no solution. Notebook 12 reports the count. The third part of this notebook (D5) shows what a solver does with a problem that has no solution, and why the order of the two steps matters.
+
+**Where the numbers come from, and why this solver.** The constraints date from the design of 10 September 2026 and are in `constants.py` with their reasons.
+
+- Tracking error. Public descriptions of enhanced indexing give the tracking error they run at: Robeco's enhanced-index developed-market composite ran at 1.06% a year from 2004 to 2016 and is offered up to about 5% (Robeco, "Building customized core quant portfolios", interview, October 2016); J.P. Morgan writes that enhanced index strategies typically have a tracking error below 2%, its own Research Enhanced Index strategy 0.67% over twenty years (J.P. Morgan Asset Management, "Celebrating 20 years of our Global Research Enhanced Index Strategy", 2024); Morgan Stanley's Applied Enhanced Index Russell 1000 strategy targets 1.5% to 2.0% with 200 to 300 holdings (strategy profile). The level of expectation 3, 1% a year, sits inside that range.
+- Tilt. Robeco's enhanced-index products carry at least a 30% lower carbon footprint than the index, and its Paris-aligned versions target a 50% reduction (robeco.com, Enhanced Indexing Equities product page, read 4 October 2026). French's data carry no footprint per firm, so the tilt applies that 50% reduction to the three most carbon-intensive industries of the 49: Coal, Oil and Utilities.
+- Active weight bound and turnover cap. The same descriptions call deviations from the index limited and turnover low, without a number. The 2 percentage points around each benchmark weight and the 2% one way a month (about 24% a year) are this study's own settings, chosen so that each constraint can bind without preventing the portfolio from following the benchmark; the tables report what each costs, which is the test of whether they are sensible.
+- Exclusion. Built for the planned second study, what exclusion lists cost a long-only portfolio; the lists would come from what Dutch institutional investors publish about the firms they exclude.
+- Solver. The problem is a convex quadratic program, and cvxpy is the layer that writes it almost as on paper and hands it to a solver (Diamond and Boyd, "CVXPY: A Python-Embedded Modeling Language for Convex Optimization", Journal of Machine Learning Research 17, 2016). It is the tool of the convex-optimisation portfolio literature: Boyd, Busseti, Diamond, Kahn, Koh, Nystrup and Speth, "Multi-Period Trading via Convex Optimization" (Foundations and Trends in Optimization, 2017), with three authors at BlackRock, ships with cvxportfolio, built on cvxpy. Asset managers run the same formulations in production on commercial solvers (MSCI's Barra Optimizer; Axioma, now part of SimCorp; Gurobi, which Robeco uses for its systematic fixed-income portfolios of about EUR 12.5 billion across about 30,000 instruments, Gurobi case study); what carries over from here to there is the formulation. The solver under cvxpy here is Clarabel (Goulart and Chen, 2024), an interior-point method, with its stopping rule tightened from the default.
+
+**What I expect to see, written before the run (`constants.py`, 4 October 2026).**
+
+1. Count first: the benchmark weights sum to one in every month from 1969-07; the drifted weights are defined for every month after the first and sum to one; Coal, Oil and Util are columns of the 49-industry file; the specification count is 28 (five estimator variants, the robust portfolio and RiskMetrics, times four constraint sets).
+2. Known answers, at every report month and estimator: (a) under C0 and C1, with the benchmark as the previous portfolio, the solution is the benchmark and the forecast tracking error is zero within 1e-6 a year; (b) under C3 the three tilted industries sit at the top of their allowed range, half their benchmark weight, and the forecast tracking error is positive; (c) the forecast tracking error does not fall from C0 to C1 to C2 (each set adds a constraint, so the minimum cannot fall; this checks the solver) and rises from C2 to C3 (the tilt forces deviations that the freedom it gives the tilted industries does not repay; this is a statement about the data).
+3. The cost of the tilt: at the last month, under C3 with the sample covariance on daily data, the forecast tracking error is below 100 basis points a year, the ex-ante tracking-error limit of enhanced indexing. Reason: the tilt removes about 3% of the portfolio from three industries whose own risk beyond the market is 12% to 20% a year, and the optimiser places that weight in the industries that move most with them, so the deviation's risk is a fraction of 3% times 20%.
+4. Reported, no verdict: where the tilt's weight goes (the industries with the largest positive active weights under C3), the effective number of holdings of the benchmark and of each portfolio, the forecast tracking error under C3 across the five estimators (notebook 12 judges them on realised tracking error), and which constraints bind.
+5. The turnover cap as a speed limit, a stress case at the last month: starting from 1/N weights under long-only plus the cap, the one-way turnover equals the cap (it binds) and the forecast tracking error is positive, while under C1 from the same start it is zero. Reported, no verdict: the forecast tracking error after 1, 6, 12 and 24 monthly rebalances from 1/N with the benchmark and the covariance held fixed; the one-way distance from 1/N to the benchmark divided by the cap; and what C2 does from the same start, where the active bound is hard and demands more trading than the cap allows, so the cap is relaxed to the smallest feasible turnover.
+
+**Checks and fixes added after the first part, each with its expectation written in `constants.py` before its code.** D1 to D4 (4 October): how much of the tilt is a market bet, what forcing the beta to one costs, what refusing the tobacco hedge costs, and how much the hedge depends on the estimator and the month. F1 to F3 (4 October): the mandate's C3 and the robust portfolio at the same three months. D5 (6 October): the solver's status against the independent check on a month with no feasible portfolio. Their expectations are stated in full at the head of their sections.
+
+Running time: about three minutes, most of it the download of the daily files.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader`, `benchmark`, `rules` and `covariance` are those of earlier notebooks; `covariance` gained the panel loader and the estimator dispatch that notebook 10's loop used inline. `optimiser` is new: the constrained tracking-error minimiser, the drifted weights, the feasibility checks and the effective number of holdings, each tested on made-up markets in `tests/test_optimiser.py`, including against an independent solver. `evaluation`, notebook 12's module, is written here as well, for the check D5, which reruns the first five years of one of notebook 12's paths.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    md("""
+## Count first: the benchmark weights, the drifted weights, the tilted industries, the specification count
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+import cvxpy
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+
+pd.set_option("display.width", 220)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 40)
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+eval_months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+industries = [c.strip() for c in weights.columns]
+tilt_mask, exclude_mask = O.masks(weights.columns)
+
+# Expectation 1
+assert np.allclose(weights.sum(axis=1), 1.0, atol=1e-9), "benchmark weights do not sum to one in every month"
+drift = pd.DataFrame({m: O.drifted_weights(weights.loc[m - 1].to_numpy(), returns_m.loc[m - 1].to_numpy()) for m in weights.index[1:]}, index=weights.columns).T
+drift.index = pd.PeriodIndex(drift.index, freq="M")
+assert len(drift) == len(weights) - 1 and np.allclose(drift.sum(axis=1), 1.0, atol=1e-9)
+assert tilt_mask.sum() == len(C.TILT_INDUSTRIES) == 3
+spec_count = len(CV.ALL_VARIANTS) * len(C.CONSTRAINT_SETS)
+assert spec_count == C.EXT_SPEC_COUNT == 28
+provenance = [fl.download(key) for key in P.files]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+print(f"{len(weights)} months of benchmark weights, {weights.index[0]} to {weights.index[-1]}, each summing to one; drifted weights for {len(drift)} months, each summing to one")
+print(f"tilted industries: {', '.join(C.TILT_INDUSTRIES)}, held at no more than {C.TILT_MAX_SHARE_OF_BENCHMARK:.0%} of their benchmark weight; at {weights.index[-1]} they are "
+      + ", ".join(f"{n} {100 * weights.loc[weights.index[-1], c]:.2f}%" for n, c in zip(C.TILT_INDUSTRIES, weights.columns[tilt_mask])) + " of the benchmark")
+print(f"specification count: {spec_count} ({len(CV.ALL_VARIANTS)} variants, five estimators, the robust portfolio and RiskMetrics, times {len(C.CONSTRAINT_SETS)} constraint sets); cvxpy {cvxpy.__version__}, solver {C.OPT_SOLVER}")
+print(f"expectation 1 holds; CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## The optimiser at three months
+
+This is the first part of the notebook: C3 is the tilt alone, as first designed. The report months are the first evaluation month (1979-07, the first with both a 120-month and a three-year daily window), the paper's last month (2004-11) and the vintage's last month. At each, the five estimator variants of the rolling evaluation (the four estimators on three years of daily returns and the sample covariance of 120 monthly returns) give five covariance matrices, and the optimiser runs under each constraint set with the benchmark as the previous portfolio. The table reports, for each portfolio, the forecast tracking error in basis points a year, the one-way turnover, the cap after any relaxation, how many industries it holds, its effective number of holdings, the active weights of the three tilted industries in percentage points, and how many constraints of each kind bind.
+"""),
+    code("""
+SETS = {"C0": C.CONSTRAINT_SETS["C0"], "C1": C.CONSTRAINT_SETS["C1"], "C2": C.CONSTRAINT_SETS["C2"], "C3": C.CONSTRAINT_SET_TILT_ONLY}   # the first run: C3 as designed on 10 September, the tilt alone
+report_months = [eval_months[0] if m == "first_eval" else (P.last if m == "last" else pd.Period(m, "M")) for m in C.OPT_REPORT_MONTHS]
+tilt_cols = list(weights.columns[tilt_mask])
+
+Sigmas = {}
+t0 = time.time()
+for month in report_months:
+    for v in CV.EVALUATION_VARIANTS:
+        Sigmas[(month, v)], _, _ = CV.estimate(*v, month, P)
+print(f"{len(Sigmas)} covariance matrices built in {time.time() - t0:.0f}s")
+
+rows, solutions = [], {}
+for month in report_months:
+    b = weights.loc[month].to_numpy()
+    for v in CV.EVALUATION_VARIANTS:
+        S = Sigmas[(month, v)]
+        for cs, names in SETS.items():
+            sol = O.solve(S, b, names, w_prev=b, tilt_mask=tilt_mask)
+            solutions[(month, v, cs)] = sol
+            row = {"month": str(month), "estimator": v[0], "data": v[1], "set": cs,
+                   "tracking error (bp a year)": 1e4 * sol.tracking_error, "one-way turnover": sol.turnover,
+                   "cap used": sol.turnover_cap_used if "turnover_cap" in names else np.nan, "cap relaxed": sol.relaxed,
+                   "industries held": int((sol.weights > 1e-6).sum()), "effective number": O.effective_number(sol.weights)}
+            for name, j in zip(C.TILT_INDUSTRIES, np.flatnonzero(tilt_mask)):
+                row[f"active {name} (pp)"] = 100 * sol.active[j]
+            for k, n in sol.binding.items():
+                row[f"binding: {k}"] = n
+            rows.append(row)
+report = pd.DataFrame(rows).set_index(["month", "estimator", "data", "set"])
+print(report.to_string(float_format=lambda x: f"{x:.2f}"))
+"""),
+    md("""
+## Expectations 2 and 3: the known answers and the cost of the tilt
+"""),
+    code("""
+te = report["tracking error (bp a year)"] / 1e4
+pairs = [(m, v) for m in report_months for v in CV.EVALUATION_VARIANTS]
+def TE(m, v, cs):
+    return te.loc[(str(m), v[0], v[1], cs)]
+
+e2a = sum(TE(m, v, "C0") < C.OPT_TOL_TE and TE(m, v, "C1") < C.OPT_TOL_TE for m, v in pairs)
+e2b = sum(report.loc[(str(m), v[0], v[1], "C3"), "binding: tilt"] == 3 and TE(m, v, "C3") > C.OPT_TOL_TE for m, v in pairs)
+e2c_mono = sum(TE(m, v, "C1") >= TE(m, v, "C0") - C.OPT_TOL_TE and TE(m, v, "C2") >= TE(m, v, "C1") - C.OPT_TOL_TE for m, v in pairs)
+e2c_tilt = sum(TE(m, v, "C3") > TE(m, v, "C2") for m, v in pairs)
+n = len(pairs)
+print(f"expectation 2a: under C0 and C1 the solution is the benchmark (forecast tracking error below {C.OPT_TOL_TE:g} a year) in {e2a} of {n} month-estimator pairs: {'MET' if e2a == n else 'NOT MET'}")
+print(f"expectation 2b: under C3 all three tilts bind and the tracking error is positive in {e2b} of {n}: {'MET' if e2b == n else 'NOT MET'}")
+print(f"expectation 2c: the tracking error does not fall from C0 to C1 to C2 in {e2c_mono} of {n} ({'MET' if e2c_mono == n else 'NOT MET'}), and rises from C2 to C3 in {e2c_tilt} of {n} ({'MET' if e2c_tilt == n else 'NOT MET'})")
+last = report_months[-1]
+te_tilt = TE(last, ("sample", "daily_3y"), "C3")
+print(f"expectation 3: at {last} the forecast tracking error under C3 with the sample covariance on daily data is {1e4 * te_tilt:.1f} basis points a year "
+      f"(level {1e4 * C.OPT_TILT_TE_MAX_ANNUAL:.0f}): {'MET' if te_tilt < C.OPT_TILT_TE_MAX_ANNUAL else 'NOT MET'}")
+print()
+c3 = report.xs("C3", level="set")["tracking error (bp a year)"].unstack(["estimator", "data"])
+print("the cost of the tilt by month and estimator, forecast tracking error under C3 in basis points a year:")
+print(c3.to_string(float_format=lambda x: f"{x:.1f}"))
+"""),
+    md("""
+## Expectation 4: where the tilt's weight goes, the effective number of holdings, which constraints bind
+
+The tilt takes weight out of Coal, Oil and Utilities, and the optimiser puts it where the forecast tracking error grows least. Two things decide where that is. First, the portfolio's beta to the benchmark: Oil and Utilities are low-beta industries (their returns move less than one for one with the market), so removing them leaves a portfolio with a beta above one, and the cheapest way to bring it back to one is to buy other low-beta industries. Second, among the low-beta industries, those whose remaining movement (after the market is taken out) is correlated with Oil and Utilities, and whose own volatility is low, replace the removed exposure at the least added risk. The table lists, at the last month under C3 with the sample covariance on daily data, the industries with the largest positive active weights beside each one's beta to the benchmark, its own volatility, and its correlation with Oil and with Utilities after the market is taken out; the rank correlations below the table say which of these numbers predicts the active weights. One more thing shapes the list: under C3 the first month's cap is relaxed to the smallest feasible turnover, so the portfolio trades exactly what the tilt requires and nothing else, and the purchases concentrate in the few industries with the best hedge per unit traded.
+"""),
+    code("""
+b_last = weights.loc[last].to_numpy()
+S_last = Sigmas[(last, ("sample", "daily_3y"))]
+sol = solutions[(last, ("sample", "daily_3y"), "C3")]
+own_vol = np.sqrt(12 * np.diag(S_last))
+beta_bench = (S_last @ b_last) / (b_last @ S_last @ b_last)
+resid = S_last - np.outer(S_last @ b_last, S_last @ b_last) / (b_last @ S_last @ b_last)     # covariance after the benchmark is taken out
+resid_corr = resid / np.sqrt(np.outer(np.diag(resid), np.diag(resid)))
+i_oil, i_util = industries.index("Oil"), industries.index("Util")
+where = pd.DataFrame({"benchmark weight %": 100 * b_last, "active weight (pp)": 100 * sol.active, "beta to benchmark": beta_bench, "own volatility %": 100 * own_vol,
+                      "residual corr with Oil": resid_corr[:, i_oil], "residual corr with Util": resid_corr[:, i_util]}, index=industries)
+print(f"where the tilt's weight goes at {last} (C3, sample covariance on daily data); the tilt removes {-100 * sol.active[tilt_mask].sum():.2f} percentage points from Coal, Oil and Util, "
+      f"whose betas to the benchmark are {', '.join(f'{beta_bench[j]:.2f}' for j in np.flatnonzero(tilt_mask))}:")
+print(where.sort_values("active weight (pp)", ascending=False).head(10).to_string(float_format=lambda x: f"{x:.2f}"))
+print()
+print(f"{int((sol.active[~tilt_mask] > 1e-6).sum())} of the 46 untilted industries receive weight; the portfolio's beta to the benchmark is {float(sol.weights @ beta_bench):.3f}")
+sp = where.loc[~tilt_mask].corr(method="spearman")["active weight (pp)"]
+print("rank correlation across the 46 untilted industries between the active weight and: " + "; ".join(f"{c} {sp[c]:.2f}" for c in ["beta to benchmark", "own volatility %", "residual corr with Oil", "residual corr with Util", "benchmark weight %"]))
+print()
+eff = report["effective number"].unstack("set")
+eff.insert(0, "benchmark", [O.effective_number(weights.loc[pd.Period(m, 'M')].to_numpy()) for m in eff.index.get_level_values("month")])
+print("effective number of holdings (49 would be 1/N):")
+print(eff.to_string(float_format=lambda x: f"{x:.1f}"))
+print()
+bind_cols = [c for c in report.columns if c.startswith("binding")]
+print("constraints binding (count of bounds at their limit), by set, averaged over the fifteen month-estimator pairs:")
+print(report[bind_cols].groupby(level="set").mean().to_string(float_format=lambda x: f"{x:.1f}"))
+"""),
+    md("""
+## Expectation 4, continued: the tilt's cost with and without the transition cap (added after the first run)
+
+Reported, no verdict. Under C3 at a report month the previous portfolio is the benchmark, so the cap is relaxed to the smallest feasible turnover and the portfolio trades exactly the tilt and nothing else. The same tilt with free trading (long-only, active bound and tilt, no cap) is the cost of the tilt once the portfolio has settled, which notebook 12's rolling evaluation reaches after the first months. The two are reported side by side.
+"""),
+    code("""
+# Added after the first run (4 October 2026): the tilt under the minimum-turnover transition (C3) against the tilt with free trading.
+rows = []
+for month in report_months:
+    b = weights.loc[month].to_numpy()
+    for v in CV.EVALUATION_VARIANTS:
+        s3 = solutions[(month, v, "C3")]
+        sf = O.solve(Sigmas[(month, v)], b, ("long_only", "active_weight_bound", "tilt"), w_prev=b, tilt_mask=tilt_mask)
+        rows.append({"month": str(month), "estimator": v[0], "data": v[1], "C3, transition (bp)": 1e4 * s3.tracking_error, "turnover C3": s3.turnover,
+                     "tilt, free trading (bp)": 1e4 * sf.tracking_error, "turnover free": sf.turnover, "industries held, free": int((sf.weights > 1e-6).sum())})
+free = pd.DataFrame(rows).set_index(["month", "estimator", "data"])
+print(free.to_string(float_format=lambda x: f"{x:.2f}"))
+"""),
+    md("""
+## Expectation 5: the turnover cap as a speed limit
+
+A stress case at the last month: the fund starts as 1/N, far from the cap-weighted benchmark, and may trade 2% one way a month. Under C1 it reaches the benchmark at once, because nothing limits the trade. Under long-only plus the cap it moves towards the benchmark 2% a month, choosing each month the trade that lowers the forecast tracking error most; the benchmark weights and the covariance are held fixed so that only the cap acts. Under C2 the active bound is hard and 1/N is far outside it, so the cap is relaxed to the smallest turnover that reaches the bound.
+"""),
+    code("""
+start = np.ones(49) / 49
+distance = O.one_way_turnover(start, b_last)
+sol_c1 = O.solve(S_last, b_last, SETS["C1"], w_prev=start, tilt_mask=tilt_mask)
+path, w_now = [], start.copy()
+for step in range(1, max(C.OPT_SPEED_LIMIT_STEPS) + 1):
+    s = O.solve(S_last, b_last, ("long_only", "turnover_cap"), w_prev=w_now, tilt_mask=tilt_mask)
+    path.append({"rebalance": step, "one-way turnover": s.turnover, "forecast tracking error (bp a year)": 1e4 * s.tracking_error,
+                 "one-way distance to the benchmark": O.one_way_turnover(s.weights, b_last)})
+    w_now = s.weights
+path = pd.DataFrame(path).set_index("rebalance")
+first = path.loc[1]
+e5 = abs(first["one-way turnover"] - C.TURNOVER_CAP_MONTHLY_ONE_WAY) <= C.OPT_TOL and first["forecast tracking error (bp a year)"] > 0 and sol_c1.tracking_error < C.OPT_TOL_TE
+print(f"from 1/N at {last}: one-way distance to the benchmark {distance:.3f}, which is {distance / C.TURNOVER_CAP_MONTHLY_ONE_WAY:.0f} months of trading at the cap if every trade reduced it")
+print(f"expectation 5: under long-only plus the cap the first rebalance trades {first['one-way turnover']:.4f} one way (cap {C.TURNOVER_CAP_MONTHLY_ONE_WAY}) and leaves a forecast tracking error of {first['forecast tracking error (bp a year)']:.0f} basis points; "
+      f"under C1 the first rebalance reaches the benchmark (tracking error {1e4 * sol_c1.tracking_error:.4f} basis points, turnover {sol_c1.turnover:.3f}): {'MET' if e5 else 'NOT MET'}")
+print()
+print("the journey from 1/N under long-only plus the cap, benchmark and covariance held fixed:")
+print(path.loc[list(C.OPT_SPEED_LIMIT_STEPS)].to_string(float_format=lambda x: f"{x:.4f}"))
+sol_c2 = O.solve(S_last, b_last, SETS["C2"], w_prev=start, tilt_mask=tilt_mask)
+print()
+print(f"under C2 from 1/N the active bound demands a one-way turnover of {sol_c2.turnover:.3f} at once, so the cap is relaxed to it ({'relaxed' if sol_c2.relaxed else 'not relaxed'}); forecast tracking error {1e4 * sol_c2.tracking_error:.1f} basis points, the cost of landing inside the bound in one month")
+"""),
+    md("""
+## Part two, added after the first run: the practical problem behind the hedge (D1 to D4)
+
+A tilt removes exposure, and the optimiser replaces it with whatever the covariance says is closest. Four things about that replacement matter to a manager, each checked here with its expectation fixed in `constants.py` before the code (4 October 2026):
+
+- **D1, how much of the tilt is a market bet.** The forecast active variance a' Sigma a splits exactly into a market part, (a' beta)^2 times the benchmark's variance, with beta the industries' betas to the benchmark under the same covariance, and a residual part, the variance of what the benchmark leaves unexplained. Expectation D1a: the market part is below 5% of the whole in all fifteen month-estimator pairs, because the market is the largest direction of the covariance, so a beta away from one is the most expensive deviation and the optimiser removes it on its own.
+- **D2, forcing the beta to one.** A beta-neutral constraint, the portfolio's beta equal to the benchmark's, is added to C3 as a new switchable constraint. Expectation D2a: it raises the forecast tracking error by less than 1 basis point a year in every pair, for the same reason. The lesson, if it holds: with a tracking-error objective and a usable covariance, a manager does not need to impose beta neutrality by hand; the optimiser's first move is to restore it.
+- **D3, is the hedge consistent with the mandate.** At 2026-08 the tobacco industry (Smoke) received weight as a low-beta substitute for Utilities. A sustainability mandate that underweights carbon would not buy tobacco to hedge it. Reported, no verdict: the forecast tracking error of C3 plus the exclusion of Smoke, against C3, at every report month and estimator; written before the code, I expect a rise below 2 basis points, because the other low-beta industries are close substitutes.
+- **D4, how much the hedge depends on the covariance and on the month.** (a) The rank correlation between the C3 active-weight vectors of each pair of estimators at the same month, over the 46 untilted industries; expectation D4a: at every report month the four daily estimators agree with each other more than any of them agrees with the monthly sample covariance. (b) The cross-evaluation matrix at the last month: the C3 portfolio built with estimator i (the row), its tracking error forecast with estimator j's covariance (the column). Within a column the diagonal is the minimum by construction, because the column's estimator built that portfolio to minimise its own forecast and the other rows' portfolios are feasible under the same set; so the report is the excess of each entry over its column's diagonal, in basis points: how much worse the column's estimator thinks another estimator's portfolio is than its own. (c) The three industries that absorb most of the tilt at each report month under the sample covariance on daily data.
+"""),
+    code("""
+# Added after the first run (4 October 2026): D1 and D2, the market part of the tilt and the beta-neutral constraint.
+rows = []
+for month in report_months:
+    b = weights.loc[month].to_numpy()
+    for v in CV.EVALUATION_VARIANTS:
+        S = Sigmas[(month, v)]
+        s3 = solutions[(month, v, "C3")]
+        market, rest = O.active_variance_parts(s3.active, S, b)
+        beta = O.benchmark_betas(S, b)
+        s_bn = O.solve(S, b, C.CONSTRAINT_SET_TILT_ONLY + ("beta_neutral",), w_prev=b, tilt_mask=tilt_mask)
+        rows.append({"month": str(month), "estimator": v[0], "data": v[1], "C3 tracking error (bp)": 1e4 * s3.tracking_error,
+                     "market share of active variance": market / (market + rest), "portfolio beta under C3": float(s3.weights @ beta),
+                     "C3 + beta-neutral (bp)": 1e4 * s_bn.tracking_error, "rise (bp)": 1e4 * (s_bn.tracking_error - s3.tracking_error)})
+d12 = pd.DataFrame(rows).set_index(["month", "estimator", "data"])
+print(d12.to_string(float_format=lambda x: f"{x:.4f}"))
+d1a = int((d12["market share of active variance"] < C.OPT_D1_MARKET_SHARE_MAX).sum())
+d2a = int((d12["rise (bp)"] < 1e4 * C.OPT_D2_TE_RISE_MAX).sum())
+print()
+print(f"D1a: the market part is below {C.OPT_D1_MARKET_SHARE_MAX:.0%} of the active variance in {d1a} of {len(d12)} pairs (largest share {d12['market share of active variance'].max():.4f}; "
+      f"portfolio beta under C3 between {d12['portfolio beta under C3'].min():.3f} and {d12['portfolio beta under C3'].max():.3f}): {'MET' if d1a == len(d12) else 'NOT MET'}")
+print(f"D2a: the beta-neutral constraint raises the tracking error by less than {1e4 * C.OPT_D2_TE_RISE_MAX:.0f} basis point in {d2a} of {len(d12)} pairs (largest rise {d12['rise (bp)'].max():.3f} bp): {'MET' if d2a == len(d12) else 'NOT MET'}")
+"""),
+    code("""
+# Added after the first run (4 October 2026): D3, the cost of refusing the tobacco hedge, and D4, the dependence of the hedge on the estimator and the month.
+_, smoke_mask = O.masks(weights.columns, exclude=C.OPT_D3_EXCLUDE)
+rows = []
+for month in report_months:
+    b = weights.loc[month].to_numpy()
+    for v in CV.EVALUATION_VARIANTS:
+        s3 = solutions[(month, v, "C3")]
+        s_ex = O.solve(Sigmas[(month, v)], b, C.CONSTRAINT_SET_TILT_ONLY + ("exclusion",), w_prev=b, tilt_mask=tilt_mask, exclude_mask=smoke_mask)
+        rows.append({"month": str(month), "estimator": v[0], "data": v[1], "C3 (bp)": 1e4 * s3.tracking_error, "active Smoke under C3 (pp)": 100 * s3.active[smoke_mask][0],
+                     "C3 without Smoke (bp)": 1e4 * s_ex.tracking_error, "rise (bp)": 1e4 * (s_ex.tracking_error - s3.tracking_error)})
+d3 = pd.DataFrame(rows).set_index(["month", "estimator", "data"])
+print(f"D3, the cost of excluding {', '.join(C.OPT_D3_EXCLUDE)} from the hedge:")
+print(d3.to_string(float_format=lambda x: f"{x:.2f}"))
+print()
+
+labels = [f"{v[0]}, {v[1].replace('_', ' ')}" for v in CV.EVALUATION_VARIANTS]
+daily = [i for i, v in enumerate(CV.EVALUATION_VARIANTS) if v[1] == "daily_3y"]
+monthly = [i for i, v in enumerate(CV.EVALUATION_VARIANTS) if v[1] == "monthly_120"]
+d4a_holds = []
+for month in report_months:
+    A_act = pd.DataFrame({labels[i]: solutions[(month, v, "C3")].active[~tilt_mask] for i, v in enumerate(CV.EVALUATION_VARIANTS)})
+    rc = A_act.corr(method="spearman")
+    dd = np.mean([rc.iloc[i, j] for i in daily for j in daily if i < j])
+    dm = np.mean([rc.iloc[i, j] for i in daily for j in monthly])
+    d4a_holds.append(dd > dm)
+    print(f"D4a at {month}: rank correlation of the C3 active weights across estimators (46 untilted industries); daily-daily mean {dd:.2f}, daily-monthly mean {dm:.2f}")
+    print(rc.to_string(float_format=lambda x: f"{x:.2f}"))
+    print()
+print(f"D4a: the daily estimators agree with each other more than with the monthly sample covariance at {sum(d4a_holds)} of {len(report_months)} report months: {'MET' if all(d4a_holds) else 'NOT MET'}")
+print()
+cross = pd.DataFrame(index=labels, columns=labels, dtype=float)
+for i, vi in enumerate(CV.EVALUATION_VARIANTS):
+    w_i = solutions[(last, vi, "C3")].weights
+    for j, vj in enumerate(CV.EVALUATION_VARIANTS):
+        cross.iloc[i, j] = 1e4 * O.forecast_tracking_error(w_i, b_last, Sigmas[(last, vj)])
+excess = cross.sub(np.diag(cross.to_numpy()), axis=1)
+assert (excess.to_numpy() >= -1e-6).all(), "a column's own portfolio must be that column's minimum"
+print(f"D4b at {last}: forecast tracking error (bp a year) of the C3 portfolio built with the row's estimator, judged by the column's covariance:")
+print(cross.to_string(float_format=lambda x: f"{x:.1f}"))
+print()
+print("excess over the column's own portfolio (bp): how much worse the column's estimator thinks the row's portfolio is than its own")
+print(excess.to_string(float_format=lambda x: f"{x:.1f}"))
+print()
+print("D4c: the three industries that absorb most of the tilt, sample covariance on daily data, by report month:")
+for month in report_months:
+    a = pd.Series(solutions[(month, ("sample", "daily_3y"), "C3")].active, index=industries)
+    top = a.sort_values(ascending=False).head(3)
+    print(f"  {month}: " + ", ".join(f"{k} +{100 * x:.2f} pp" for k, x in top.items()) + f"; tilt removes {-100 * a[tilt_mask].sum():.2f} pp")
+"""),
+    md("""
+## The fixes (F1 to F3): the mandate's C3 and the robust portfolio at the three months
+
+D1 to D4 describe problems a manager would fix, so the design was changed (4 October 2026, before notebook 12's code), with the expectations written into `constants.py` first:
+
+- **Fix 1 (D1, D2).** Beta neutrality joins C3 for every covariance. It cost the daily estimators at most 1.2 basis points and removes the beta bet the monthly covariance left standing. Factor neutrality beyond the market is not imposed: the market is 55% of the industries' variance (notebook 09) and the next components 17%, and factor betas from a window carry their own estimation error.
+- **Fix 2 (D3).** The optimiser receives the whole mandate: the carbon tilt and the exclusions of tobacco (Smoke) and weapons (Guns), the standard exclusions of Dutch institutional mandates, both of which the tilt's hedge had bought. Excluded industries are at weight zero, which costs tracking error of its own (together 0.9% of the 2026-08 benchmark).
+- **Fix 3 (D4).** A robust portfolio for model risk: the weights whose largest forecast tracking error across the five covariances is smallest, so that no single matrix is trusted; one more convex problem, with beta neutrality under every covariance. It joins notebook 12's rolling evaluation as a sixth variant.
+
+Expectations: F1, under the mandate's C3 the portfolio's beta equals one within 1e-6 and Smoke and Guns have weight zero, in all fifteen pairs. F2, the mandate's C3 costs more than the tilt alone in every pair (its feasible set is smaller) and the rise is below 15 basis points a year everywhere; D2 and D3 together suggest up to about 12 for the monthly covariance at 2004-11. F3, the robust portfolio's worst forecast tracking error across the five covariances is at most the worst of every single-estimator portfolio (a check, it is the minimax by construction), and under each covariance its excess over that covariance's own minimum is at most the largest excess any single-estimator portfolio shows there (F3a, a statement about the data: the compromise is nobody's worst case). Reported: the robust portfolio's mean excess and where its weight goes.
+"""),
+    code("""
+# The fixes (4 October 2026): the mandate's C3 and the robust portfolio at the three report months.
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+fix_rows, fixed, robust = [], {}, {}
+for month in report_months:
+    b = weights.loc[month].to_numpy()
+    for v in CV.EVALUATION_VARIANTS:
+        S = Sigmas[(month, v)]
+        s_old = solutions[(month, v, "C3")]
+        s_new = O.solve(S, b, C.CONSTRAINT_SETS["C3"], w_prev=b, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+        fixed[(month, v)] = s_new
+        beta = O.benchmark_betas(S, b)
+        fix_rows.append({"month": str(month), "estimator": v[0], "data": v[1], "tilt only (bp)": 1e4 * s_old.tracking_error, "mandate C3 (bp)": 1e4 * s_new.tracking_error,
+                         "rise (bp)": 1e4 * (s_new.tracking_error - s_old.tracking_error), "beta": float(s_new.weights @ beta),
+                         "Smoke + Guns weight": float(s_new.weights[mandate_mask].sum()), "one-way turnover": s_new.turnover, "industries held": int((s_new.weights > 1e-6).sum())})
+    robust[month] = O.solve_robust([Sigmas[(month, v)] for v in CV.EVALUATION_VARIANTS], b, C.CONSTRAINT_SETS["C3"], w_prev=b, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+fixes = pd.DataFrame(fix_rows).set_index(["month", "estimator", "data"])
+print("the mandate's C3 against the tilt alone:")
+print(fixes.to_string(float_format=lambda x: f"{x:.4f}"))
+f1 = int((((fixes["beta"] - 1).abs() <= 1e-5) & (fixes["Smoke + Guns weight"].abs() <= C.OPT_TOL)).sum())
+f2 = int(((fixes["rise (bp)"] > -1e-6) & (fixes["rise (bp)"] < 1e4 * C.OPT_FIX_RISE_MAX)).sum())
+print()
+print(f"F1: beta equal to one and Smoke and Guns at zero in {f1} of {len(fixes)} pairs: {'MET' if f1 == len(fixes) else 'NOT MET'}")
+print(f"F2: the mandate's C3 costs more than the tilt alone and less than {1e4 * C.OPT_FIX_RISE_MAX:.0f} basis points more in {f2} of {len(fixes)} pairs (largest rise {fixes['rise (bp)'].max():.1f} bp, at {fixes['rise (bp)'].idxmax()}): {'MET' if f2 == len(fixes) else 'NOT MET'}")
+print()
+# F3: the robust portfolio against the single-estimator portfolios, under each covariance
+f3_check, f3a, rob_rows = [], [], []
+for month in report_months:
+    b = weights.loc[month].to_numpy()
+    covs = [Sigmas[(month, v)] for v in CV.EVALUATION_VARIANTS]
+    own = np.array([fixed[(month, v)].tracking_error for v in CV.EVALUATION_VARIANTS])
+    te_single = np.array([[O.forecast_tracking_error(fixed[(month, vi)].weights, b, Sj) for Sj in covs] for vi in CV.EVALUATION_VARIANTS])   # row i built, column j judged
+    te_rob = np.array([O.forecast_tracking_error(robust[month].weights, b, Sj) for Sj in covs])
+    worst_single = te_single.max(axis=1)
+    f3_check.append(bool(te_rob.max() <= worst_single.min() + 1e-7))
+    excess_single = te_single - own[None, :]          # excess of portfolio i over estimator j's own minimum, under j
+    excess_rob = te_rob - own
+    f3a.append(bool((excess_rob <= excess_single.max(axis=0) + 1e-9).all()))
+    rob_rows.append({"month": str(month), "robust worst case (bp)": 1e4 * te_rob.max(), "best single worst case (bp)": 1e4 * worst_single.min(),
+                     "robust mean excess (bp)": 1e4 * excess_rob.mean(), "largest single excess (bp)": 1e4 * excess_single[~np.eye(5, dtype=bool)].max(),
+                     "robust turnover": robust[month].turnover, "industries held": int((robust[month].weights > 1e-6).sum())})
+rob_table = pd.DataFrame(rob_rows).set_index("month")
+print("F3, the robust portfolio under the mandate's C3:")
+print(rob_table.to_string(float_format=lambda x: f"{x:.2f}"))
+print(f"F3 check (the robust worst case is at most every single portfolio's worst case): {sum(f3_check)} of {len(f3_check)} months; "
+      f"F3a (under each covariance the robust excess is at most the largest single-portfolio excess): {sum(f3a)} of {len(f3a)} months: {'MET' if all(f3a) else 'NOT MET'}")
+print()
+a_rob = pd.Series(robust[last].active, index=industries)
+print(f"where the robust portfolio's weight goes at {last} (mandate's C3): " + ", ".join(f"{k} +{100 * x:.2f} pp" for k, x in a_rob.sort_values(ascending=False).head(5).items())
+      + f"; Smoke and Guns {100 * robust[last].weights[mandate_mask].sum():.2f}%, tilt removes {-100 * a_rob[tilt_mask].sum():.2f} pp")
+a_new = pd.Series(fixed[(last, ("sample", "daily_3y"))].active, index=industries)
+print(f"where the sample covariance's weight goes under the mandate's C3 at {last}: " + ", ".join(f"{k} +{100 * x:.2f} pp" for k, x in a_new.sort_values(ascending=False).head(5).items()))
+"""),
+    md("""
+## Part three: a check on the solver (D5, added after the first run of notebook 12)
+
+A solver returns two things, a status word ("optimal", "optimal_inaccurate", "infeasible" or "unbounded") and a list of 49 weights, and both can be wrong at once. The first run of notebook 12 found such a case. At 1984-07, a July in which French rebuilds the industry portfolios from the end-of-June SIC codes, the index itself moved 4.3% one way, above the cap of 2%, so no portfolio satisfied the cap and the tilt at once; the right answer was "infeasible". The solver returned "optimal" and weights that summed to 1.0037. The independent check of the returned weights (`optimiser.check`: the weights sum to one, lie inside their bounds and respect the cap, each within 1e-6) failed them and the run stopped, which is what the check is for.
+
+Why it matters to a manager: the optimiser's output is the trade list. A portfolio whose weights sum to 1.0037 buys 0.37% more than the fund's money, an unintended loan or a failed settlement; one that trades 22% of the fund in a month with a 2% cap pays eleven times the cost budget, 11 basis points at 50 basis points per unit of turnover against 1, and breaks the promise made to the client. A solver's status is its own opinion of its arithmetic and says nothing about the mandate. A firm answers the mandate question with a check that does not belong to the solver, the pre-trade compliance test of the order management system, which tests the proposed portfolio against every rule before an order leaves; `optimiser.check` is the same thing in miniature.
+
+The check D5 reruns that month on the final form of the problem, with its expectation in `constants.py` first: (a) at 1984-07 under the tilt-only set, with the previous portfolio taken from the robust path run from 1979-07, the smallest one-way turnover that satisfies the tilt and the active bound exceeds the 2% cap, so the month is infeasible under the cap; (b) handed the capped problem at its default stopping rule, the solver reports "optimal" and the returned weights fail the independent check; reported beside it, the status at the 1e-9 rule the robust problem runs at and at the 1e-12 rule of the single-covariance problem; (c) the optimiser's full routine returns a portfolio that passes every check, with the cap raised to the smallest feasible turnover (within the rule's margin of 2e-6) and the month marked as relaxed.
+
+Two repairs were tried, and the second is the one that holds. The first was to write the turnover cap differently. The cap can be written with absolute values (half the sum of |w - w0| at most 2%) or with a purchase p and a sale n per industry (w - w0 = p - n, half the sum of p + n at most 2%; an industry that goes from 7.0% to 6.4% has p = 0 and n = 0.6 points, and p + n is the 0.6 the absolute value gives). The two mean the same thing, and the rerun shows that the second way also comes back "optimal" at the default stopping rule, with different wrong weights (summing to 0.961 and trading 21.9%): rewriting the constraint changed which wrong weights came back and left the wrong status word in place, so it protects nothing. The second repair is the order of the two steps described at the start of this notebook. Both sets of wrong weights came from a problem that had no solution, and whether the capped problem has a solution can be known before it is posed: the smallest turnover the other constraints allow is a linear program, a problem with a linear objective and linear constraints, which the solver answers reliably, and comparing that turnover with the cap says whether the capped problem is feasible. The optimiser runs that program first in every month with a cap, raises the cap when that turnover is above it, and only then poses the tracking-error problem, so the solver never sees a capped problem without a solution. What this does not do is make the check unnecessary: on a feasible problem a solver can still return weights that are off by a little (at its default stopping rule, by 1e-4 against an independent solver's, which is why the stopping rule was tightened), so the check of every returned portfolio stays as the backstop. D5c runs the full routine.
+"""),
+    code("""
+# Added after the first run of notebook 12 (6 October 2026): D5, the solver's status against the independent check at 1984-07.
+import warnings
+from bp import evaluation as E
+d5_month = pd.Period(C.OPT_D5_MONTH, "M")
+d5_months = pd.period_range(C.COV_EVAL_START, d5_month, freq="M")
+Sig5 = {m: [CV.estimate(*v, m, P)[0] for v in CV.EVALUATION_VARIANTS] for m in d5_months}
+path5 = E.run_path(d5_months, Sig5, weights, returns_m, C.CONSTRAINT_SET_TILT_ONLY, tilt_mask, None, robust=True, keep_weights=True)
+prev = d5_months[-2]
+w0 = O.drifted_weights(path5.loc[prev, "weights"], returns_m.loc[prev].to_numpy())
+b = weights.loc[d5_month].to_numpy()
+b_drift = O.drifted_weights(weights.loc[prev].to_numpy(), returns_m.loc[prev].to_numpy())
+lower, upper = O.bounds(b, C.CONSTRAINT_SET_TILT_ONLY, tilt_mask, np.zeros(len(b), bool), C.ACTIVE_WEIGHT_BOUND, C.TILT_MAX_SHARE_OF_BENCHMARK)
+Ls = [O.cholesky_factor(S) for S in Sig5[d5_month]]
+cap = C.TURNOVER_CAP_MONTHLY_ONE_WAY
+
+# (a) the smallest feasible one-way turnover, against the cap
+w_t, prob_t = O._build(Ls, b, lower, upper, w0, None, objective="turnover")
+prob_t.solve(solver=C.OPT_SOLVER, **C.OPT_SOLVER_OPTIONS_ROBUST)
+min_turnover = float(prob_t.value)
+d5a = min_turnover > cap
+print(f"D5a: at {d5_month} the index moved {O.one_way_turnover(b, b_drift):.3f} one way; the smallest one-way turnover that satisfies the tilt and the active bound is {min_turnover:.4f}, "
+      f"above the cap of {cap}: {'yes' if d5a else 'no'}, so the month is {'infeasible' if d5a else 'feasible'} under the cap: {'MET' if d5a else 'NOT MET'}")
+
+# (b) the solver on the capped problem, at its default stopping rule and at the tight one, status against the independent check
+def raw_solve(options):
+    w_raw, prob_raw = O._build(Ls, b, lower, upper, w0, cap)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        prob_raw.solve(solver=C.OPT_SOLVER, **options)
+    x = O._clean(w_raw.value)
+    ok = len(x) == len(b) and O.feasible(x, b, lower, upper, w0, cap, C.OPT_TOL)
+    return prob_raw.status, x, ok
+status_default, x_default, ok_default = raw_solve({})
+d5b = status_default == "optimal" and not ok_default
+print(f"D5b: at the solver's default stopping rule (1e-8) the status is '{status_default}'"
+      + (f", the returned weights sum to {x_default.sum():.4f} and trade {O.one_way_turnover(x_default, w0):.4f} one way, and the independent check {'passes' if ok_default else 'fails'}" if len(x_default) == len(b) else ", and no weights are returned")
+      + f": {'MET' if d5b else 'NOT MET'}")
+for label, options in (("1e-9, the robust problem's rule", C.OPT_SOLVER_OPTIONS_ROBUST), ("1e-12, the single-covariance rule", C.OPT_SOLVER_OPTIONS)):
+    status_r, x_r, ok_r = raw_solve(options)
+    print(f"     at the stopping rule {label}: status '{status_r}'" + (f", weights summing to {x_r.sum():.4f}, one-way turnover {O.one_way_turnover(x_r, w0):.4f}, the independent check {'passes' if ok_r else 'fails'}" if len(x_r) == len(b) else ", no weights returned"))
+
+# (c) the guarded routine: feasibility test, relaxation to the smallest feasible turnover, every check passed
+sol5 = O.solve_robust(Sig5[d5_month], b, C.CONSTRAINT_SET_TILT_ONLY, w_prev=w0, tilt_mask=tilt_mask)
+d5c = bool(sol5.relaxed) and abs(sol5.turnover_cap_used - min_turnover) <= 2e-6 and O.feasible(sol5.weights, b, lower, upper, w0, sol5.turnover_cap_used, C.OPT_TOL)
+print(f"D5c: the guarded routine relaxes the cap to {sol5.turnover_cap_used:.6f} (smallest feasible {min_turnover:.6f}), status '{sol5.status}', weights summing to {sol5.weights.sum():.6f}, "
+      f"one-way turnover {sol5.turnover:.4f}, relaxed {sol5.relaxed}, every check passed: {'MET' if d5c else 'NOT MET'}")
+"""),
+    md("""
+## Save
+
+The report table, the speed-limit path, the fixes table and the robust portfolio's table are written to `outputs/`, with the vintage in the file name, as a record.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+report.to_csv(f"{C.OUTPUT_DIR}/optimiser_report_{vintage}.csv", float_format="%.6f")
+path.to_csv(f"{C.OUTPUT_DIR}/optimiser_speed_limit_{vintage}.csv", float_format="%.6f")
+fixes.to_csv(f"{C.OUTPUT_DIR}/optimiser_fixes_{vintage}.csv", float_format="%.6f")
+rob_table.to_csv(f"{C.OUTPUT_DIR}/optimiser_robust_{vintage}.csv", float_format="%.6f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("optimiser")))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 686 months of benchmark weights summing to one, 685 months of drifted weights summing to one, Coal, Oil and Util present, 28 specifications | holds |
+| 2a. Under C0 and C1 the benchmark is the answer | forecast tracking error below 1e-6 a year in 15 of 15 month-estimator pairs | MET |
+| 2b. Under C3 the three tilts bind and the tracking error is positive | 15 of 15 | MET |
+| 2c. Tracking error does not fall from C0 to C1 to C2, and rises from C2 to C3 | 15 of 15 and 15 of 15 | MET |
+| 3. The tilt costs less than 100 basis points a year at the last month | 35.1 basis points (sample covariance, daily data) | MET |
+| 4. Where the tilt's weight goes, effective number, binding constraints | weight to low-beta industries (Other, Food, Telcm, Smoke) and to the commodity-linked ones (Agric, Steel); effective number 18.4 to 24.2 in 1979-07, 10.2 to 10.3 in 2026-08; under C3 the three tilts and the relaxed cap bind | reported |
+| 5. The cap as a speed limit from 1/N | first rebalance trades 0.0200 one way and leaves 708 basis points; C1 reaches the benchmark at once | MET |
+| D1a. The market part of the tilt's active variance is below 5% in all 15 pairs | 14 of 15; the monthly sample covariance at 2004-11 leaves 5.4% (portfolio beta 1.007) | NOT MET |
+| D2a. A beta-neutral constraint raises the tracking error by less than 1 basis point in all 15 pairs | 11 of 15; 3.4 and 5.6 basis points for the monthly sample covariance, 1.2 for the sample and shrinkage estimators on daily data at 2026-08 | NOT MET |
+| D3. Excluding tobacco from the hedge (guess written before the code: a rise below 2 basis points) | rises of 1.3 to 6.5 basis points, 2% to 13% of the tilt's cost; below 2 in 4 of 15 pairs | reported; the guess was wrong |
+| D4a. The daily estimators agree with each other on the hedge more than with the monthly sample covariance | 3 of 3 months (daily-daily mean rank correlation 0.58 to 0.68 against daily-monthly 0.54 to 0.63) | MET |
+| D4b, D4c. Cross-evaluation and the absorbing industries by month | one estimator judges another's portfolio 1 to 5 basis points worse than its own; the absorbing industries change entirely across the three months | reported |
+| F1. Under the mandate's C3 the beta is one and Smoke and Guns are at zero | 15 of 15 | MET |
+| F2. The mandate's C3 costs more than the tilt alone and less than 15 basis points more | 13 of 15; the daily estimators pay 1.9 to 6.9 basis points, the monthly sample covariance 18.6 and 25.4 | NOT MET for the monthly covariance |
+| F3. The robust portfolio's worst case is at most every single portfolio's worst case, and its excess under each covariance at most the largest single excess | 3 of 3 months; robust worst case 113, 64 and 42 basis points against 125, 67 and 42 for the best single portfolio; mean excess 0.1 to 1.1 basis points against single excesses of up to 21 | MET |
+| D5. The solver's status against the independent check at 1984-07 (added 6 October) | the month is infeasible under the cap (smallest feasible turnover 0.0201, the index moved 4.3%); at the default and the 1e-9 stopping rules the status is "optimal" with weights summing to 0.961 and trading 22% one way, which fail the check; at 1e-12 the status is "infeasible"; the guarded routine relaxes the cap to 0.0201 and passes every check | MET, 3 of 3 |
+
+Expectation 1 holds: the benchmark weights of notebook 08 sum to one in each of the 686 months from 1969-07, the drifted weights exist for the 685 months that follow a month and sum to one, Coal, Oil and Util are columns of the file, and the rolling evaluation of notebook 12 has 28 specifications, five estimator variants, the robust portfolio and RiskMetrics, times four constraint sets.
+
+Expectation 2, the known answers, holds in every one of the 15 month-estimator pairs. Under long-only (C0) and with the active weight bound (C1) the solution is the benchmark itself, with a forecast tracking error of zero, because the benchmark satisfies both constraints and nothing beats zero. Under C3 the three tilted industries sit at exactly half their benchmark weight: the tilt is the only constraint that forces the portfolio off the benchmark, and a constraint that forces a deviation binds. The tracking error never falls from C0 to C1 to C2, which is a check of the solver (each set is the previous set plus one constraint), and it rises from C2 to C3 in every pair, which is a fact about the data: the freedom the tilt gives the three industries from the active bound is worth nothing when they are forced below it.
+
+Expectation 3, the cost of the tilt, holds: 35 basis points a year at 2026-08 with the sample covariance on daily data, against the enhanced-indexing limit of 100. The cost depends on how much the tilt removes. In 1979-07 Oil was 15.1% of the benchmark and Utilities 8.0%, so the tilt took 11.7 percentage points out of the portfolio and cost 47 to 55 basis points with the daily estimators (108 with the sample covariance of 120 monthly returns); in 2004-11 it took 4.7 points and cost 49 to 56; in 2026-08 it takes 2.8 points and costs 33 to 36. Per percentage point removed, the cost rose from 4.6 basis points in 1979 to 12.7 in 2026: a concentrated benchmark (effective number of holdings 10.2 against 18.4) offers fewer substitutes of the right kind. The five estimators agree within 2 basis points in 2026-08 and within 8 in 1979-07 among the daily ones; the monthly sample covariance stands apart in 1979-07 (108 against 47 to 55) and is the lowest in 2004-11 and 2026-08.
+
+Expectation 4, where the weight goes. The pre-run reasoning said the optimiser would put the removed weight in the industries that move most with Oil and Utilities. That is half of it. Oil and Utilities have betas to the benchmark of 0.41 and 0.33, so removing 2.8 points of them leaves a portfolio with a beta above one, and the first thing the optimiser does is restore the beta: the weight goes to Other (beta 0.47), Food (0.12), Telcm (0.39) and Smoke (0.04), and the portfolio's beta ends at 1.004. Among the low-beta industries it prefers those whose movement after the market is taken out is correlated with the removed ones: across the 46 untilted industries the rank correlation between the active weight and the residual correlation with Oil is 0.57 and with Utilities 0.43, against -0.29 with the beta, -0.13 with the industry's own volatility and 0.04 with its benchmark weight. The commodity-linked industries (Agric, Steel, FabPr, Gold) receive weight too, and little of it, because their own volatility is 25% to 42% a year. Only 11 of the 46 untilted industries receive any weight, because the first month's cap is relaxed to the smallest feasible turnover, so the portfolio buys exactly 2.8 points and places them where each unit traded hedges most. The effective number of holdings is the benchmark's under C0 to C2 (18.4 in 1979-07, 18.6 in 2004-11, 10.2 in 2026-08) and rises under C3 in 1979-07 to about 24, because the tilt spreads a 15% industry's weight over others; in 2026-08 it barely moves. The comparison added after the first run separates the tilt from the transition: with free trading the same tilt costs 0.2 to 4 basis points less with the daily estimators and 5 to 17 less with the monthly sample covariance, which trades two to three times as much (0.24 against 0.12 in 1979-07) and holds fewer industries; that is the pattern of notebook 10 again, a noisy covariance sees hedges that a less noisy one does not, and notebook 12 will say whether those trades pay in realised tracking error.
+
+Expectation 5, the cap as a speed limit, holds. From 1/N at 2026-08 the one-way distance to the benchmark is 0.528, which is 26 months of trading at 2% if every trade reduced the distance. Under C1 the first rebalance trades the whole 0.528 and lands on the benchmark; under long-only plus the cap the first rebalance trades exactly 0.0200 and leaves a forecast tracking error of 708 basis points, which falls to 472 after six rebalances, 254 after twelve and 28 after twenty-four, when the remaining distance is 0.078. The optimiser does not reduce the distance fastest; it reduces the tracking error fastest, which means trading the industries whose active weights contribute most to the deviation's variance first. Under C2 from the same start the active bound is hard and 1/N sits 0.387 of one-way turnover outside it, so the cap is relaxed to 0.387 and the portfolio lands inside the bound in one month with a forecast tracking error of 95 basis points.
+
+**The tests added after the first run: the practical problem behind the hedge.** A tilt is also a factor bet: removing low-beta industries leaves a high-beta portfolio, and the optimiser's hedge depends on the covariance it is given. D1 measured how much of the tilt's forecast risk is a market bet after the optimiser has done its work: under 1% of the active variance for the four daily estimators at 1979-07 and 2004-11, 0.3% to 3% at 2026-08, and 2.3% and 5.4% for the monthly sample covariance at 1979-07 and 2004-11, where the portfolio's beta ends at 1.010 and 1.007. The expectation (below 5% in every pair) fails in that one pair, and the failure is informative: a noisy covariance sees cheap hedges in its noise and leaves a beta bet standing that a less noisy one removes. D2 imposed beta neutrality as a constraint: it costs the daily estimators 0.0 to 1.2 basis points and the monthly sample covariance 3.4 and 5.6, so the expectation (below 1 basis point in every pair) fails in four pairs, for the same reason. The lesson stands with a qualification: with a tracking-error objective the optimiser restores the beta on its own when the covariance is estimated from daily data; with 120 monthly observations it leaves a beta of 1.007 to 1.010 standing, and a manager using such a matrix should impose the constraint. D3 priced the mandate problem: at 2026-08 the hedge buys tobacco (Smoke, a low-beta industry) to replace Utilities, which a sustainability mandate that underweights carbon would refuse; excluding Smoke from the hedge costs 2.4 to 3.2 basis points at 2026-08, 1.3 to 1.6 at 1979-07 and 5.5 to 6.5 at 2004-11, that is 2% to 13% of the tilt's cost. The guess written before the code (below 2 basis points) was wrong in 11 of 15 pairs; the next-best low-beta substitutes are further away than I assumed. D4 measured how much the hedge is a property of the estimator. The four daily estimators agree with each other on the active weights more than with the monthly sample covariance (expectation met), and the agreement is partial: the sample covariance and shrinkage are the same hedge (rank correlation 0.99 to 1.00, because the shrinkage intensity on daily data is 0.012), the factor model agrees with the sample covariance at 0.45 to 0.53, and the component model sits between. In the cross-evaluation at 2026-08, one estimator judges another's hedge 1 to 5 basis points worse than its own on a tilt that costs 33 to 36: a model risk of up to 13% of the number quoted. And the industries that absorb the tilt change with the month: Fin, Telcm and Food in 1979-07, Drugs, Mach and Banks in 2004-11, Other, Food and Telcm in 2026-08. For a manager this says four things: check the factor exposures the optimiser creates and removes, because it hedges a beta bet silently; check the hedge against the mandate, because the covariance does not know what the mandate forbids; treat the forecast cost of a tilt as model-dependent to within about a tenth; and expect the hedge to be rebuilt as the covariance moves, which is turnover the cap will ration. The first three are problems a manager fixes in the design, and the design was changed accordingly.
+
+**The fixes.** Beta neutrality and the exclusions of Smoke and Guns joined C3, and the robust portfolio joined the variants. Under the mandate's C3 every portfolio has a beta of exactly one and holds no tobacco or weapons (F1). The mandate costs the daily estimators 1.9 to 2.2 basis points more than the tilt alone at 1979-07, 5.6 to 6.9 at 2004-11 and 4.5 to 6.6 at 2026-08, that is 4% to 19% of the tilt's cost; the monthly sample covariance pays 25.4 and 18.6 basis points at the first two months and 0.6 at the last, so F2 (below 15 everywhere) fails for that covariance, which is the covariance whose hedges the fixes were most needed against: a matrix that saw cheap hedges in its noise is the one that loses most when the hedges it liked are forbidden. The robust portfolio does what it was built for (F3): its worst forecast tracking error across the five covariances is 113, 64 and 42 basis points at the three months against 125, 67 and 42 for the best single-estimator portfolio, and under each covariance it sits 0.1 to 1.1 basis points above that covariance's own minimum on average, where the single-estimator portfolios sit up to 21, 13 and 7 above each other's. The compromise costs almost nothing and protects against the matrix being wrong. Under the mandate the weight at 2026-08 goes to Food, Other, Telcm, Soda and Agric, for the robust portfolio and for the sample covariance alike, and to nothing the mandate forbids.
+
+**The solver check (D5).** At 1984-07 the index moved 4.3% one way and the smallest turnover that satisfies the tilt and the active bound is 2.01%, a hundredth of a percentage point above the cap, so the month is infeasible under the cap by that margin. Handed the capped problem, the solver reports "optimal" at its default stopping rule and at the 1e-9 rule, with weights that sum to 0.961 and trade 21.9% of the portfolio one way, eleven times the cap; at the 1e-12 rule it reports "infeasible"; in notebook 12's first run, with the cap written with absolute values, it reported "optimal" with weights summing to 1.0037. The independent check fails the returned weights in every one of these cases, and the optimiser's full routine, which finds the smallest feasible turnover first and poses the capped problem only with a cap at or above it, raises the cap to 2.01% and returns a portfolio that sums to one and trades 2.01%, every check passed. Two consequences for a manager. First, a solver's status is a statement about its own arithmetic and says nothing about the mandate; a portfolio is accepted only after a check that does not belong to the solver, which in a firm is the pre-trade compliance test of the order management system and here is `optimiser.check`. Second, infeasibility is settled in the design before any solver runs: the design says which constraint gives way (the cap, raised to the smallest feasible turnover) and counts the months it happens, so that the fund never trades a portfolio the solver invented; notebook 12 reports those months (1 to 4 of 566 per path).
+
+**What this notebook does not settle.**
+
+- Every tracking error here is a forecast at three months from the covariance used to build the portfolio, so a portfolio built from an estimator is judged by that estimator's own view of it. Realised tracking error month by month, and whether the choice of estimator matters once the constraints are on, are notebook 12's question.
+- Whether underweighting Coal, Oil and Utilities cost or earned return over the sample is a question about returns, which the optimiser never sees; notebook 13's attribution answers it.
+- The transition rule, raising the cap to the smallest feasible turnover, decides the first month under a tilt and any month in which the benchmark moved by more than 2%. How often that happens and what it costs is a count notebook 12 reports.
+- The reasoning written before the run for expectation 3 was incomplete: the number was right, the mechanism named only co-movement, and the first mechanism is the restoration of the portfolio's beta. The expectation was met for a reason only partly foreseen. D1 to D4 were designed after the first part and two of them failed in the pairs that use the monthly sample covariance; the fixes were designed after D1 to D4, and one of their expectations (F2) failed for the same covariance; D5 was designed after notebook 12's first run. Each step was written down before its code, with its date, and the order of the sections is the order of the work.
+- The fixes are tested here on forecasts at three months. Whether the mandate's C3 and the robust portfolio hold up in realised tracking error, month by month, with the turnover of rebuilding the hedge as the covariance moves, is notebook 12's question; the tilt-only set runs beside them there so that the cost of the fixes is measured on realised numbers.
+- Beta neutrality is the only factor constraint. Exposures to the other Fama-French factors (size, value, profitability, investment, momentum) are left to the covariance; imposing them would need factor betas from the window, with their own estimation error, and is the natural extension if notebook 13's attribution shows that the tilt loads on one of them.
+- The optimiser was checked against an independent solver and against a linear program on problems of six to eight assets, and on the 49 industries by the feasibility checks and the known answers of expectation 2; no independent solver was run on the 49-industry problems. The solver's own status is not relied on in any month: D5 shows it reporting "optimal" on a month with no feasible portfolio, and every returned portfolio is tested against every constraint before it is accepted.
+- The active weight bound is 2 percentage points around each benchmark weight. A bound proportional to the benchmark weight is another common choice and was not tried; the design fixed one and the notebook reports it.
+"""),
+]
+
+# ---------------------------------------------------------------------------
+# 12: the rolling evaluation
+# ---------------------------------------------------------------------------
+
+NB12 = [
+    md("""
+# 12. The rolling evaluation: what the constrained portfolios realised, month by month
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves; volatility is the standard deviation of returns, stated per year here by multiplying the monthly figure by the square root of 12 |
+| Standard error | the uncertainty of a number estimated from a sample: the standard deviation that the estimate would show across repeated samples of the same size; for a mean it is the standard deviation of the observations divided by the square root of their number |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here, 1,225 distinct numbers |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Regime | a stretch of time over which the volatilities and co-movements of the returns stay about the same; a change of regime is a shift between two such stretches, which a window of past returns cannot see coming |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
+| RiskMetrics | the covariance estimator of J.P. Morgan's 1996 RiskMetrics document: a weighted sample covariance in which each day's weight falls by half every half-life, one year of trading days here, so that recent days count most (notebook 10's sensitivity) |
+| Factor | a return series that moves many assets at once, for example the return of the whole market; the Fama-French factors are long-short portfolios built to isolate one such source each |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09) |
+| Minimum-variance portfolio | the fully invested portfolio with the lowest variance under a given covariance matrix; the test portfolio of the covariance literature |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Tracking error | the standard deviation of the difference between two return series, stated per year; forecast (ex-ante) when computed from a covariance matrix before the month, realised (ex-post) when measured on the active returns afterwards |
+| Bias statistic | the standard deviation of the active return divided by its forecast standard deviation, over many months; 1 when the forecasts of risk are right on average, above 1 when risk is under-forecast, below 1 when over-forecast |
+| Autocorrelation | the correlation of a series with its own value one period earlier |
+| Variance ratio | the variance of 21-day returns divided by 21 times the variance of daily returns, measured over a window; 1 when one day's return says nothing about the next day's, above 1 under positive autocorrelation, below 1 under negative (notebook 10) |
+| Long-only | said of a portfolio in which no weight is negative |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought when the portfolio stays fully invested |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance; 2% a month here |
+| Drifted weights | the previous month's weights after that month's returns have moved them, so that they still sum to one |
+| Index turnover | the one-way turnover an index fund needs to follow its benchmark: the distance between the benchmark's new weights and its own drifted weights; zero when the weights move only because prices moved |
+| Tilt | a constraint that holds named industries below their benchmark weight; here Coal, Oil and Utilities at no more than half of it |
+| Exclusion | a constraint that holds named industries at zero weight; Smoke (tobacco) and Guns (weapons) here |
+| Beta | how much an asset moves with a factor on average; the beta to the benchmark is how much it moves with the benchmark, one for the benchmark itself |
+| Beta-neutral | a constraint that holds the portfolio's beta to the benchmark equal to one |
+| Mandate | the whole set of rules the fund obeys: the tilt, the exclusions and beta neutrality, the constraint set C3 |
+| Constraint set | one of the four cumulative sets C0 to C3: long-only; plus the active weight bound; plus the turnover cap; plus the mandate |
+| Optimiser | the extension's routine that solves the constrained tracking-error problem (notebook 11) |
+| Robust portfolio | the weights whose largest forecast tracking error across the five covariance estimates is smallest; a portfolio that trusts no single matrix (notebook 11) |
+| Specification | one combination of a variant (an estimator, or the robust portfolio) and a constraint set |
+| Path | the month-by-month sequence of portfolios of one specification, each built on the data before its month |
+| In-sample | measured on the same data that were used to form the weights; the forecast tracking error is in-sample in this sense, because the covariance that forecasts the portfolio's risk is the one the portfolio was built on |
+| Out-of-sample | measured on months the portfolio had not seen when its weights were formed; the realised tracking error is out of sample |
+| Information ratio | the active return per year divided by the realised tracking error; the reward earned per unit of tracking error |
+| Basis point | one hundredth of a percentage point, so 50 basis points is 0.50% |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** The literature judges covariance estimators by what an unconstrained minimum-variance portfolio realised after the fact; Dom, Howard, Jansen and Lohre (2024), whose framing this notebook follows, replace that portfolio with a constrained one and read its realised volatility, turnover and costs. The counterpart for an index manager is the realised tracking error of the constrained, tilted, turnover-capped portfolio against its benchmark, month after month, with each month's weights chosen before the month began, and beside it the turnover, the costs, and the question whether the risk forecast that justified each portfolio was right. Nothing in notebooks 10 and 11 can answer that; both are forecasts. This notebook runs the portfolios and measures.
+
+**What this notebook does.** Notebooks 10 and 11 forecast. This notebook measures what happened. For every month from 1979-07 to the vintage's last month, each specification builds its portfolio on the data before the month and holds it through the month; the difference between the portfolio's return and the benchmark's is that month's active return, and the standard deviation of those active returns over 566 months is the realised tracking error, the number the forecasts of notebook 11 were about. The question the extension was built to ask is answered here, whether the choice of covariance estimator still matters, measured as realised tracking error, once the portfolio is long-only, bounded, turnover-capped and tilted. Beside it: how well the forecasts were calibrated, what the mandate's fixes of notebook 11 cost in realised terms, whether the robust portfolio did what it was built for, how often the cap had to give way, and what the tilt earned or cost in return. Two expectations (8 and 9) were added after the first run, with their expectations written before their code, and are marked as such.
+
+**How a path is run.**
+
+- The path starts as the index: in the first evaluation month the previous portfolio is the benchmark of that month.
+- In month t the variant's covariance is estimated on the data before t (notebook 10's estimators; the robust portfolio uses all five), and the optimiser solves for the weights with the drifted previous weights as the turnover reference. Nothing from month t enters the weights.
+- The portfolio earns its weights times the industries' returns of month t, the benchmark earns its weights times the same returns, and the difference is recorded with the forecast tracking error, the one-way turnover, whether the cap was relaxed and the holdings.
+- 35 paths: seven variants (the four estimators on daily data, the sample covariance of 120 monthly returns, the robust portfolio, and RiskMetrics, added after the first run) times the four constraint sets, 28 specifications, plus seven sensitivity paths under the tilt alone (C3 without notebook 11's fixes), so that the fixes' cost is measured on realised numbers.
+
+**Measures of a path.**
+
+- Realised tracking error: the standard deviation of the 566 active returns, times the square root of 12.
+- Forecast tracking error: the mean of the monthly forecasts, and the bias statistic (standard deviation of active return over forecast standard deviation); for the daily variants also under the ten-year variance ratio of notebook 10, which multiplies the forecast variance by the ratio measured on the benchmark's daily returns over the ten years before the month.
+- Active return: the mean times 12, gross; the cost of the turnover at 50 and 100 basis points per unit of one-way turnover; the net active return; the information ratio.
+- Turnover: the mean one-way turnover, the months in which the cap was relaxed and their share, and those months by calendar month; the index's own turnover beside it.
+- Holdings: the mean effective number of holdings and the mean number of industries held. Realised tracking error by decade.
+
+**What I expect to see, written before the run (`constants.py`, 4 October 2026).**
+
+1. Count first: 566 evaluation months from 1979-07; 28 paths plus 7 sensitivity paths, each with one record per month; under C0 and C1 every path holds the benchmark in every month (active return below 1e-6 a month, a ten-thousandth of a basis point; written as 1e-10 and set to the solver's precision before the recorded run), which checks the loop, and their turnover is the index's own.
+2. The extension's question: under C3 the realised tracking errors of the four daily estimators lie within 10 basis points a year of each other, and the monthly sample covariance's is above the lowest of the four (direction only; its hedges were the noisiest in notebook 11).
+3. Calibration: for the four daily estimators under C3 the bias statistic of the active return lies between 0.8 and 1.25 under the 21 rule. Reported: the same under the ten-year variance ratio, and which of the two is closer to 1.
+4. The robust portfolio: its realised tracking error under C3 is at most the largest of the five single estimators'. Reported: its distance from the best.
+5. The fixes: for each variant the mandate's C3 realises a higher tracking error than the tilt alone (direction), by less than 15 basis points a year.
+6. The cap: under C2 and C3 the share of months with a relaxed cap is below 10% for every variant; relaxations are expected in the first month of every C3 path and in July months, when French rebuilds the industry portfolios, reported by calendar month.
+7. Reported, no verdict: turnover, costs, net active return and the information ratio, the effective number of holdings, realised tracking error by decade, the index's own turnover.
+
+**Added after the first recorded run (`constants.py`, 6 October 2026), expectations fixed before their code.**
+
+8. RiskMetrics joins as a seventh variant (the exponentially weighted covariance over five years of daily returns with a one-year half-life, notebook 10's sensitivity), because Dom, Howard, Jansen and Lohre (2024) find that time dynamics matter more than shrinkage or structure and that RiskMetrics does as well as the DCC model of Engle (2002) for minimum-variance portfolios, and because notebook 10 found it gave the lowest unconstrained volatility and the best-calibrated forecast. Expectation: under C3 its realised tracking error is at or below the sample covariance's on daily data. The robust portfolio stays the minimax over the five covariances of notebook 11, so that its path is unchanged.
+9. Calibration of the forecast on its own past: in month t the forecast is multiplied by the ratio of realised to forecast tracking error over the previous 60 months of the same path, using only months before t (unchanged while fewer than 24 months are available). Expectation: under C3 the calibrated bias statistic lies between 0.85 and 1.15 for the four daily estimators. Reported: by decade, and for the robust portfolio and RiskMetrics.
+
+Running time: about ten to fifteen minutes, most of it the 20,000 optimisations.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader`, `benchmark`, `rules`, `covariance` and `optimiser` are those of earlier notebooks. `evaluation` is new: the path, its records and its measures, tested on a made-up market in `tests/test_evaluation.py`.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    md("""
+## Count first: the months, the paths, the variance ratios
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import evaluation as E
+
+pd.set_option("display.width", 230)
+pd.set_option("display.max_rows", 200)
+pd.set_option("display.max_columns", 40)
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+industries = [c.strip() for c in weights.columns]
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+SETS = dict(C.CONSTRAINT_SETS)
+SENSITIVITY_SET = ("C3 tilt only", C.CONSTRAINT_SET_TILT_ONLY)
+VARIANTS = list(CV.ALL_VARIANTS)
+LABEL = {v: ("robust, all five" if v == C.ROBUST_VARIANT else ("RiskMetrics, daily 5y" if v == C.EWMA_VARIANT else f"{v[0]}, {v[1].replace('_', ' ')}")) for v in VARIANTS}
+
+# Expectation 1, the counts
+assert len(months) == 566, len(months)
+n_paths = len(VARIANTS) * len(SETS)
+assert n_paths == C.EXT_SPEC_COUNT == 28
+# the ten-year variance ratio of the benchmark's daily excess return before each month (notebook 10's correction)
+vr10 = pd.Series({m: CV.variance_ratio(P.bench_d.loc[CV.daily_window(P.excess_d, m, C.COV_SCALE_VR_WINDOW_YEARS_SENSITIVITY).index].to_numpy(), C.COV_SCALE_VR_HORIZON_DAYS) for m in months})
+provenance = [fl.download(key) for key in P.files]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+print(f"{len(months)} evaluation months, {months[0]} to {months[-1]}; {n_paths} specifications ({len(VARIANTS)} variants, five estimators, the robust portfolio and RiskMetrics, times {len(SETS)} constraint sets) plus {len(VARIANTS)} sensitivity paths under the tilt alone")
+print(f"ten-year variance ratio of the benchmark before each month: {vr10.min():.2f} to {vr10.max():.2f}, mean {vr10.mean():.2f}")
+print(f"CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## The covariances, once per month
+
+Each of the five estimator variants and RiskMetrics is built once per month and shared by every constraint set; the robust portfolio uses the five estimator covariances, as in notebook 11.
+"""),
+    code("""
+t0 = time.time()
+Sigmas = {v: {} for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,)}
+for i, month in enumerate(months):
+    for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,):
+        Sigmas[v][month], _, _ = CV.estimate(*v, month, P)
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}   # the robust portfolio's set: the five of the 4 October design
+print(f"{len(months) * (len(CV.EVALUATION_VARIANTS) + 1)} covariance matrices in {time.time() - t0:.0f}s")
+"""),
+    md("""
+## The paths
+
+One path per specification, and the seven sensitivity paths. Each month's optimisation uses the drifted previous weights of its own path.
+"""),
+    code("""
+paths = {}
+t0 = time.time()
+for v in VARIANTS:
+    for cs, names in list(SETS.items()) + [SENSITIVITY_SET]:
+        t1 = time.time()
+        paths[(v, cs)] = E.run_path(months, Sigmas[v], weights, returns_m, names, tilt_mask,
+                                    mandate_mask if "exclusion" in names else None, robust=(v == C.ROBUST_VARIANT), keep_weights=True)
+        print(f"{LABEL[v]:>24}  {cs:<13} {time.time() - t1:5.0f}s")
+print(f"{len(paths)} paths in {time.time() - t0:.0f}s")
+
+# Expectation 1, the loop check: under C0 and C1 every path is the benchmark
+hold = [(v, cs) for v in VARIANTS for cs in ("C0", "C1") if np.abs(paths[(v, cs)]["active_return"]).max() < C.EVAL_BENCHMARK_TOL]
+largest_dev = max(np.abs(paths[(v, cs)]["active_return"]).max() for v in VARIANTS for cs in ("C0", "C1"))
+index_turnover = paths[(VARIANTS[0], "C0")]["benchmark_turnover"]
+print()
+print(f"expectation 1: {len(months)} months; {len(paths)} paths with {set(len(p) for p in paths.values())} records each; "
+      f"the benchmark is held in every month under C0 and C1 in {len(hold)} of {2 * len(VARIANTS)} paths (largest active return {largest_dev:.1e} a month, level {C.EVAL_BENCHMARK_TOL:g}): {'holds' if len(hold) == 2 * len(VARIANTS) else 'FAILS'}")
+print(f"the index's own one-way turnover: mean {index_turnover.mean():.4f} a month ({12 * index_turnover.mean():.1%} a year), median {index_turnover.median():.4f}, "
+      f"largest {index_turnover.max():.3f} in {index_turnover.idxmax()}; months above the cap of {C.TURNOVER_CAP_MONTHLY_ONE_WAY}: {int((index_turnover > C.TURNOVER_CAP_MONTHLY_ONE_WAY).sum())}")
+"""),
+    md("""
+## Expectations 2 to 7: the measures
+
+One row per path. Tracking errors and active returns in basis points a year; turnover as a fraction of the portfolio per month; the bias statistic under the 21 rule and under the ten-year variance ratio (daily variants only).
+"""),
+    code("""
+rows = []
+for (v, cs), path in paths.items():
+    s = E.summarise(path, vr_scale=vr10 if v[1] == "daily_3y" or v == C.ROBUST_VARIANT else None)
+    rows.append({"variant": LABEL[v], "set": cs, **s})
+table = pd.DataFrame(rows).set_index(["variant", "set"])
+bp_cols = ["realised TE", "forecast TE (mean)", "active return (gross)"] + [c for c in table.columns if c.startswith(("cost at", "net active return"))]
+show = table.copy()
+show[bp_cols] = 1e4 * show[bp_cols]
+show = show.rename(columns={c: f"{c} (bp)" for c in bp_cols})
+order = ["C0", "C1", "C2", "C3", "C3 tilt only"]
+show = show.reindex(pd.MultiIndex.from_product([[LABEL[v] for v in VARIANTS], order], names=["variant", "set"]))
+print(show[["realised TE (bp)", "forecast TE (mean) (bp)", "bias", "bias (variance ratio)", "turnover (one-way)", "relaxed months", "inaccurate months", "effective number", "industries held"]].to_string(float_format=lambda x: f"{x:.3f}"))
+print()
+print(show[["active return (gross) (bp)", "cost at 50 bp (bp)", "net active return at 50 bp (bp)", "information ratio at 50 bp", "net active return at 100 bp (bp)", "information ratio at 100 bp"]].to_string(float_format=lambda x: f"{x:.2f}"))
+"""),
+    code("""
+daily = [LABEL[v] for v in CV.EVALUATION_VARIANTS if v[1] == "daily_3y"]
+monthly = LABEL[("sample", "monthly_120")]
+robust_label = LABEL[C.ROBUST_VARIANT]
+te3 = table.xs("C3", level="set")["realised TE"]
+rng = te3[daily].max() - te3[daily].min()
+e2a = rng < C.EVAL_TE_RANGE_MAX
+e2b = te3[monthly] > te3[daily].min()
+print(f"expectation 2: realised tracking error under C3, daily estimators {1e4 * te3[daily].min():.1f} to {1e4 * te3[daily].max():.1f} bp (range {1e4 * rng:.1f}, level {1e4 * C.EVAL_TE_RANGE_MAX:.0f}): {'MET' if e2a else 'NOT MET'}; "
+      f"monthly sample covariance {1e4 * te3[monthly]:.1f} bp, above the lowest daily: {'yes' if e2b else 'no'}")
+bias3 = table.xs("C3", level="set")[["bias", "bias (variance ratio)"]]
+lo, hi = C.EVAL_BIAS_RANGE
+e3 = int(((bias3.loc[daily, "bias"] >= lo) & (bias3.loc[daily, "bias"] <= hi)).sum())
+closer = int((abs(bias3.loc[daily, "bias (variance ratio)"] - 1) < abs(bias3.loc[daily, "bias"] - 1)).sum())
+print(f"expectation 3: bias statistic under C3 and the 21 rule inside {lo} to {hi} for {e3} of {len(daily)} daily estimators ({', '.join(f'{b:.2f}' for b in bias3.loc[daily, 'bias'])}): {'MET' if e3 == len(daily) else 'NOT MET'}; "
+      f"under the ten-year variance ratio ({', '.join(f'{b:.2f}' for b in bias3.loc[daily, 'bias (variance ratio)'])}), closer to 1 for {closer} of {len(daily)}")
+singles = te3[daily + [monthly]]
+e4 = te3[robust_label] <= singles.max() + 1e-12
+print(f"expectation 4: the robust portfolio's realised tracking error under C3 is {1e4 * te3[robust_label]:.1f} bp against {1e4 * singles.min():.1f} (best single, {singles.idxmin()}) and {1e4 * singles.max():.1f} (worst, {singles.idxmax()}): {'MET' if e4 else 'NOT MET'}")
+fix = pd.DataFrame({"mandate C3": te3, "tilt only": table.xs("C3 tilt only", level="set")["realised TE"]})
+fix["difference"] = fix["mandate C3"] - fix["tilt only"]
+e5 = int(((fix["difference"] > 0) & (fix["difference"] < C.OPT_FIX_RISE_MAX)).sum())
+print(f"expectation 5: the mandate's C3 against the tilt alone, realised tracking error (bp): " + "; ".join(f"{k} {1e4 * r['mandate C3']:.1f} vs {1e4 * r['tilt only']:.1f} ({1e4 * r['difference']:+.1f})" for k, r in fix.iterrows())
+      + f"; positive and below {1e4 * C.OPT_FIX_RISE_MAX:.0f} bp in {e5} of {len(fix)}: {'MET' if e5 == len(fix) else 'NOT MET'}")
+relax = table.loc[(slice(None), ["C2", "C3"]), "relaxed share"]
+e6 = bool((relax < C.EVAL_RELAX_SHARE_MAX).all())
+print(f"expectation 6: share of months with a relaxed cap under C2 and C3, {relax.min():.3f} to {relax.max():.3f} (level {C.EVAL_RELAX_SHARE_MAX}): {'MET' if e6 else 'NOT MET'}")
+relaxed_months = pd.concat({cs: paths[(("sample", "daily_3y"), cs)]["relaxed"] for cs in ("C2", "C3")}, axis=1)
+by_cal = relaxed_months.groupby(relaxed_months.index.month).sum()
+by_cal.index = [pd.Timestamp(2000, m, 1).strftime("%b") for m in by_cal.index]
+print("relaxed months by calendar month (sample covariance on daily data):")
+print(by_cal.T.to_string())
+first_relaxed = [cs for cs in ("C3", "C3 tilt only") if bool(paths[(("sample", "daily_3y"), cs)]["relaxed"].iloc[0])]
+print(f"the first month is relaxed under: {', '.join(first_relaxed) if first_relaxed else 'none'}")
+"""),
+    md("""
+## By decade: realised against forecast tracking error under the mandate
+
+For each variant under C3, the realised tracking error of each decade beside the mean forecast of the same months, and the ratio of the two; the ten-year variance ratio's version of the forecast beside it for the daily variants.
+"""),
+    code("""
+first_label, last_label = f"{months[0]} to 1989-12", f"2020-01 to {months[-1]}"
+blocks = []
+for v in VARIANTS:
+    path = paths[(v, "C3")]
+    dec = E.by_decade(path, first_label, last_label).rename("realised TE")
+    grp = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in path.index], index=path.index)
+    fc = path.groupby(grp)["forecast_te"].mean().rename("forecast TE")
+    fc_vr = (path["forecast_te"] * np.sqrt(vr10.loc[path.index])).groupby(grp).mean().rename("forecast TE (variance ratio)") if (v[1] == "daily_3y" or v == C.ROBUST_VARIANT) else fc.rename("forecast TE (variance ratio)") * np.nan
+    d = pd.concat([dec, fc, fc_vr], axis=1)
+    d["realised / forecast"] = d["realised TE"] / d["forecast TE"]
+    d.insert(0, "variant", LABEL[v])
+    blocks.append(d)
+decades = pd.concat(blocks).set_index("variant", append=True).swaplevel()
+show_d = decades.copy()
+for c in ["realised TE", "forecast TE", "forecast TE (variance ratio)"]:
+    show_d[c] = 1e4 * show_d[c]
+print("under C3, by decade (bp a year):")
+print(show_d.to_string(float_format=lambda x: f"{x:.1f}"))
+"""),
+    md("""
+## Expectations 8 and 9, added after the first run: RiskMetrics, and the forecasts calibrated on their own past
+
+Two additions after the first run (6 October 2026), each with its expectation in `constants.py` before the code. First, RiskMetrics as a seventh variant: Dom, Howard, Jansen and Lohre (2024) find that weighting recent days more does more for a covariance than shrinkage or factor structure and that this simple dynamic estimator does as well as the DCC model for minimum-variance portfolios; notebook 10 found it gave the lowest unconstrained volatility and the best-calibrated forecast; the first design of this notebook left it out, a design miss. Second, a calibration of the forecasts, the fix a risk-model vendor applies when the bias statistic drifts from 1: the forecast of month t is multiplied by the ratio of realised to forecast tracking error over the previous 60 months of the same path, computed from months before t only, so nothing from the future enters it. One setting, 60 months, long enough for a stable ratio (a standard deviation estimated from 60 observations has a standard error of about 9%) and short enough to follow a change of regime within five years. The calibration cannot repair a month that no past resembles; it can repair a bias that persists.
+"""),
+    code("""
+# Added after the first run (6 October 2026): expectation 8, RiskMetrics against the sample covariance on daily data.
+ewma_label, sample_label = LABEL[C.EWMA_VARIANT], LABEL[("sample", "daily_3y")]
+e8 = te3[ewma_label] <= te3[sample_label] + 1e-12
+print(f"expectation 8: realised tracking error under C3, RiskMetrics {1e4 * te3[ewma_label]:.1f} bp against the sample covariance on daily data {1e4 * te3[sample_label]:.1f} bp: {'MET' if e8 else 'NOT MET'}; "
+      f"RiskMetrics forecast {1e4 * table.loc[(ewma_label, 'C3'), 'forecast TE (mean)']:.1f} bp, bias {table.loc[(ewma_label, 'C3'), 'bias']:.2f}, turnover {table.loc[(ewma_label, 'C3'), 'turnover (one-way)']:.3f} a month, "
+      f"net active return at 50 bp {1e4 * table.loc[(ewma_label, 'C3'), 'net active return at 50 bp']:.1f} bp")
+"""),
+    code("""
+# Added after the first run (6 October 2026): expectation 9, the forecasts calibrated on their own past.
+first_label, last_label = f"{months[0]} to 1989-12", f"2020-01 to {months[-1]}"
+rows = []
+for v in VARIANTS:
+    path = paths[(v, "C3")]
+    cal = E.calibrated_forecast(path)
+    active = path["active_return"].to_numpy()
+    grp = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in path.index], index=path.index)
+    row = {"variant": LABEL[v], "bias, 21 rule": E.bias_statistic(active, path["forecast_te"].to_numpy()), "bias, calibrated": E.bias_statistic(active, cal.to_numpy()),
+           "mean calibration factor": float((cal / path["forecast_te"]).mean())}
+    for g in grp.unique():
+        m = (grp == g).to_numpy()
+        row[f"calibrated bias, {g}"] = E.bias_statistic(active[m], cal.to_numpy()[m])
+    rows.append(row)
+calib = pd.DataFrame(rows).set_index("variant")
+print("the bias statistic under C3 before and after calibration on the path's own past (60-month window):")
+print(calib.to_string(float_format=lambda x: f"{x:.2f}"))
+lo9, hi9 = C.EVAL_CALIBRATED_BIAS_RANGE
+e9 = int(((calib.loc[daily, "bias, calibrated"] >= lo9) & (calib.loc[daily, "bias, calibrated"] <= hi9)).sum())
+print()
+print(f"expectation 9: the calibrated bias statistic lies in {lo9} to {hi9} for {e9} of {len(daily)} daily estimators ({', '.join(f'{b:.2f}' for b in calib.loc[daily, 'bias, calibrated'])}): {'MET' if e9 == len(daily) else 'NOT MET'}")
+"""),
+    md("""
+## Save
+
+The measures table, the by-decade table and the active returns of every path are written to `outputs/`, with the vintage in the file name; notebook 13 rebuilds the paths it attributes from the modules.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+table.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_{vintage}.csv", float_format="%.8f")
+decades.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_by_decade_{vintage}.csv", float_format="%.8f")
+calib.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_calibration_{vintage}.csv", float_format="%.8f")
+active = pd.DataFrame({f"{LABEL[v]} | {cs}": p["active_return"] for (v, cs), p in paths.items()})
+active.to_csv(f"{C.OUTPUT_DIR}/active_returns_{vintage}.csv", float_format="%.10f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("rolling", "active"))))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 566 months, 35 paths with 566 records each; the benchmark held in every month under C0 and C1 in 14 of 14 paths (largest active return 2e-7 a month); the index's own turnover 0.39% a month | holds |
+| 2. Does the estimator matter under the mandate | realised tracking error 84.7 to 93.4 basis points across the four daily estimators (range 8.8, level 10); the monthly sample covariance 95.8, above the lowest | MET |
+| 3. Calibration of the forecasts under the mandate | bias statistics 1.22 to 1.39 under the 21 rule, 1 of 4 inside 0.8 to 1.25; 1.20 to 1.36 under the ten-year variance ratio, closer to 1 for 4 of 4 | NOT MET |
+| 4. The robust portfolio | 87.4 basis points, against 84.7 for the best single estimator and 95.8 for the worst; its forecast the best calibrated (bias 1.09) | MET |
+| 5. The realised cost of the fixes | the mandate's C3 above the tilt alone by 4.4 to 5.2 basis points for all seven variants | MET |
+| 6. The cap | relaxed in 1 to 4 of 566 months (0.2% to 0.7%), the first month and Julys | MET |
+| 7. Active return, costs, holdings | the tilt had no opportunity cost: +1.8 to +6.9 basis points a year gross, inside one standard error (12 to 14) of zero; the mandate -1.0 to -6.9, the exclusions' cost 3 to 9; turnover costs 5 to 9 at 50 basis points; net -6 to -15; information ratios -0.07 to -0.17 | reported |
+| 8. RiskMetrics (added 6 October) | 84.3 basis points against 84.7 for the sample covariance on daily data; a difference of 0.4, inside the noise | MET, direction only |
+| 9. Calibrated forecasts (added 6 October) | calibrated bias statistics 1.11, 1.11, 1.17 and 1.15 for the four daily estimators, 3 of 4 inside 0.85 to 1.15; the monthly covariance's 1.61 falls to 1.12; by decade 0.95 to 1.18 after 1989, 1.24 to 1.50 before | NOT MET |
+
+Expectation 1 holds. 566 evaluation months, 35 paths, 566 records each; under C0 and C1 every path is the benchmark to the solver's precision (the largest active return in any month is 2e-7, two hundred-thousandths of a basis point; the level of 1e-10 written first was set for exact arithmetic and was raised to 1e-6 before the recorded run, as `constants.py` says). The index's own one-way turnover, the trading an index fund cannot avoid, averages 0.39% a month, 4.7% a year, with a median of 0.16% and a largest value of 13.3% in 1988-07; it exceeds 2% in 24 months, all of them Julys, when French rebuilds the industry portfolios from the end-of-June SIC codes. Under C2 the active weight bound leaves room to absorb those months, so the cap was relaxed once and the realised tracking error of following the index at 2% a month is 6.3 to 6.5 basis points.
+
+Expectation 2, the extension's question, is met: under the mandate the four daily estimators realise 84.7 (sample), 84.8 (shrinkage), 91.5 (component model) and 93.4 (factor model) basis points a year of tracking error, a range of 8.8 against the level of 10, and the sample covariance of 120 monthly returns realises 95.8, above all four. The ranking is notebook 10's: on three years of daily data the sample covariance and shrinkage are the same estimate (shrinkage intensity 0.012) and the best, the two structured models pay 7 to 9 basis points for assuming that industries share nothing beyond their factors, and the monthly covariance pays for its noise. The pattern of Dom, Howard, Jansen and Lohre (2024) holds in tracking-error terms with a qualification: the constraints shrink the differences between estimators to about a tenth of the tracking error, and do not remove them.
+
+Expectation 3 is not met, and the way it fails is the notebook's main finding about forecasts. Over the 566 months the daily estimators' forecasts under-forecast the realised tracking error by 22% to 39% (bias statistics 1.22 to 1.39) and the monthly covariance's by 61%. The ten-year variance ratio, which repaired the benchmark's forecasts in notebook 10, changes these by 0.02 to 0.03, because its mean over the evaluation months is 1.00: the positive autocorrelation of the early decades and the negative autocorrelation of the later ones cancel over this sample, and the active portfolio's own autocorrelation is not the benchmark's. The by-decade table says where the miss is. In 1979-07 to 1989-12 the realised tracking error was 1.6 to 2.0 times the forecast for every variant (138 to 156 basis points against 76 to 90); in the 1990s 1.3 to 1.4 times; in the 2000s 1.1 to 1.2; in the 2010s and from 2020 the forecasts were right to within 10%. The first decade is the oil shock. Oil was 15% of the benchmark and the tilt removed 7.6 percentage points of it; the oil price doubled in 1979 and 1980 and collapsed in 1986, and in single months the portfolio's active return reached +1.45% (1980-07), +1.41% (1980-02) and -1.14% (1981-03) against a forecast monthly standard deviation of about 0.24%, five to six forecast standard deviations. A three-year window of daily returns estimated on 1976 to 1979 cannot know that Oil's own volatility is about to triple; this is a change of regime, which no window length repairs, and it is why the realised number is the one that counts. The second part of the miss is of a different kind and does not go away with the decades: the monthly sample covariance under-forecasts by 30% to 70% in every decade, the daily estimators by 10% to 40% in the first three. An optimiser handed a covariance with errors finds the portfolio that looks least risky in that covariance, and part of what makes it look least risky is the errors; the forecast is then an in-sample minimum and the realised number is out of sample. This is the optimisation bias of Michaud (1989), the error-maximisation property of optimised portfolios, and it is larger the noisier the covariance, which is why the monthly covariance's forecast is the worst calibrated (1.61) and the robust portfolio's worst-case forecast, the maximum over five matrices, the best (1.09): taking the worst case across estimates offsets the optimism of each. For a manager: a tracking-error forecast that comes out of an optimiser is biased low, here by a fifth to a third with a good covariance, and the worst case across estimators is a better number to quote than any single estimator's own.
+
+Whether the miss of expectation 3 was foreseeable. Its direction was, and the design did not use what it knew. Notebook 10's by-decade table had the benchmark's own forecasts under-forecasting by 34% in 1979 to 1989 under the 21 rule, and Michaud (1989) says that an optimised portfolio's forecast risk is biased low. Both were known on 4 October when the range 0.8 to 1.25 was written for the whole sample, as if the active portfolio's forecasts would be as well calibrated on average as the benchmark's. The miss is on the design side: the expectation should have been written by decade, with a statistic above 1 expected for the first decade and for every optimised portfolio. The size of the miss was not foreseeable from the literature: a first decade at 1.6 to 2.0 times the forecast is the oil shock acting on a portfolio tilted away from Oil, and notebook 10's table, which showed 1.34 for the benchmark, had no active portfolio in it. Expectation 9 below adds the fix for the part of the bias that persists; it uses only months before each forecast, so it is not fitted on the months it is judged on.
+
+Expectation 4 holds. The robust portfolio realises 87.4 basis points, 2.7 above the best single estimator and 8.4 below the worst, at a one-way turnover of 1.1% a month against 1.3% for the sample covariance. It is nobody's worst case, which is what it was built for, and its forecast is the one a manager could have trusted.
+
+Expectation 5 holds. The mandate's fixes, beta neutrality and the exclusion of tobacco and weapons, cost 4.4 to 5.2 basis points a year of realised tracking error for every one of the seven variants. Notebook 11 had forecast 2 to 7 for the daily estimators and 19 to 25 for the monthly covariance; the realised cost for the monthly covariance is 4.8, so the large forecast was the noise talking, the same noise that made its hedges attractive in the first place.
+
+Expectation 6 holds. The cap was relaxed in 2 of 566 months under C3 for the daily estimators and RiskMetrics (the first month, when the tilt is put on from the index, and one July), 3 for the robust portfolio, 4 for the monthly covariance, and once under C2; the share is 0.2% to 0.7% against a level of 10%. The months are the ones the design named.
+
+Expectation 7, the active returns. Opportunity cost, the return a fund gives up by obeying a constraint, is the first thing a client asks about a tilt, and the tilt portfolio's returns show that there was none: over 47 years the tilt alone earned between +1.8 and +6.9 basis points a year gross against the benchmark, and a mean active return over 47 years has a standard error of the realised tracking error divided by the square root of 47, 85 to 96 basis points divided by 6.9, 12 to 14 basis points a year, so the figure is inside one standard error of zero. Holding Coal, Oil and Utilities at half their index weight gave up no return that can be told from chance, which for a sustainability mandate is the result its holders want. The mandate earned between -1.0 and -6.9, also inside one standard error of zero. The difference between the mandate and the tilt alone, 3 to 9 basis points a year, is the opportunity cost of holding tobacco and weapons at zero, two industries that outperformed the market over the sample; it is a difference of two means on the same months and is less noisy than either, and it is the number a manager reports to the client who asked for the exclusions. Trading costs at 50 basis points per unit of turnover take 5 to 9 a year; they are arithmetic on the turnover and carry no noise. Net of them the mandate's portfolios trail the benchmark by 6 to 15 basis points a year, with information ratios of -0.07 to -0.17, on a tracking error of 85 to 96. A manager of such a mandate is judged on four numbers before the active return: the realised tracking error against the ex-ante limit (85 to 96 basis points against 100: inside, for every variant), the constraints obeyed in every month (the relaxed-cap months counted and explained), the turnover and its cost (0.9% to 1.5% a month, 5 to 9 basis points a year at 50), and the cost of each exclusion reported to the client. The information ratio measures skill at forecasting returns; this portfolio makes no return forecast, so an information ratio inside one standard error of zero is the outcome the design implies. The effective number of holdings is 19.0 to 19.8 against the benchmark's 18.9, and the portfolios hold 41 to 45 of the 49 industries. Where the active return came from, by factor, is notebook 13's question.
+
+Expectation 8, RiskMetrics, is met in direction and says nothing in size. Under the mandate RiskMetrics realises 84.3 basis points against 84.7 for the sample covariance on three years of daily data, a difference of 0.4 basis points on paths that share most of their months; a realised tracking error of 85 basis points measured on 566 months has a standard error of about 2.5, so the two are the same number. Its forecast is as low as the others' (bias 1.23 against 1.26), and its turnover is the highest of the daily variants (1.4% a month against 0.9% to 1.3%), because a covariance that weights recent days most changes more from month to month and the portfolio follows it; after costs at 50 basis points it nets -13.9 against -14.8. Dom, Howard, Jansen and Lohre (2024) found that time dynamics were the design choice that mattered most for a constrained minimum-variance portfolio of single stocks; notebook 10 found the same for the unconstrained minimum-variance portfolio of the 49 industries. Under the tracking-error mandate on 49 industries the gain is gone: the active weight bound of 2 percentage points and the turnover cap leave the optimiser too little room for a better covariance to show. The expectation was written as "at or below", and a result of equality meets it without teaching anything; written again, it would name a smallest difference worth calling a gain, 2.5 basis points, one standard error.
+
+Expectation 9, the calibrated forecasts, is not met by one estimator and 0.02. Multiplying each forecast by the ratio of realised to forecast tracking error over the previous 60 months of the same path moves every variant's bias statistic towards 1: the daily estimators from 1.22 to 1.39 to 1.11 to 1.17, the monthly covariance from 1.61 to 1.12, RiskMetrics from 1.23 to 1.08, the robust portfolio from 1.09 to 1.06. Three of the four daily estimators land inside 0.85 to 1.15 (1.11, 1.11, 1.15); the factor model lands at 1.17. The by-decade columns say what the calibration repairs and what it cannot. From 1990 on, the calibrated statistics of the daily estimators lie between 0.95 and 1.18 in every decade, and the monthly covariance's between 1.01 and 1.18: the persistent part of the bias, the optimisation bias, is a ratio that the previous five years measure well. In 1979 to 1989 the calibrated statistics are still 1.24 to 1.50, because the first 24 months run uncorrected and the shock enters the realised numbers before it enters the window; a correction built from the past arrives after the regime it is correcting for. The mean calibration factor, 1.16 to 1.30 for the daily estimators and 1.52 for the monthly covariance, is the size of the correction a manager would have applied in real time. The range 0.85 to 1.15 was written for the whole sample, which includes the 126 months no backward-looking calibration can repair; written for the months from 1990, where the calibration has a full window, the four daily estimators would have landed between 0.96 and 1.18, and the verdict on that range is not claimed, because the range was not written first.
+
+The robust portfolio's status column reports 154 and 113 months of inaccurate solver status under C0 and C1 and one under C3. Under C0 and C1 the optimum is the benchmark exactly, where the worst-case tracking error is zero and the problem's cone constraints are all at their tips; an interior-point method reaches that point only approximately and says so. The weights it returned passed every feasibility check, and the active return in those months is below 2e-7.
+
+**What this notebook does not settle.**
+
+- The under-forecast of 1979 to 1989 is a change of regime that no estimation window anticipates and that the calibration of expectation 9 reaches only after the fact. A manager handles it with scenario and stress tests outside the covariance, which the extension does not build; the notebook states the size of the miss so that a reader knows what a covariance-based forecast can and cannot do.
+- The calibration of expectation 9 uses one window length, 60 months, fixed before its code. A shorter window would follow a change of regime sooner and carry more noise (a ratio from 24 months has a standard error of about 15%); the trade-off is stated and not searched, because searching it on these 566 months would fit the window to the sample.
+- Where the tilt's and the exclusions' active returns came from, by Fama-French factor, is notebook 13's question.
+- The result holds for 49 industries, whose benchmark is concentrated (effective number 19); at the level of single stocks the differences between estimators, and the gain from time dynamics that expectation 8 did not find here, may be larger, which is the second study's question.
+- Trading costs are one proportional rate for every industry and month; the realised numbers are gross of costs, and the net figures use 50 and 100 basis points per unit of one-way turnover as the replication does.
+- The level for expectation 1 was raised from 1e-10 to 1e-6 after the first run, for the solver's precision. The two additions after the first run, RiskMetrics and the calibration, are labelled in the text and in `constants.py` with their date; the 30 paths of the first design give the same numbers to every printed decimal as in the first run.
 """),
 ]
 
 
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))

@@ -71,3 +71,28 @@ def test_missing_codes_become_nan_and_percent_becomes_decimal(tmp_path, monkeypa
     assert abs(frame.loc["1926-07", "Agric"] - 0.0236) < 1e-12
     counts = fl.load_counts("ind49", "Number of Firms", cache_dir=tmp_path)
     assert counts.loc["1926-09", "Food"] == 26
+
+
+DAILY_FIXTURE = """This file was created using the 202608 CRSP database.
+It contains value- and equal-weighted returns for 3 industry portfolios.
+
+Missing data are indicated by -99.99 or -999.
+
+
+  Average Value Weighted Returns -- Daily
+,Agric,Food ,Soda
+19690701,   0.36,   0.09, -99.99
+19690702,  -0.23,   0.71,   0.10
+19690703,   0.50,  -1.00,   0.30
+19690707,   0.10,   0.20,   0.30
+"""
+
+
+def test_parse_blocks_reads_daily_dates_as_days():
+    blocks = fl.parse_blocks(DAILY_FIXTURE)
+    assert len(blocks) == 1 and blocks[0]["frequency"] == "daily"
+    frame = blocks[0]["frame"]
+    assert str(frame.index[0]) == "1969-07-01" and str(frame.index[-1]) == "1969-07-07"
+    assert frame.index.freqstr == "D" and len(frame) == 4          # the weekend and the holiday are simply absent
+    assert frame.loc["1969-07-03", "Food"] == -1.00
+    assert frame.loc["1969-07-01", "Soda"] == -99.99               # the missing code is left for the loader to mask

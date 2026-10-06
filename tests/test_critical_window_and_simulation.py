@@ -123,3 +123,24 @@ def test_garch_scales_formula():
     h1 = 0.05 + 0.1 * 1.0 * 1.0**2 + 0.85 * 1.0
     h2 = 0.05 + 0.1 * h1 * 2.0**2 + 0.85 * h1
     assert abs(s[1, 0] - np.sqrt(h1)) < 1e-12 and abs(s[2, 0] - np.sqrt(h2)) < 1e-12
+
+
+def test_per_asset_scale_keeps_the_covariance_and_changes_the_shape_of_months():
+    normal = SIM.build_market(10)
+    common = SIM.build_market(10, dof=5)
+    per_asset = SIM.build_market(10, dof=5, common_scale=False)
+    # same true moments; the sample covariance stays close to Sigma because every scale has mean square one
+    np.testing.assert_array_equal(per_asset.Sigma, normal.Sigma)
+    S = np.cov(per_asset.returns, rowvar=False)
+    assert np.allclose(np.diag(S), np.diag(per_asset.Sigma), rtol=0.06)
+    assert np.allclose(S[0, 1:], per_asset.Sigma[0, 1:], rtol=0.08)      # the factor row: covariances with every asset
+    assert np.allclose(per_asset.returns.mean(axis=0), per_asset.mu, atol=0.002)
+    # the scales differ across assets within a month under per-asset scaling and are equal under the common scale
+    assert np.allclose(common.scales[:, 0], common.scales[:, 5])
+    assert not np.allclose(per_asset.scales[:, 0], per_asset.scales[:, 5])
+    assert per_asset.scales.shape == (C.SIM_T, 10)
+    # the factor's shocks keep their sign, paired with the normal market (an asset's return adds two shocks with
+    # different scales, so its sign can flip; the factor asset has only one)
+    assert np.all(np.sign(per_asset.returns[:, 0] - per_asset.mu[0]) == np.sign(normal.returns[:, 0] - normal.mu[0]))
+    # fatter tails than the normal market in the assets' own returns too
+    assert SIM.excess_kurtosis(per_asset.returns[:, 3]) > SIM.excess_kurtosis(normal.returns[:, 3]) + 0.3

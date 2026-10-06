@@ -1,0 +1,208 @@
+{
+ "test": "notebook 08, direct test of the explanation of the gap on firm-level data",
+ "run_utc": "2026-10-01T14:54Z",
+ "firm_level_source": "CRSP monthly stock file and names file, Center for Research in Security Prices, LLC, accessed via WRDS under Queen Mary University of London's subscription on 2026-09-28; data kept on the machine that holds them, results only published",
+ "french_vintage": "This file was created using the 202608 CRSP database.",
+ "months": 666,
+ "first_month": "1969-07",
+ "last_month": "2024-12",
+ "design": {
+  "DIRECT_TEST_SHARE_CODES": [
+   10,
+   11
+  ],
+  "DIRECT_TEST_EXCHANGE_CODES": [
+   1,
+   2,
+   3
+  ],
+  "DIRECT_TEST_FORMATION_MONTH": 6,
+  "DIRECT_TEST_MARKET_TE_MAX": 0.002,
+  "DIRECT_TEST_MIN_CORRELATION": 0.8,
+  "DIRECT_TEST_SLOPE_RANGE": [
+   0.8,
+   1.2
+  ],
+  "DIRECT_TEST_RESIDUAL_TE_MAX": 0.0025
+ },
+ "expectation_1_validation": {
+  "months": 666,
+  "tracking_error_annual": 0.0007560713421650078,
+  "mean_difference_annual": -0.0004227168688761194,
+  "correlation": 0.9999888721278982,
+  "max_abs_monthly_difference": 0.001535411474569523,
+  "month_of_max": "1998-10",
+  "level": 0.002,
+  "met": true
+ },
+ "expectation_2_predicted_vs_observed": {
+  "months": 666,
+  "correlation": 0.9308514413936518,
+  "slope": 1.192572977125293,
+  "intercept_monthly": -3.406294262470599e-05,
+  "te_observed_annual": 0.004733579843260669,
+  "te_predicted_annual": 0.003694750513861591,
+  "te_residual_annual": 0.0018702672272756153,
+  "share_of_variance_explained": 0.8438910100893097,
+  "met": true
+ },
+ "expectation_3_reported": {
+  "omega_by_calendar_month_percent": {
+   "Jul": 0.57,
+   "Aug": 0.759,
+   "Sep": 0.879,
+   "Oct": 0.988,
+   "Nov": 1.11,
+   "Dec": 1.277,
+   "Jan": 1.685,
+   "Feb": 1.798,
+   "Mar": 1.951,
+   "Apr": 2.085,
+   "May": 2.206,
+   "Jun": 2.339
+  },
+  "te_observed_by_calendar_month_bp": {
+   "Jul": 2.0,
+   "Aug": 6.7,
+   "Sep": 11.1,
+   "Oct": 14.3,
+   "Nov": 34.4,
+   "Dec": 37.2,
+   "Jan": 27.7,
+   "Feb": 54.9,
+   "Mar": 86.0,
+   "Apr": 80.9,
+   "May": 46.3,
+   "Jun": 64.8
+  },
+  "te_predicted_by_calendar_month_bp": {
+   "Jul": 6.8,
+   "Aug": 12.8,
+   "Sep": 10.1,
+   "Oct": 17.8,
+   "Nov": 27.9,
+   "Dec": 29.8,
+   "Jan": 19.4,
+   "Feb": 39.0,
+   "Mar": 71.0,
+   "Apr": 61.4,
+   "May": 32.4,
+   "Jun": 48.4
+  },
+  "te_residual_by_calendar_month_bp": {
+   "Jul": 7.0,
+   "Aug": 12.3,
+   "Sep": 8.9,
+   "Oct": 14.8,
+   "Nov": 13.5,
+   "Dec": 14.9,
+   "Jan": 15.0,
+   "Feb": 22.5,
+   "Mar": 24.0,
+   "Apr": 27.7,
+   "May": 22.2,
+   "Jun": 27.6
+  },
+  "omega_by_year_percent_top5": {
+   "1973": 8.789,
+   "1974": 4.276,
+   "1975": 3.787,
+   "1976": 3.318,
+   "1981": 3.289
+  },
+  "omega_by_decade_percent": {
+   "1960": 0.758,
+   "1970": 3.255,
+   "1980": 1.965,
+   "1990": 1.065,
+   "2000": 0.829,
+   "2010": 0.706,
+   "2020": 0.552
+  },
+  "firms_outside_industries_by_decade_mean": {
+   "1960": 46.0,
+   "1970": 605.0,
+   "1980": 558.0,
+   "1990": 308.0,
+   "2000": 135.0,
+   "2010": 100.0,
+   "2020": 183.0
+  },
+  "firms_market_by_decade_mean": {
+   "1960": 2186.0,
+   "1970": 3976.0,
+   "1980": 5491.0,
+   "1990": 6496.0,
+   "2000": 5031.0,
+   "2010": 3701.0,
+   "2020": 4010.0
+  }
+ },
+ "expectation_4_residual": {
+  "te_residual_annual": 0.0018702672272756153,
+  "level": 0.0025,
+  "met": true
+ },
+ "largest_observed_gaps": {
+  "1973-04": {
+   "observed": -0.00542,
+   "predicted": -0.00484,
+   "omega": 0.131
+  },
+  "1973-05": {
+   "observed": -0.00345,
+   "predicted": -0.00316,
+   "omega": 0.1261
+  },
+  "1984-06": {
+   "observed": -0.00332,
+   "predicted": 0.00027,
+   "omega": 0.0642
+  },
+  "1999-11": {
+   "observed": 0.00532,
+   "predicted": 0.00472,
+   "omega": 0.018
+  },
+  "1999-12": {
+   "observed": 0.00725,
+   "predicted": 0.00571,
+   "omega": 0.0294
+  },
+  "2000-02": {
+   "observed": 0.00986,
+   "predicted": 0.00714,
+   "omega": 0.0392
+  },
+  "2000-03": {
+   "observed": -0.0175,
+   "predicted": -0.0145,
+   "omega": 0.0527
+  },
+  "2000-04": {
+   "observed": -0.01496,
+   "predicted": -0.01131,
+   "omega": 0.0459
+  },
+  "2000-05": {
+   "observed": -0.00729,
+   "predicted": -0.00447,
+   "omega": 0.0381
+  },
+  "2000-06": {
+   "observed": 0.01214,
+   "predicted": 0.00915,
+   "omega": 0.035
+  },
+  "2000-11": {
+   "observed": -0.00392,
+   "predicted": -0.00252,
+   "omega": 0.0092
+  },
+  "2001-02": {
+   "observed": -0.00424,
+   "predicted": -0.00121,
+   "omega": 0.0089
+  }
+ }
+}

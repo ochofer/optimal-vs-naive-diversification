@@ -10,3 +10,5 @@ __pycache__/
 .DS_Store
 # The checker's banned-synonym list: a working file, not part of the public text
 .public_text_terms
+# Run products: every notebook regenerates its outputs from the downloaded files, and the vintage is in each file name
+outputs/

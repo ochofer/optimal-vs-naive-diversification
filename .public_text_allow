@@ -3,3 +3,8 @@ Optimal Versus Naive Diversification
 How Inefficient is the 1/N Portfolio Strategy\?
 # The header word of the paper's tables, read from the PDF as data by tests/test_dgu_published.py.
 _rows\(.*"Strategy"
+# Product and strategy names quoted from asset managers' own descriptions in notebook 11's references, not this repository's terms.
+Research Enhanced Index [Ss]trategy
+enhanced index strategies typically
+Enhanced Index Russell 1000 strategy
+Barra Optimizer

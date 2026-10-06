@@ -35,7 +35,7 @@ import requests
 
 from . import constants as C
 
-_DATE_ROW = re.compile(r"^\s*(\d{6}|\d{4})\s*,")
+_DATE_ROW = re.compile(r"^\s*(\d{8}|\d{6}|\d{4})\s*,")   # daily YYYYMMDD, monthly YYYYMM, annual YYYY
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -98,9 +98,9 @@ def _vintage_line(zip_bytes: bytes) -> str:
 def parse_blocks(text: str) -> list[dict]:
     """Split a French CSV into its blocks.
 
-    Each block is returned as {"title": str, "frequency": "monthly" | "annual",
-    "frame": DataFrame} where the frame is indexed by Period and holds floats in
-    the file's own units (percent). The title is the last non-empty line before
+    Each block is returned as {"title": str, "frequency": "daily" | "monthly" |
+    "annual", "frame": DataFrame} where the frame is indexed by Period (day,
+    month or year) and holds floats in the file's own units (percent). The title is the last non-empty line before
     the header row that is not itself a data row.
     """
     lines = text.splitlines()
@@ -132,7 +132,10 @@ def parse_blocks(text: str) -> list[dict]:
             raw = pd.read_csv(io.StringIO("\n".join(rows)), header=None, index_col=0)
             raw.columns = columns[: raw.shape[1]]
             date_len = len(str(raw.index[0]).strip())
-            if date_len == 6:
+            if date_len == 8:
+                idx = pd.PeriodIndex(pd.to_datetime(raw.index.astype(str), format="%Y%m%d"), freq="D")
+                freq = "daily"
+            elif date_len == 6:
                 idx = pd.PeriodIndex([pd.Period(f"{str(d)[:4]}-{str(d)[4:6]}", freq="M") for d in raw.index])
                 freq = "monthly"
             else:
@@ -160,7 +163,10 @@ def load_blocks(key: str, cache_dir: str | Path = "data/french") -> list[dict]:
 
 def load_monthly(key: str, block: int | str = 0, cache_dir: str | Path = "data/french",
                  as_decimal: bool = True) -> pd.DataFrame:
-    """One monthly block of one file, in decimal returns with missing codes as NaN.
+    """One block of one file, in decimal returns with missing codes as NaN.
+
+    The name dates from the monthly files; the function serves the daily files
+    in the same way (the block's index is then a daily Period).
 
     block is an integer position among the file's blocks, or a regular
     expression matched against block titles (the first match wins).

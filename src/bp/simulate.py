@@ -62,15 +62,21 @@ class Market:
 
 
 def build_market(N: int, T: int = C.SIM_T, seed: int = C.SIM_SEED, dof: float | None = None,
-                 garch: bool = False) -> Market:
+                 garch: bool = False, common_scale: bool = C.SIM_T_COMMON_SCALE) -> Market:
     """One simulated history. The factor's returns depend on the seed only, so the
     three universes (N = 10, 25, 50) share it, as Table 6's identical "mv (true)"
     column across N implies; the idiosyncratic volatilities and shocks depend on
     the seed and on N. With dof set, the shocks are Student-t with that many
-    degrees of freedom, scaled to the same covariance; the scale draws depend on
-    the seed and on dof, and are shared across N like the factor. With garch
-    set, each shock series carries its own GARCH(1,1) volatility. One relaxation
-    at a time: dof and garch cannot both be set."""
+    degrees of freedom, scaled to the same covariance. With common_scale (the
+    design), one scale draw per month multiplies the factor shock and every
+    asset's own shock, so an extreme month hits all assets at once; the scale
+    draws depend on the seed and on dof, and are shared across N like the
+    factor. Without it, the factor shock and each asset's own shock get their
+    own independent scale draw each month, so the shape of the month's
+    co-movement changes as well as its size; the covariance of returns is still
+    exactly Sigma, because each scale has mean square one and the shocks are
+    independent. With garch set, each shock series carries its own GARCH(1,1)
+    volatility. One relaxation at a time: dof and garch cannot both be set."""
     if dof is not None and dof <= 2:
         raise ValueError("dof must exceed 2 for the variance to exist")
     if dof is not None and garch:
@@ -90,12 +96,22 @@ def build_market(N: int, T: int = C.SIM_T, seed: int = C.SIM_SEED, dof: float | 
     eps = rng.normal(0.0, np.sqrt(idio_var), size=(T, N))
     eps[:, 0] = 0.0
     scales = None
-    if dof is not None:
+    if dof is not None and common_scale:
         rng_scale = np.random.default_rng([seed, 1_000_000 + int(round(dof * 1000))])
         scale = np.sqrt((dof - 2.0) / rng_scale.chisquare(dof, size=T))
         f_shock = scale * f_shock
         eps = scale[:, None] * eps
         scales = np.repeat(scale[:, None], N, axis=1)
+    elif dof is not None:
+        # one scale per shock series: column 0 for the factor (shared across N, like the factor itself),
+        # columns 1 to N-1 for the assets' own shocks
+        rng_scale_f = np.random.default_rng([seed, 2_000_000 + int(round(dof * 1000))])
+        rng_scale_a = np.random.default_rng([seed, N, 2_000_000 + int(round(dof * 1000))])
+        scales = np.empty((T, N))
+        scales[:, 0] = np.sqrt((dof - 2.0) / rng_scale_f.chisquare(dof, size=T))
+        scales[:, 1:] = np.sqrt((dof - 2.0) / rng_scale_a.chisquare(dof, size=(T, N - 1)))
+        f_shock = scales[:, 0] * f_shock
+        eps[:, 1:] = scales[:, 1:] * eps[:, 1:]
     if garch:
         # standardised shocks: the factor's in column 0 (the factor asset has no idiosyncratic shock),
         # each asset's own in columns 1 to N-1
