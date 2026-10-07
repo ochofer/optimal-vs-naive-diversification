@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optimal versus naive diversification</title>
+<meta name="description" content="A replication of DeMiguel, Garlappi and Uppal (2009) on Ken French's data, and an extension to index tracking under the constraints of an enhanced index fund: the dashboard, the companion page and the note.">
+<style>
+:root { color-scheme: light dark;
+  --bg: #fafaf8; --fg: #1a1a1a; --muted: #555; --line: #d9d9d4; --card: #ffffff; --accent: #1f5fa8; }
+@media (prefers-color-scheme: dark) { :root { --bg: #141414; --fg: #e8e8e4; --muted: #a8a8a2; --line: #333; --card: #1d1d1d; --accent: #6ea8e0; } }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--fg); margin: 0; line-height: 1.5; }
+main { max-width: 760px; margin: 0 auto; padding: 2.5rem 1rem 3rem; }
+h1 { font-size: 1.6rem; margin: 0 0 .6rem; }
+p { margin: 0 0 1rem; }
+.card { display: block; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .9rem 1.1rem; margin: .8rem 0; color: inherit; text-decoration: none; }
+.card:hover { border-color: var(--accent); }
+.card strong { color: var(--accent); }
+.card span { display: block; color: var(--muted); font-size: .93rem; margin-top: .15rem; }
+footer { color: var(--muted); font-size: .85rem; margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: .8rem; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+<h1>Optimal versus naive diversification</h1>
+<p>A replication of DeMiguel, Garlappi and Uppal (2009) on Ken French's data, and an extension in which a portfolio of French's 49 industries tracks their combination weighted by market value under the constraints an enhanced index fund runs: no short positions, bounded deviations from the index, limited trading each month, three carbon-intensive industries held at half their index weight, tobacco and weapons excluded, and a beta (the slope of the portfolio's return on the index's) of one to the index. The code, the thirteen notebooks, the tables and the README with the findings are in the repository; the dashboard and the companion page are built from the tables committed with them, and the note cites them.</p>
+
+<a class="card" href="dashboard/B-P_dashboard.html"><strong>The dashboard</strong><span>The results of the thirteen notebooks in ten interactive figures, each naming the tables it is drawn from; the numbers appear on hover.</span></a>
+<a class="card" href="companion/industry_tilts_factor_exposures.html"><strong>The companion page</strong><span>The attribution, the split of the portfolio's return relative to the index into six parts, one per factor (a factor is a return series that many assets move with, such as size or value), and a remainder, worked through on one page: the map of the industries' betas to the factors, the arithmetic from a change in weight to its effect on return, a calculator, and three cases.</span></a>
+<a class="card" href="note/B-P_note_2026-10.pdf"><strong>The note</strong><span>The write-up as a PDF, with its HTML source beside it in the repository: the replication beside the published figures, the extended sample, the estimators under the constraints, the attribution, and the limits of the design.</span></a>
+<a class="card" href="https://github.com/ochofer/optimal-vs-naive-diversification"><strong>The repository on GitHub</strong><span>Code, notebooks, tables and the README; the MIT licence; how to run everything from a blank Colab runtime.</span></a>
+
+<footer>Carlo Hofer, 2026. Data: Kenneth R. French's data library, downloaded at run time.</footer>
+</main>
+</body>
+</html>

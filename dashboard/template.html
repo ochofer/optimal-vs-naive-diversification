@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optimal versus naive diversification: the results in charts</title>
+<style>
+:root { color-scheme: light dark;
+  --bg: #fafaf8; --fg: #1a1a1a; --muted: #555; --line: #d9d9d4; --card: #ffffff; --grid: #e6e6e1; --accent: #1f5fa8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #141414; --fg: #e8e8e4; --muted: #a8a8a2; --line: #333; --card: #1d1d1d; --grid: #2c2c2c; --accent: #6ea8e0; } }
+:root[data-theme="dark"] { --bg: #141414; --fg: #e8e8e4; --muted: #a8a8a2; --line: #333; --card: #1d1d1d; --grid: #2c2c2c; --accent: #6ea8e0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--fg); margin: 0; line-height: 1.45; }
+main { max-width: 1120px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+h1 { font-size: 1.5rem; margin: 0 0 .3rem; } h2 { font-size: 1.15rem; margin: 2.2rem 0 .4rem; padding-top: .6rem; border-top: 1px solid var(--line); }
+.dek { color: var(--muted); margin: 0 0 1rem; max-width: 60rem; }
+.nav { display: flex; flex-wrap: wrap; gap: .35rem .9rem; font-size: .9rem; margin: .8rem 0 1.4rem; }
+.nav a { color: var(--accent); text-decoration: none; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: .8rem 1rem 1rem; margin: .8rem 0; }
+.card p { margin: .2rem 0 .6rem; max-width: 62rem; }
+.chart { width: 100%; min-height: 380px; }
+.chart.tall { min-height: 460px; }
+.src { color: var(--muted); font-size: .82rem; margin: .4rem 0 0; }
+.toggle { font-size: .85rem; margin: .2rem 0 .4rem; }
+.toggle button { font: inherit; padding: .25rem .7rem; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 4px; cursor: pointer; margin-right: .3rem; }
+.toggle button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+dl.terms { font-size: .9rem; } dl.terms dt { font-weight: 600; margin-top: .5rem; } dl.terms dd { margin: 0 0 0 1rem; }
+footer { color: var(--muted); font-size: .85rem; margin-top: 2.5rem; border-top: 1px solid var(--line); padding-top: .8rem; }
+a { color: var(--accent); }
+@media print { .chart { min-height: 320px; } .card { break-inside: avoid; } }
+</style>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+</head>
+<body>
+<main>
+<header>
+<h1>Optimal versus naive diversification: the results in charts</h1>
+<p class="dek">The replication of DeMiguel, Garlappi and Uppal (2009) on Ken French's data and the extension to a tracking-error mandate on French's 49 industries, 1979-07 to 2026-08, in ten figures. Each chart is drawn from the output files of the repository's notebooks, named under it; hover for the numbers. Terms are defined at the end of the page.</p>
+<nav class="nav" aria-label="Sections">
+<a href="#s1">1 Replication</a><a href="#s2">2 Since the paper</a><a href="#s3">3 Benchmark</a><a href="#s4">4 Estimators</a><a href="#s5">5 Frontier</a><a href="#s6">6 Forecast bias</a><a href="#s7">7 Active return</a><a href="#s8">8 Turnover and cost</a><a href="#s9">9 Attribution</a><a href="#s10">10 Optimiser</a><a href="#terms">Terms</a>
+</nav>
+</header>
+
+<h2 id="s1">1. The replication: this study beside the paper</h2>
+<div class="card">
+<p>Each point is one rule on one dataset over the paper's out-of-sample months ({{paper_lo}} to {{paper_hi}}). On the left the Sharpe ratio: {{gated_pass}} of the {{gated_n}} cells that carry the band of 0.03 (the shaded strip around the diagonal) sit inside it; the hollow points carry no verdict, because the rule's turnover makes its Sharpe ratio fragile. On the right turnover relative to 1/N on log scales, with the 25 per cent band: {{turn_pass}} of {{turn_n}} gated cells inside it.</p>
+<div id="f1" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/replication_sharpe_{{vintage}}.csv and results/{{vintage}}/replication_turnover_{{vintage}}.csv (notebook 03); published values from DeMiguel, Garlappi and Uppal (2009), Tables 3 and 5.</p>
+</div>
+
+<h2 id="s2">2. The months since the paper</h2>
+<div class="card">
+<p>Each rule's Sharpe ratio in the paper's period (grey) and in the {{new_months}} months since ({{new_lo}} to {{new_hi}}, coloured), by dataset. The vertical line is 1/N in the new period. {{beats}} of {{cells}} rule-dataset cells beat 1/N at the 5 per cent level in the new period; the cells that fall below it at that level are the minimum-variance rules on MKT/SMB/HML and on FF-4-factor.</p>
+<div id="f2" class="chart tall"></div>
+<p class="src">Source: results/{{vintage}}/extended_sample_sharpe_{{vintage}}.csv and results/{{vintage}}/extended_sample_vs_1N_{{vintage}}.csv (notebook 07).</p>
+</div>
+
+<h2 id="s3">3. The benchmark: the 49 industries against French's market</h2>
+<div class="card">
+<p>The cap-weighted combination of the 49 industries, rebuilt from French's firm counts and average sizes, tracks French's market return within {{bench_te}} basis points a year over {{bench_months}} months from {{bench_first}}. The upper panel shows growth of one unit in each (log scale); the lower panel the cumulative gap in basis points, which comes from French's end-of-June formation (a firm listed since June is in the market and in no industry until the next July); a direct test on the CRSP monthly file accounts for {{gap_share}} per cent of the gap's variance.</p>
+<div id="f3" class="chart tall"></div>
+<p>The benchmark's own composition moved: the eight largest industries on average ({{top_ind}}) and the rest, every third month.</p>
+<div id="f3b" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/benchmark_returns_{{vintage}}.csv and results/{{vintage}}/benchmark_weights_{{vintage}}.csv (notebook 08).</p>
+</div>
+
+<h2 id="s4">4. Four covariance estimators without the mandate</h2>
+<div class="card">
+<p>The realised volatility, per year, of the minimum-variance portfolio each estimator builds, over the 566 months, unconstrained and long-only, on 120 monthly returns and on three years of daily returns. On monthly data the sample covariance realises {{gmv_sample}} per cent against {{gmv_lo}} to {{gmv_hi}} for the structured estimators; long-only, every estimator at either frequency lands between {{lo_lo}} and {{lo_hi}}.</p>
+<div id="f4" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/covariance_estimators_{{vintage}}.csv (notebook 10).</p>
+</div>
+
+<h2 id="s5">5. The tracking-error frontier: what each constraint costs</h2>
+<div class="card">
+<p>Realised tracking error (filled markers) and the estimators' own forecast (hollow) as the constraints accumulate from long-only to the mandate. Under the mandate the four estimators built from daily returns realise {{te_lo}} to {{te_hi}} basis points a year and the monthly sample covariance {{te_monthly}}: a range of {{te_range}} across the daily four on a level of about 90.</p>
+<div id="f5" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/rolling_evaluation_{{vintage}}.csv (notebook 12).</p>
+</div>
+
+<h2 id="s6">6. Forecast bias by decade</h2>
+<div class="card">
+<p>The bias statistic, realised tracking error over the mean forecast, under the mandate: 1 is a calibrated forecast, above 1 an under-forecast. Over the whole period the daily estimators run at {{bias_lo}} to {{bias_hi}} and the monthly covariance at {{bias_monthly}}; calibrating each month's forecast by the same path's bias over the previous 60 months, with nothing from the future, brings the daily estimators to {{cal_lo}} to {{cal_hi}}.</p>
+<div class="toggle" role="group" aria-label="Bias"><button type="button" data-bias="raw" aria-pressed="true">As forecast</button><button type="button" data-bias="cal" aria-pressed="false">Calibrated on the previous 60 months</button></div>
+<div id="f6" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/rolling_evaluation_by_decade_{{vintage}}.csv and results/{{vintage}}/rolling_evaluation_calibration_{{vintage}}.csv (notebook 12).</p>
+</div>
+
+<h2 id="s7">7. The active return, month by month</h2>
+<div class="card">
+<p>Cumulative active return (portfolio minus benchmark, in percentage points) of the seven paths. The tilt alone ends at {{tilt_lo}} to {{tilt_hi}} basis points a year against a standard error of {{tilt_se_lo}} to {{tilt_se_hi}}; the mandate's two additions, beta neutrality and the exclusions, cost {{mandate_lo}} to {{mandate_hi}} basis points a year against the tilt alone.</p>
+<div class="toggle" role="group" aria-label="Constraint set"><button type="button" data-set="C3" aria-pressed="true">The mandate</button><button type="button" data-set="C3 tilt only" aria-pressed="false">The tilt alone</button></div>
+<div id="f7" class="chart tall"></div>
+<p class="src">Source: results/{{vintage}}/active_returns_{{vintage}}.csv (notebook 12); standard errors from results/{{vintage}}/attribution_summary_{{vintage}}.csv (notebook 13).</p>
+</div>
+
+<h2 id="s8">8. Turnover and trading cost</h2>
+<div class="card">
+<p>One-way turnover per month under the mandate, {{turn_lo}} to {{turn_hi}} per cent against the benchmark's own {{bench_turn}}, and the cost at 50 basis points per unit of turnover, {{cost_lo}} to {{cost_hi}} basis points a year against the index fund's {{bench_cost}}; the right panel sets that cost beside the gross active return.</p>
+<div id="f8" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/rolling_evaluation_{{vintage}}.csv (notebook 12).</p>
+</div>
+
+<h2 id="s9">9. Where the active return came from</h2>
+<div class="card">
+<p>The attribution splits each path's active return into six factor contributions and a residual, the industries' own returns. Left: the mean active exposure to each factor (beta neutrality shows in the market column). Right: the contributions and the residual, in basis points a year, with the active return as the black mark. The factors explain {{share_lo}} to {{share_hi}} per cent of the active return's variance across the fourteen paths; under the tilt alone the exposures cost {{factor_lo}} to {{factor_hi}} basis points a year and the residual paid {{resid_lo}} to {{resid_hi}}.</p>
+<div class="toggle" role="group" aria-label="Constraint set"><button type="button" data-aset="C3" aria-pressed="true">The mandate</button><button type="button" data-aset="C3 tilt only" aria-pressed="false">The tilt alone</button></div>
+<div id="f9" class="chart tall"></div>
+<p>By decade, for the sample covariance's path under the mandate: the factor part was largest in 1979 to 1989, the decade in which the tilt away from Oil was largest and the oil price doubled and then collapsed.</p>
+<div id="f9b" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/attribution_summary_{{vintage}}.csv, results/{{vintage}}/attribution_mandate_cost_{{vintage}}.csv and results/{{vintage}}/attribution_by_decade_{{vintage}}.csv (notebook 13).</p>
+</div>
+
+<h2 id="s10">10. The optimiser: the tilt's forecast cost, and the speed limit</h2>
+<div class="card">
+<p>Left: the forecast tracking error of the tilt alone and of the mandate at three months, by estimator; the tilt costs {{tilt_cost_last}} basis points a year at {{last_opt_month}} and up to {{tilt_cost_first}} at {{first_opt_month}}, when Oil held 15 per cent of the benchmark. Right: the turnover cap as a speed limit: starting from 1/N, {{speed_start}} of one-way turnover from the benchmark, {{speed_months}} rebalances at the cap of {{speed_cap}} per cent bring the forecast tracking error from {{speed_te_first}} to {{speed_te_last}} basis points a year and leave {{speed_left}} of the distance to close; the optimiser trades the industries that reduce the tracking error most first, which is a different order from closing the distance.</p>
+<div id="f10" class="chart"></div>
+<p class="src">Source: results/{{vintage}}/optimiser_fixes_{{vintage}}.csv and results/{{vintage}}/optimiser_speed_limit_{{vintage}}.csv (notebook 11).</p>
+</div>
+
+<h2 id="terms">Terms</h2>
+<dl class="terms">
+<dt>1/N</dt><dd>the rule that holds every asset at the same weight and rebalances to it each month.</dd>
+<dt>rule</dt><dd>any of the nine portfolio rules of the replication: 1/N, sample-based mean-variance, Bayes-Stein, minimum variance, the value-weighted market, and the short-sale-constrained versions of the three optimising rules, with the generalised minimum-variance rule.</dd>
+<dt>Sharpe ratio</dt><dd>the mean monthly excess return divided by its standard deviation; an excess return is a return minus the one-month Treasury bill rate.</dd>
+<dt>turnover</dt><dd>the sum of absolute weight changes at a rebalance; one-way turnover is half of it.</dd>
+<dt>band</dt><dd>an interval, fixed before the code ran, within which a replicated number counts as matching the published one; a cell a band applies to is gated and receives a verdict, pass or miss.</dd>
+<dt>benchmark</dt><dd>the index the portfolio tracks, the cap-weighted (weighted by market capitalisation) combination of the 49 industries.</dd>
+<dt>tracking error</dt><dd>the standard deviation of the monthly difference between the portfolio's return and the benchmark's, times the square root of 12; the forecast is the optimiser's own, the realised the measured one.</dd>
+<dt>basis point</dt><dd>a hundredth of a percentage point.</dd>
+<dt>covariance estimator</dt><dd>a method that turns a window of returns into a covariance matrix, the table of the assets' variances and covariances: the sample covariance, Ledoit-Wolf shrinkage towards a scaled identity, a six-factor model, a principal-component model; the robust portfolio minimises the worst forecast across the five estimates, and RiskMetrics is an exponentially weighted sample covariance.</dd>
+<dt>minimum-variance portfolio</dt><dd>the portfolio with the smallest forecast variance under its constraints.</dd>
+<dt>constraint set</dt>
+<dd>one of the cumulative sets C0 to C3: long-only; plus an active weight bound of 2 percentage points per industry; plus a one-way turnover cap of 2 per cent a month; plus the mandate (the tilt, the exclusions of tobacco and weapons and a beta of one to the benchmark). The tilt alone, C2 plus the tilt, runs beside them as a sensitivity and is the fourth step of figure 5.</dd>
+<dt>bias statistic</dt><dd>the realised tracking error divided by the mean forecast; 1 for a calibrated forecast.</dd>
+<dt>active return</dt><dd>the portfolio's return minus the benchmark's; the active weight of an industry is its portfolio weight minus its benchmark weight.</dd>
+<dt>factor</dt><dd>a return series that many assets move with: the market (Mkt-RF), size (SMB), value (HML), profitability (RMW), investment (CMA) and momentum (Mom) factors of Fama and French and Carhart.</dd>
+<dt>active exposure</dt><dd>the sum over industries of the active weight times the industry's beta (the slope of its return on the factor's) to the factor.</dd>
+<dt>attribution</dt><dd>the split of a month's active return into the six contributions (exposure times the factor's return) and a residual; the factor share is one minus the variance of the residual over the variance of the active return.</dd>
+<dt>standard error</dt><dd>the standard deviation of an estimate; for a mean active return over 47 years, the realised tracking error over the square root of 47.</dd>
+<dt>vintage</dt><dd>the version of French's files on the download date, named by the CRSP cut French built them from.</dd>
+<dt>excess return</dt><dd>a return minus the one-month Treasury bill rate.</dd>
+<dt>out-of-sample</dt><dd>said of a return earned in the month after the estimation window, the 120 months a rule sees when it forms its weights.</dd>
+<dt>gated</dt><dd>said of a cell a band applies to.</dd>
+<dt>verdict</dt><dd>pass or miss for a gated cell; a cell with no band is reported beside the published number and has no verdict.</dd>
+<dt>Bayes-Stein</dt><dd>the rule of Jorion (1986) that shrinks each estimated mean towards one common value.</dd>
+<dt>shrinkage</dt><dd>pulling an estimate towards a simpler target.</dd>
+<dt>beta</dt><dd>the slope of an asset's return on a factor's return, or on the benchmark's.</dd>
+<dt>active weight</dt><dd>the portfolio weight minus the benchmark weight.</dd>
+<dt>market capitalisation</dt><dd>the number of a firm's shares times their price.</dd>
+<dt>cap-weighted</dt><dd>weighted by market capitalisation.</dd>
+<dt>value-weighted</dt><dd>said of French's industry returns: each firm counts in proportion to its market capitalisation at the start of the month.</dd>
+<dt>turnover cap</dt><dd>an upper limit on one-way turnover per rebalance, 2 per cent a month in the extension.</dd>
+<dt>tilt</dt><dd>a constraint holding named industries below their benchmark weight, here Coal, Oil and Utilities at no more than half of it.</dd>
+<dt>mandate</dt><dd>the whole set of rules the extension's portfolio obeys: the tilt, the exclusion of tobacco and weapons, and a beta of one to the benchmark, within the active weight bound and the turnover cap.</dd>
+<dt>residual</dt><dd>the active return minus the six factor contributions, the part the industries' own returns account for.</dd>
+<dt>contribution</dt><dd>the part of a month's active return one factor accounts for, the active exposure to it times its return in the month.</dd>
+<dt>estimation window</dt><dd>the months of returns a rule sees when it forms its weights, 120 in the paper.</dd>
+</dl>
+
+<footer>Built by <code>dashboard/build_dashboard.py</code> from the tables in <code>results/{{vintage}}/</code>, written by notebooks 03, 07, 08, 10, 11, 12 and 13 on vintage {{vintage}} of French's files, on {{build_date}}; rebuilt whenever a notebook is rerun, from the tables committed with it. Data: Kenneth R. French's data library. Code and notebooks: <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Charts drawn with Plotly.</footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var D = /*DATA*/null;
+  var state = { bias: "raw", set: "C3", aset: "C3" };
+
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function dark() {
+    var t = document.documentElement.getAttribute("data-theme");
+    if (t === "dark") { return true; }
+    if (t === "light") { return false; }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function base(extra) {
+    var fg = css("--fg"), grid = css("--grid"), muted = css("--muted");
+    var l = { paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)", font: { color: fg, size: 12 },
+      margin: { l: 60, r: 20, t: 30, b: 50 }, hovermode: "closest",
+      xaxis: { gridcolor: grid, zerolinecolor: grid, linecolor: grid, tickcolor: muted },
+      yaxis: { gridcolor: grid, zerolinecolor: grid, linecolor: grid, tickcolor: muted },
+      legend: { orientation: "h", y: -0.18, font: { size: 11 } } };
+    Object.keys(extra || {}).forEach(function (k) {
+      if (k.indexOf("axis") >= 0 && l[k]) { Object.keys(extra[k]).forEach(function (kk) { l[k][kk] = extra[k][kk]; }); }
+      else { l[k] = extra[k]; }
+    });
+    return l;
+  }
+  var CONFIG = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["lasso2d", "select2d"] };
+  function axis(extra) { var a = { gridcolor: css("--grid"), zerolinecolor: css("--grid"), linecolor: css("--grid") }; Object.keys(extra || {}).forEach(function (k) { a[k] = extra[k]; }); return a; }
+  function hollow(c) { return { color: "rgba(0,0,0,0)", line: { color: c, width: 1.6 } }; }
+  function pick(cond, a, b) { if (cond) { return a; } return b; }
+  function verdictText(p) { if (p.verdict === "report") { return "no verdict"; } return p.verdict; }
+
+  // 1. replication
+  function f1() {
+    var traces = [];
+    var strip = { x: [-0.1, 0.55, 0.55, -0.1], y: [-0.13, 0.52, 0.58, -0.07], fill: "toself", fillcolor: "rgba(31,95,168,0.12)", line: { width: 0 }, hoverinfo: "skip", showlegend: true, name: "band of 0.03", xaxis: "x", yaxis: "y" };
+    traces.push(strip);
+    traces.push({ x: [-0.1, 0.55], y: [-0.1, 0.55], mode: "lines", line: { color: css("--muted"), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false });
+    var g = D.rep_sharpe.filter(function (p) { return p.verdict !== "report"; });
+    var n = D.rep_sharpe.filter(function (p) { return p.verdict === "report"; });
+    function txt(p) { return D.rulelabel[p.rule] + ", " + p.dataset + "<br>this study " + p.y.toFixed(4) + ", published " + p.x.toFixed(4) + "<br>" + verdictText(p); }
+    traces.push({ x: g.map(function (p) { return p.x; }), y: g.map(function (p) { return p.y; }), text: g.map(txt), hoverinfo: "text", mode: "markers", name: "gated cell", marker: { color: g.map(function (p) { return pick(p.verdict === "MISS", "#c0392b", "#1f5fa8"); }), size: 8 } });
+    traces.push({ x: n.map(function (p) { return p.x; }), y: n.map(function (p) { return p.y; }), text: n.map(txt), hoverinfo: "text", mode: "markers", name: "no verdict", marker: hollow("#8a8a8a") });
+    var t = D.rep_turn;
+    function ttxt(p) { return D.rulelabel[p.rule] + ", " + p.dataset + "<br>this study " + p.y + ", published " + p.x + " times 1/N<br>" + verdictText(p); }
+    var gt = t.filter(function (p) { return p.verdict !== "report"; }), nt = t.filter(function (p) { return p.verdict === "report"; });
+    traces.push({ x: [0.01, 1e6], y: [0.01, 1e6], mode: "lines", line: { color: css("--muted"), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: [0.01, 1e6], y: [0.0125, 1.25e6], mode: "lines", line: { color: "rgba(31,95,168,0.5)", width: 1 }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: [0.01, 1e6], y: [0.0075, 0.75e6], mode: "lines", line: { color: "rgba(31,95,168,0.5)", width: 1 }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2", name: "band of 25 per cent" });
+    traces.push({ x: gt.map(function (p) { return p.x; }), y: gt.map(function (p) { return p.y; }), text: gt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: { color: "#1f5fa8", size: 8 }, xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: nt.map(function (p) { return p.x; }), y: nt.map(function (p) { return p.y; }), text: nt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: hollow("#8a8a8a"), xaxis: "x2", yaxis: "y2" });
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, legend: { orientation: "h", y: -0.2 } });
+    layout.xaxis = axis({ title: { text: "published Sharpe ratio" }, range: [-0.08, 0.42], domain: [0, 0.46] });
+    layout.yaxis = axis({ title: { text: "this study" }, range: [-0.08, 0.42] });
+    layout.xaxis2 = axis({ title: { text: "published turnover, times 1/N (log)" }, type: "log", domain: [0.56, 1] });
+    layout.yaxis2 = axis({ title: { text: "this study (log)" }, type: "log" });
+    layout.annotations = [{ text: "Sharpe ratio, with the band of 0.03", x: 0.0, y: 1.08, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } },
+                          { text: "Turnover relative to 1/N, with the band of 25 per cent", x: 0.56, y: 1.08, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }];
+    Plotly.newPlot("f1", traces, layout, CONFIG);
+  }
+
+  // 2. since the paper
+  function f2() {
+    var paper = D.ext_periods[0], recent = D.ext_periods[1];
+    var traces = [], layout = base({ grid: { rows: 1, columns: 4, pattern: "independent" }, margin: { l: 230, r: 20, t: 40, b: 60 } });
+    var rules = D.rules.slice().reverse();
+    D.datasets.forEach(function (d, j) {
+      var ax = pick(j === 0, "", String(j + 1));
+      var xa = "x" + ax, ya = "y" + ax;
+      var p = rules.map(function (r) { return D.ext_sharpe[paper][d][r]; });
+      var q = rules.map(function (r) { return D.ext_sharpe[recent][d][r]; });
+      var labels = rules.map(function (r) { return D.rulelabel[r]; });
+      rules.forEach(function (r, i) {
+        traces.push({ x: [p[i], q[i]], y: [labels[i], labels[i]], mode: "lines", line: { color: css("--grid"), width: 2 }, hoverinfo: "skip", showlegend: false, xaxis: xa, yaxis: ya });
+      });
+      traces.push({ x: p, y: labels, mode: "markers", marker: { color: "#8a8a8a", size: 8 }, name: "paper's period", showlegend: j === 0, xaxis: xa, yaxis: ya, text: p.map(function (v) { return d + ", " + paper + ": " + v.toFixed(3); }), hoverinfo: "text" });
+      var pv = {};
+      D.ext_vs.forEach(function (e) { if (e.dataset === d) { pv[e.rule] = e.p; } });
+      traces.push({ x: q, y: labels, mode: "markers", marker: { color: "#d1731e", size: 9 }, name: "since the paper", showlegend: j === 0, xaxis: xa, yaxis: ya,
+        text: rules.map(function (r, i) { return d + ", " + recent + ": " + q[i].toFixed(3) + pick(pv[r] === undefined, "", "<br>p-value against 1/N " + pick(pv[r] === undefined, "", String(pv[r]))); }), hoverinfo: "text" });
+      var ew = D.ext_sharpe[recent][d]["ew"];
+      layout["xaxis" + ax] = axis({ domain: [j * 0.25 + pick(j > 0, 0.02, 0), (j + 1) * 0.25 - 0.01], range: [-0.08, 0.4], title: { text: d, font: { size: 11 } } });
+      layout["yaxis" + ax] = axis({ showticklabels: j === 0, anchor: xa });
+      layout.shapes = (layout.shapes || []).concat([{ type: "line", xref: xa, yref: ya + " domain", x0: ew, x1: ew, y0: 0, y1: 1, line: { color: "#d1731e", width: 1, dash: "dot" } }]);
+    });
+    layout.legend = { orientation: "h", y: -0.16 };
+    Plotly.newPlot("f2", traces, layout, CONFIG);
+  }
+
+  // 3. the benchmark
+  function f3() {
+    var b = D.bench;
+    var traces = [
+      { x: b.month, y: b.benchmark, mode: "lines", name: "benchmark (49 industries, cap-weighted)", line: { color: "#1f5fa8", width: 1.4 }, hovertemplate: "%{x}: %{y:.2f}<extra>benchmark</extra>" },
+      { x: b.month, y: b.market, mode: "lines", name: "French's market", line: { color: "#d1731e", width: 1.4, dash: "dot" }, hovertemplate: "%{x}: %{y:.2f}<extra>market</extra>" },
+      { x: b.month, y: b.gap_cum_bp, mode: "lines", name: "cumulative gap, benchmark minus market", line: { color: "#2e8b57", width: 1.4 }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.0f} bp<extra>gap</extra>" }
+    ];
+    var layout = base({ grid: { rows: 2, columns: 1, pattern: "independent", roworder: "top to bottom" }, margin: { l: 70, r: 20, t: 20, b: 50 } });
+    layout.xaxis = axis({ domain: [0, 1], showticklabels: false });
+    layout.yaxis = axis({ type: "log", title: { text: "growth of 1 (log)" }, domain: [0.42, 1], tickvals: [1, 2, 5, 10, 20, 50, 100, 200], ticktext: ["1", "2", "5", "10", "20", "50", "100", "200"] });
+    layout.xaxis2 = axis({ domain: [0, 1], anchor: "y2" });
+    layout.yaxis2 = axis({ title: { text: "cumulative gap, bp" }, domain: [0, 0.34] });
+    layout.legend = { orientation: "h", y: -0.12 };
+    Plotly.newPlot("f3", traces, layout, CONFIG);
+    var w = D.bench_w, t2 = [];
+    w.ind.forEach(function (i, k) {
+      t2.push({ x: w.month, y: w.w[i].map(function (v) { return v * 100; }), stackgroup: "one", name: i, mode: "none", hovertemplate: "%{x}: %{y:.1f}%<extra>" + i + "</extra>" });
+    });
+    t2.push({ x: w.month, y: w.other.map(function (v) { return v * 100; }), stackgroup: "one", name: "the other 41", mode: "none", fillcolor: "rgba(140,140,140,0.35)", hovertemplate: "%{x}: %{y:.1f}%<extra>the other 41</extra>" });
+    var l2 = base({ margin: { l: 60, r: 20, t: 20, b: 50 } });
+    l2.yaxis = axis({ title: { text: "share of the benchmark, %" }, range: [0, 100] });
+    l2.xaxis = axis({});
+    l2.legend = { orientation: "h", y: -0.14 };
+    Plotly.newPlot("f3b", t2, l2, CONFIG);
+  }
+
+  // 4. estimators without constraints
+  function f4() {
+    var ests = ["sample", "Ledoit-Wolf", "six-factor model", "principal components"];
+    var traces = [], layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "group", margin: { l: 60, r: 20, t: 40, b: 70 } });
+    [["monthly_120", "120 monthly returns", ""], ["daily_3y", "three years of daily returns", "2"]].forEach(function (spec, j) {
+      var rows = D.cov.filter(function (c) { return c.data === spec[0]; });
+      function val(key) { return ests.map(function (e) { var r = rows.filter(function (c) { return c.estimator === e; })[0]; return r[key]; }); }
+      traces.push({ x: ests, y: val("unconstrained"), type: "bar", name: "unconstrained", marker: { color: "#d1731e" }, showlegend: j === 0, xaxis: "x" + spec[2], yaxis: "y" + spec[2], hovertemplate: "%{x}: %{y:.1f}%<extra>unconstrained</extra>" });
+      traces.push({ x: ests, y: val("long_only"), type: "bar", name: "long-only", marker: { color: "#1f5fa8" }, showlegend: j === 0, xaxis: "x" + spec[2], yaxis: "y" + spec[2], hovertemplate: "%{x}: %{y:.1f}%<extra>long-only</extra>" });
+      layout["xaxis" + spec[2]] = axis({ domain: pick(j === 0, [0, 0.47], [0.53, 1]), title: { text: spec[1], font: { size: 11 } } });
+      layout["yaxis" + spec[2]] = axis({ range: [10, 15], title: pick(j === 0, { text: "realised volatility, % a year" }, {}) });
+    });
+    layout.legend = { orientation: "h", y: -0.28 };
+    Plotly.newPlot("f4", traces, layout, CONFIG);
+  }
+
+  // 5. the frontier
+  function f5() {
+    var traces = [];
+    var xs = D.sets.map(function (s) { return D.setlabel[s]; });
+    D.variants.forEach(function (v) {
+      var re = D.sets.map(function (s) { return D.frontier[v][s].realised; });
+      var fo = D.sets.map(function (s) { return D.frontier[v][s].forecast; });
+      traces.push({ x: xs, y: re, mode: "lines+markers", name: D.vlabel[v], line: { color: D.vcolour[v], width: 1.6 }, marker: { size: 7 }, legendgroup: v, hovertemplate: "%{x}<br>realised %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+      traces.push({ x: xs, y: fo, mode: "markers", marker: hollow(D.vcolour[v]), showlegend: false, legendgroup: v, hovertemplate: "%{x}<br>forecast %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+    });
+    var last = D.sets.slice(3);
+    D.variants.forEach(function (v) {
+      traces.push({ x: last.map(function (s) { return D.setlabel[s]; }), y: last.map(function (s) { return D.frontier[v][s].realised; }), mode: "lines+markers", line: { color: D.vcolour[v], width: 1.6 }, marker: { size: 8 }, showlegend: false, legendgroup: v, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}<br>realised %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+      traces.push({ x: last.map(function (s) { return D.setlabel[s]; }), y: last.map(function (s) { return D.frontier[v][s].forecast; }), mode: "markers", marker: hollow(D.vcolour[v]), showlegend: false, legendgroup: v, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}<br>forecast %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+    });
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, margin: { l: 60, r: 40, t: 40, b: 90 } });
+    layout.xaxis = axis({ domain: [0, 0.6] });
+    layout.yaxis = axis({ title: { text: "tracking error, basis points a year" } });
+    layout.xaxis2 = axis({ domain: [0.68, 1], tickangle: -15 });
+    layout.yaxis2 = axis({ range: [50, 100] });
+    layout.annotations = [{ text: "the four constraint sets and the tilt alone", x: 0, y: 1.12, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } },
+                          { text: "the last two, enlarged", x: 0.68, y: 1.12, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }];
+    layout.legend = { orientation: "h", y: -0.3 };
+    Plotly.newPlot("f5", traces, layout, CONFIG);
+  }
+
+  // 6. bias by decade
+  function f6() {
+    var src = pick(state.bias === "raw", D.bias_raw, D.bias_cal);
+    var z = D.variants.map(function (v) { return src[v]; });
+    var traces = [{ z: z, x: D.decades, y: D.variants.map(function (v) { return D.vlabel[v]; }), type: "heatmap", colorscale: [[0, "#2e8b57"], [0.5, "#f4f4ef"], [1, "#c0392b"]], zmin: 0.5, zmax: 2.0,
+      text: z.map(function (row) { return row.map(function (x) { return x.toFixed(2); }); }), texttemplate: "%{text}", hovertemplate: "%{y}<br>%{x}: %{z:.2f}<extra></extra>", colorbar: { title: { text: "realised over forecast" }, thickness: 12 } }];
+    var layout = base({ margin: { l: 190, r: 20, t: 20, b: 60 } });
+    layout.yaxis = axis({ autorange: "reversed" });
+    layout.xaxis = axis({});
+    Plotly.newPlot("f6", traces, layout, CONFIG);
+  }
+
+  // 7. cumulative active return
+  function f7() {
+    var a = D.active[state.set], traces = [];
+    D.variants.forEach(function (v) {
+      traces.push({ x: D.active.month, y: a[v], mode: "lines", name: D.vlabel[v], line: { color: D.vcolour[v], width: 1.4 }, hovertemplate: "%{x}: %{y:.2f} pp<extra>" + D.vlabel[v] + "</extra>" });
+    });
+    var layout = base({ margin: { l: 60, r: 20, t: 20, b: 80 } });
+    layout.yaxis = axis({ title: { text: "cumulative active return, percentage points" }, zeroline: true, zerolinewidth: 1.5 });
+    layout.xaxis = axis({});
+    layout.legend = { orientation: "h", y: -0.2 };
+    Plotly.newPlot("f7", traces, layout, CONFIG);
+  }
+
+  // 8. turnover and cost
+  function f8() {
+    var labels = D.variants.map(function (v) { return D.vlabel[v]; });
+    var traces = [
+      { x: labels, y: D.variants.map(function (v) { return D.turn[v].one_way; }), type: "bar", name: "one-way turnover, % a month", marker: { color: "#1f5fa8" }, hovertemplate: "%{x}: %{y:.2f}%<extra></extra>" },
+      { x: labels, y: D.variants.map(function (v) { return D.turn[v].gross; }), type: "bar", name: "gross active return, bp a year", marker: { color: "#8a8a8a" }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.1f} bp<extra>gross</extra>" },
+      { x: labels, y: D.variants.map(function (v) { return -D.turn[v].cost50; }), type: "bar", name: "trading cost at 50 bp, bp a year", marker: { color: "#c0392b" }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.1f} bp<extra>cost</extra>" },
+      { x: labels, y: D.variants.map(function (v) { return D.turn[v].net50; }), mode: "markers", name: "net active return", marker: { color: "#ffffff", symbol: "diamond", size: 10, line: { color: css("--fg"), width: 1.5 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.1f} bp<extra>net</extra>" }
+    ];
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "relative", margin: { l: 60, r: 20, t: 30, b: 120 } });
+    layout.xaxis = axis({ domain: [0, 0.46], tickangle: -30 });
+    layout.yaxis = axis({ title: { text: "% a month" } });
+    layout.xaxis2 = axis({ domain: [0.56, 1], tickangle: -30 });
+    layout.yaxis2 = axis({ title: { text: "basis points a year" }, zeroline: true });
+    layout.shapes = [{ type: "line", xref: "x domain", yref: "y", x0: 0, x1: 1, y0: D.bench_turn, y1: D.bench_turn, line: { color: "#d1731e", width: 1.5, dash: "dot" } }];
+    layout.annotations = [{ text: "the benchmark's own turnover, " + D.bench_turn.toFixed(2) + "%", xref: "x domain", yref: "y", x: 0.98, y: D.bench_turn, yshift: 11, showarrow: false, font: { size: 10, color: css("--fg") }, bgcolor: css("--bg"), borderpad: 2, xanchor: "right" }];
+    layout.legend = { orientation: "h", y: -0.42 };
+    Plotly.newPlot("f8", traces, layout, CONFIG);
+  }
+
+  // 9. the attribution
+  function f9() {
+    var A = D.att[state.aset], labels = D.variants.map(function (v) { return D.vlabel[v]; });
+    var traces = [];
+    var z = D.variants.map(function (v) { return D.factors.map(function (f) { return A[v].exposure[f]; }); });
+    traces.push({ z: z, x: D.factors.map(function (f) { return D.flabel[f]; }), y: labels, type: "heatmap", colorscale: [[0, "#d1731e"], [0.5, "#f4f4ef"], [1, "#1f5fa8"]], zmin: -0.02, zmax: 0.02,
+      text: z.map(function (row) { return row.map(function (x) { if (Math.abs(x) < 0.0005) { return "0.000"; } return pick(x > 0, "+", "") + x.toFixed(3); }); }), texttemplate: "%{text}", hovertemplate: "%{y}<br>%{x}: %{z:.4f}<extra>exposure</extra>", showscale: false, xaxis: "x", yaxis: "y" });
+    D.factors.forEach(function (f) {
+      traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].contribution[f]; }), type: "bar", orientation: "h", name: D.flabel[f], marker: { color: D.fcolour[f] }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}<br>" + D.flabel[f] + ": %{x:.1f} bp<extra></extra>" });
+    });
+    traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].residual; }), type: "bar", orientation: "h", name: "residual", marker: { color: D.resid }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}<br>residual: %{x:.1f} bp<extra></extra>" });
+    traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].active; }), mode: "markers", name: "active return (s.e. in hover)", marker: { color: css("--fg"), symbol: "line-ns-open", size: 14, line: { width: 2 } }, xaxis: "x2", yaxis: "y2",
+      text: D.variants.map(function (v) { return A[v].active.toFixed(1) + " bp, standard error " + A[v].se.toFixed(1) + "; factor share " + (A[v].share * 100).toFixed(0) + "%"; }), hoverinfo: "text+y" });
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "relative", margin: { l: 190, r: 20, t: 30, b: 90 } });
+    layout.xaxis = axis({ domain: [0, 0.36] });
+    layout.yaxis = axis({ autorange: "reversed" });
+    layout.xaxis2 = axis({ domain: [0.5, 1], title: { text: "basis points a year" }, zeroline: true });
+    layout.yaxis2 = axis({ autorange: "reversed", showticklabels: false, anchor: "x2" });
+    layout.legend = { orientation: "h", y: -0.22 };
+    layout.annotations = [{ text: "mean active exposure", x: 0, y: 1.07, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } },
+                          { text: "contributions, residual and active return", x: 0.5, y: 1.07, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }];
+    Plotly.newPlot("f9", traces, layout, CONFIG);
+    var dec = D.att_dec, t2 = [];
+    D.factors.forEach(function (f) { t2.push({ x: dec.period, y: dec.contribution[f], type: "bar", name: D.flabel[f], marker: { color: D.fcolour[f] }, hovertemplate: "%{x}<br>" + D.flabel[f] + ": %{y:.1f} bp<extra></extra>" }); });
+    t2.push({ x: dec.period, y: dec.residual, type: "bar", name: "residual", marker: { color: D.resid }, hovertemplate: "%{x}<br>residual: %{y:.1f} bp<extra></extra>" });
+    var l2 = base({ barmode: "relative", margin: { l: 60, r: 20, t: 20, b: 80 } });
+    l2.yaxis = axis({ title: { text: "basis points a year" }, zeroline: true });
+    l2.xaxis = axis({});
+    l2.legend = { orientation: "h", y: -0.25 };
+    Plotly.newPlot("f9b", t2, l2, CONFIG);
+  }
+
+  // 10. the optimiser
+  function f10() {
+    var ests = []; D.opt_fixes.forEach(function (r) { if (ests.indexOf(r.estimator) < 0) { ests.push(r.estimator); } });
+    var traces = [], colours = ["#8a8a8a", "#1f5fa8", "#d1731e"];
+    D.opt_months.forEach(function (m, j) {
+      var rows = D.opt_fixes.filter(function (r) { return r.month === m; });
+      traces.push({ x: ests, y: ests.map(function (e) { var r = rows.filter(function (q) { return q.estimator === e; })[0]; if (r) { return r.tilt; } return null; }), type: "bar", name: "tilt alone, " + m, marker: { color: colours[j], opacity: 0.55 }, hovertemplate: "%{x}, " + m + "<br>tilt alone %{y:.1f} bp<extra></extra>" });
+      traces.push({ x: ests, y: ests.map(function (e) { var r = rows.filter(function (q) { return q.estimator === e; })[0]; if (r) { return r.mandate; } return null; }), type: "bar", name: "mandate, " + m, marker: { color: colours[j] }, hovertemplate: "%{x}, " + m + "<br>mandate %{y:.1f} bp<extra></extra>" });
+    });
+    var s = D.speed;
+    traces.push({ x: s.rebalance, y: s.distance, mode: "lines+markers", name: "distance to the benchmark, % one way", line: { color: "#1f5fa8" }, xaxis: "x2", yaxis: "y2", hovertemplate: "rebalance %{x}: %{y:.1f}%<extra>distance</extra>" });
+    traces.push({ x: s.rebalance, y: s.te, mode: "lines+markers", name: "forecast tracking error, bp a year", line: { color: "#d1731e" }, xaxis: "x2", yaxis: "y3", hovertemplate: "rebalance %{x}: %{y:.0f} bp<extra>tracking error</extra>" });
+    var layout = base({ barmode: "group", margin: { l: 60, r: 70, t: 30, b: 110 } });
+    layout.xaxis = axis({ domain: [0, 0.5], tickangle: -25 });
+    layout.yaxis = axis({ title: { text: "forecast tracking error, bp a year" } });
+    layout.xaxis2 = axis({ domain: [0.6, 1], title: { text: "monthly rebalance, from 1/N" }, anchor: "y2" });
+    layout.yaxis2 = axis({ title: { text: "distance, %" }, anchor: "x2" });
+    layout.yaxis3 = axis({ title: { text: "bp a year" }, overlaying: "y2", side: "right", anchor: "x2", showgrid: false });
+    layout.legend = { orientation: "h", y: -0.38 };
+    Plotly.newPlot("f10", traces, layout, CONFIG);
+  }
+
+  function drawAll() { f1(); f2(); f3(); f4(); f5(); f6(); f7(); f8(); f9(); f10(); }
+  document.querySelectorAll("[data-bias]").forEach(function (b) { b.addEventListener("click", function () {
+    state.bias = b.getAttribute("data-bias"); document.querySelectorAll("[data-bias]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); f6(); }); });
+  document.querySelectorAll("[data-set]").forEach(function (b) { b.addEventListener("click", function () {
+    state.set = b.getAttribute("data-set"); document.querySelectorAll("[data-set]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); f7(); }); });
+  document.querySelectorAll("[data-aset]").forEach(function (b) { b.addEventListener("click", function () {
+    state.aset = b.getAttribute("data-aset"); document.querySelectorAll("[data-aset]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); f9(); }); });
+  if (window.matchMedia) { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll); }
+  if (typeof Plotly === "undefined") {
+    document.querySelectorAll(".chart").forEach(function (el) { el.textContent = "The charting library did not load; this page needs a connection to cdn.plot.ly once. The two figures in dashboard/figures/ are static files."; });
+  } else {
+    drawAll();
+  }
+})();
+</script>
+</body>
+</html>
