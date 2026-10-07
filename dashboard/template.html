@@ -42,7 +42,7 @@ a { color: var(--accent); }
 
 <h2 id="s1">1. The replication: this study beside the paper</h2>
 <div class="card">
-<p>Each point is one rule on one dataset over the paper's out-of-sample months ({{paper_lo}} to {{paper_hi}}). On the left the Sharpe ratio: {{gated_pass}} of the {{gated_n}} cells that carry the band of 0.03 (the shaded strip around the diagonal) sit inside it; the hollow points carry no verdict, because the rule's turnover makes its Sharpe ratio fragile. On the right turnover relative to 1/N on log scales, with the 25 per cent band: {{turn_pass}} of {{turn_n}} gated cells inside it.</p>
+<p>Each point is one rule on one dataset over the paper's out-of-sample months ({{paper_lo}} to {{paper_hi}}). On the left the Sharpe ratio: {{gated_pass}} of the {{gated_n}} cells that carry the band of 0.03 (the shaded strip around the diagonal) sit inside it, and a red point is a gated cell outside its band; the hollow points carry no verdict, because the rule's turnover makes its Sharpe ratio fragile. On the right turnover relative to 1/N on log scales, with the 25 per cent band: {{turn_pass}} of {{turn_n}} gated cells inside it.</p>
 <div id="f1" class="chart"></div>
 <p class="src">Source: results/{{vintage}}/replication_sharpe_{{vintage}}.csv and results/{{vintage}}/replication_turnover_{{vintage}}.csv (notebook 03); published values from DeMiguel, Garlappi and Uppal (2009), Tables 3 and 5.</p>
 </div>
@@ -58,8 +58,8 @@ a { color: var(--accent); }
 <div class="card">
 <p>The cap-weighted combination of the 49 industries, rebuilt from French's firm counts and average sizes, tracks French's market return within {{bench_te}} basis points a year over {{bench_months}} months from {{bench_first}}. The upper panel shows growth of one unit in each (log scale); the lower panel the cumulative gap in basis points, which comes from French's end-of-June formation (a firm listed since June is in the market and in no industry until the next July); a direct test on the CRSP monthly file accounts for {{gap_share}} per cent of the gap's variance.</p>
 <div id="f3" class="chart tall"></div>
-<p>The benchmark's own composition moved: the eight largest industries on average ({{top_ind}}) and the rest, every third month.</p>
-<div id="f3b" class="chart"></div>
+<p>The benchmark's own composition moved: the share of each of the eight largest industries on average ({{top_ind}}), every third month, on one scale; {{tilted_in_top}} the tilt holds at half their weight.</p>
+<div id="f3b" class="chart tall"></div>
 <p class="src">Source: results/{{vintage}}/benchmark_returns_{{vintage}}.csv and results/{{vintage}}/benchmark_weights_{{vintage}}.csv (notebook 08).</p>
 </div>
 
@@ -72,7 +72,7 @@ a { color: var(--accent); }
 
 <h2 id="s5">5. The tracking-error frontier: what each constraint costs</h2>
 <div class="card">
-<p>Realised tracking error (filled markers) and the estimators' own forecast (hollow) as the constraints accumulate from long-only to the mandate. Under the mandate the four estimators built from daily returns realise {{te_lo}} to {{te_hi}} basis points a year and the monthly sample covariance {{te_monthly}}: a range of {{te_range}} across the daily four on a level of about 90.</p>
+<p>Left: realised tracking error as the constraints accumulate from long-only to the mandate. Right: under the mandate, each estimator's own forecast (hollow) beside what it realised (filled), in the order of the realised value. Under the mandate the four estimators built from daily returns realise {{te_lo}} to {{te_hi}} basis points a year and the monthly sample covariance {{te_monthly}}: a range of {{te_range}} across the daily four on a level of about 90.</p>
 <div id="f5" class="chart"></div>
 <p class="src">Source: results/{{vintage}}/rolling_evaluation_{{vintage}}.csv (notebook 12).</p>
 </div>
@@ -192,40 +192,60 @@ a { color: var(--accent); }
   function pick(cond, a, b) { if (cond) { return a; } return b; }
   function verdictText(p) { if (p.verdict === "report") { return "no verdict"; } return p.verdict; }
 
+  // Shared conventions: text in the page's ink, never in a series colour; every legend horizontal and centred
+  // under its chart; panel titles anchored at the left edge of their panel; no tilted tick labels; bars at most
+  // sixty per cent of their slot; lines two pixels; markers eight pixels or more; hairline solid grid.
+  function vcol(v) { return pick(dark(), D.vcolour_dark[v], D.vcolour[v]); }
+  function fcol(f) { return pick(dark(), D.fcolour_dark[f], D.fcolour[f]); }
+  function resid() { return pick(dark(), D.resid_dark, D.resid); }
+  function miss() { return pick(dark(), D.miss_dark, D.miss); }
+  function grey() { return css("--muted"); }
+  function legendAt(y) { return { orientation: "h", x: 0.5, xanchor: "center", y: y, yanchor: "top", font: { size: 11 }, traceorder: "normal" }; }
+  function panelTitle(text, x, y) { return { text: text, x: x, xanchor: "left", y: pick(y === undefined, 1.0, y), yanchor: "bottom", xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }; }
+  function ink() { return css("--fg"); }
+  var TICK = { size: 11 };
+  var DIVERGING = [[0, "#2a78d6"], [0.5, "#e9e8e4"], [1, "#e34948"]];
+  var DIVERGING_DARK = [[0, "#3987e5"], [0.5, "#383835"], [1, "#e66767"]];
+  function diverging() { return pick(dark(), DIVERGING_DARK, DIVERGING); }
+  function divergingRev() { var d = diverging(); return [[0, d[2][1]], [0.5, d[1][1]], [1, d[0][1]]]; }
+
   // 1. replication
   function f1() {
     var traces = [];
-    var strip = { x: [-0.1, 0.55, 0.55, -0.1], y: [-0.13, 0.52, 0.58, -0.07], fill: "toself", fillcolor: "rgba(31,95,168,0.12)", line: { width: 0 }, hoverinfo: "skip", showlegend: true, name: "band of 0.03", xaxis: "x", yaxis: "y" };
+    var strip = { x: [-0.1, 0.55, 0.55, -0.1], y: [-0.13, 0.52, 0.58, -0.07], fill: "toself", fillcolor: "rgba(42,120,214,0.12)", line: { width: 0 }, hoverinfo: "skip", showlegend: true, name: "the band", mode: "lines", xaxis: "x", yaxis: "y" };
     traces.push(strip);
-    traces.push({ x: [-0.1, 0.55], y: [-0.1, 0.55], mode: "lines", line: { color: css("--muted"), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false });
-    var g = D.rep_sharpe.filter(function (p) { return p.verdict !== "report"; });
+    traces.push({ x: [-0.1, 0.55], y: [-0.1, 0.55], mode: "lines", line: { color: grey(), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false });
+    var g = D.rep_sharpe.filter(function (p) { return p.verdict === "pass"; });
+    var m = D.rep_sharpe.filter(function (p) { return p.verdict === "MISS"; });
     var n = D.rep_sharpe.filter(function (p) { return p.verdict === "report"; });
     function txt(p) { return D.rulelabel[p.rule] + ", " + p.dataset + "<br>this study " + p.y.toFixed(4) + ", published " + p.x.toFixed(4) + "<br>" + verdictText(p); }
-    traces.push({ x: g.map(function (p) { return p.x; }), y: g.map(function (p) { return p.y; }), text: g.map(txt), hoverinfo: "text", mode: "markers", name: "gated cell", marker: { color: g.map(function (p) { return pick(p.verdict === "MISS", "#c0392b", "#1f5fa8"); }), size: 8 } });
-    traces.push({ x: n.map(function (p) { return p.x; }), y: n.map(function (p) { return p.y; }), text: n.map(txt), hoverinfo: "text", mode: "markers", name: "no verdict", marker: hollow("#8a8a8a") });
+    traces.push({ x: g.map(function (p) { return p.x; }), y: g.map(function (p) { return p.y; }), text: g.map(txt), hoverinfo: "text", mode: "markers", name: "gated cell, inside the band", marker: { color: vcol(D.variants[0]), size: 9 } });
+    traces.push({ x: m.map(function (p) { return p.x; }), y: m.map(function (p) { return p.y; }), text: m.map(txt), hoverinfo: "text", mode: "markers", name: "gated cell, outside the band (miss)", marker: { color: miss(), size: 9 } });
+    traces.push({ x: n.map(function (p) { return p.x; }), y: n.map(function (p) { return p.y; }), text: n.map(txt), hoverinfo: "text", mode: "markers", name: "no verdict", marker: hollow(grey()) });
     var t = D.rep_turn;
     function ttxt(p) { return D.rulelabel[p.rule] + ", " + p.dataset + "<br>this study " + p.y + ", published " + p.x + " times 1/N<br>" + verdictText(p); }
-    var gt = t.filter(function (p) { return p.verdict !== "report"; }), nt = t.filter(function (p) { return p.verdict === "report"; });
-    traces.push({ x: [0.01, 1e6], y: [0.01, 1e6], mode: "lines", line: { color: css("--muted"), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2" });
-    traces.push({ x: [0.01, 1e6], y: [0.0125, 1.25e6], mode: "lines", line: { color: "rgba(31,95,168,0.5)", width: 1 }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2" });
-    traces.push({ x: [0.01, 1e6], y: [0.0075, 0.75e6], mode: "lines", line: { color: "rgba(31,95,168,0.5)", width: 1 }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2", name: "band of 25 per cent" });
-    traces.push({ x: gt.map(function (p) { return p.x; }), y: gt.map(function (p) { return p.y; }), text: gt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: { color: "#1f5fa8", size: 8 }, xaxis: "x2", yaxis: "y2" });
-    traces.push({ x: nt.map(function (p) { return p.x; }), y: nt.map(function (p) { return p.y; }), text: nt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: hollow("#8a8a8a"), xaxis: "x2", yaxis: "y2" });
-    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, legend: { orientation: "h", y: -0.2 } });
-    layout.xaxis = axis({ title: { text: "published Sharpe ratio" }, range: [-0.08, 0.42], domain: [0, 0.46] });
-    layout.yaxis = axis({ title: { text: "this study" }, range: [-0.08, 0.42] });
-    layout.xaxis2 = axis({ title: { text: "published turnover, times 1/N (log)" }, type: "log", domain: [0.56, 1] });
-    layout.yaxis2 = axis({ title: { text: "this study (log)" }, type: "log" });
-    layout.annotations = [{ text: "Sharpe ratio, with the band of 0.03", x: 0.0, y: 1.08, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } },
-                          { text: "Turnover relative to 1/N, with the band of 25 per cent", x: 0.56, y: 1.08, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }];
+    var gt = t.filter(function (p) { return p.verdict === "pass"; }), mt = t.filter(function (p) { return p.verdict === "MISS"; }), nt = t.filter(function (p) { return p.verdict === "report"; });
+    traces.push({ x: [0.01, 1e6, 1e6, 0.01], y: [0.0075, 0.75e6, 1.25e6, 0.0125], fill: "toself", fillcolor: "rgba(42,120,214,0.12)", line: { width: 0 }, hoverinfo: "skip", showlegend: false, mode: "lines", xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: [0.01, 1e6], y: [0.01, 1e6], mode: "lines", line: { color: grey(), width: 1, dash: "dot" }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: gt.map(function (p) { return p.x; }), y: gt.map(function (p) { return p.y; }), text: gt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: { color: vcol(D.variants[0]), size: 9 }, xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: mt.map(function (p) { return p.x; }), y: mt.map(function (p) { return p.y; }), text: mt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: { color: miss(), size: 9 }, xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: nt.map(function (p) { return p.x; }), y: nt.map(function (p) { return p.y; }), text: nt.map(ttxt), hoverinfo: "text", mode: "markers", showlegend: false, marker: hollow(grey()), xaxis: "x2", yaxis: "y2" });
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, margin: { l: 60, r: 20, t: 36, b: 90 } });
+    layout.xaxis = axis({ title: { text: "published Sharpe ratio" }, range: [-0.08, 0.42], domain: [0, 0.45], tickfont: TICK });
+    layout.yaxis = axis({ title: { text: "this study" }, range: [-0.08, 0.42], tickfont: TICK });
+    layout.xaxis2 = axis({ title: { text: "published turnover, times 1/N (log)" }, type: "log", domain: [0.55, 1], tickfont: TICK });
+    layout.yaxis2 = axis({ title: { text: "this study (log)" }, type: "log", tickfont: TICK });
+    layout.annotations = [panelTitle("Sharpe ratio, band of 0.03", 0), panelTitle("Turnover relative to 1/N, band of 25 per cent", 0.55)];
+    layout.legend = legendAt(-0.3);
     Plotly.newPlot("f1", traces, layout, CONFIG);
   }
 
   // 2. since the paper
   function f2() {
     var paper = D.ext_periods[0], recent = D.ext_periods[1];
-    var traces = [], layout = base({ grid: { rows: 1, columns: 4, pattern: "independent" }, margin: { l: 230, r: 20, t: 40, b: 60 } });
+    var traces = [], layout = base({ grid: { rows: 1, columns: 4, pattern: "independent" }, margin: { l: 250, r: 20, t: 24, b: 70 } });
     var rules = D.rules.slice().reverse();
+    var cPaper = grey(), cNew = vcol(D.variants[1]);
     D.datasets.forEach(function (d, j) {
       var ax = pick(j === 0, "", String(j + 1));
       var xa = "x" + ax, ya = "y" + ax;
@@ -233,19 +253,19 @@ a { color: var(--accent); }
       var q = rules.map(function (r) { return D.ext_sharpe[recent][d][r]; });
       var labels = rules.map(function (r) { return D.rulelabel[r]; });
       rules.forEach(function (r, i) {
-        traces.push({ x: [p[i], q[i]], y: [labels[i], labels[i]], mode: "lines", line: { color: css("--grid"), width: 2 }, hoverinfo: "skip", showlegend: false, xaxis: xa, yaxis: ya });
+        traces.push({ x: [p[i], q[i]], y: [labels[i], labels[i]], mode: "lines", line: { color: css("--line"), width: 2 }, hoverinfo: "skip", showlegend: false, xaxis: xa, yaxis: ya });
       });
-      traces.push({ x: p, y: labels, mode: "markers", marker: { color: "#8a8a8a", size: 8 }, name: "paper's period", showlegend: j === 0, xaxis: xa, yaxis: ya, text: p.map(function (v) { return d + ", " + paper + ": " + v.toFixed(3); }), hoverinfo: "text" });
+      traces.push({ x: p, y: labels, mode: "markers", marker: { color: cPaper, size: 9 }, name: "paper's period", showlegend: j === 0, xaxis: xa, yaxis: ya, text: p.map(function (v) { return d + ", " + paper + ": " + v.toFixed(3); }), hoverinfo: "text" });
       var pv = {};
       D.ext_vs.forEach(function (e) { if (e.dataset === d) { pv[e.rule] = e.p; } });
-      traces.push({ x: q, y: labels, mode: "markers", marker: { color: "#d1731e", size: 9 }, name: "since the paper", showlegend: j === 0, xaxis: xa, yaxis: ya,
+      traces.push({ x: q, y: labels, mode: "markers", marker: { color: cNew, size: 9 }, name: "since the paper", showlegend: j === 0, xaxis: xa, yaxis: ya,
         text: rules.map(function (r, i) { return d + ", " + recent + ": " + q[i].toFixed(3) + pick(pv[r] === undefined, "", "<br>p-value against 1/N " + pick(pv[r] === undefined, "", String(pv[r]))); }), hoverinfo: "text" });
       var ew = D.ext_sharpe[recent][d]["ew"];
-      layout["xaxis" + ax] = axis({ domain: [j * 0.25 + pick(j > 0, 0.02, 0), (j + 1) * 0.25 - 0.01], range: [-0.08, 0.4], title: { text: d, font: { size: 11 } } });
-      layout["yaxis" + ax] = axis({ showticklabels: j === 0, anchor: xa });
-      layout.shapes = (layout.shapes || []).concat([{ type: "line", xref: xa, yref: ya + " domain", x0: ew, x1: ew, y0: 0, y1: 1, line: { color: "#d1731e", width: 1, dash: "dot" } }]);
+      traces.push({ x: [ew, ew], y: [labels[0], labels[labels.length - 1]], mode: "lines", line: { color: cNew, width: 1, dash: "dot" }, name: "1/N since the paper", showlegend: j === 0, hoverinfo: "skip", xaxis: xa, yaxis: ya });
+      layout["xaxis" + ax] = axis({ domain: [j * 0.25 + pick(j > 0, 0.02, 0), (j + 1) * 0.25 - 0.01], range: [-0.08, 0.4], title: { text: d, font: { size: 11 } }, tickfont: TICK });
+      layout["yaxis" + ax] = axis({ showticklabels: j === 0, anchor: xa, tickfont: TICK });
     });
-    layout.legend = { orientation: "h", y: -0.16 };
+    layout.legend = legendAt(-0.16);
     Plotly.newPlot("f2", traces, layout, CONFIG);
   }
 
@@ -253,68 +273,90 @@ a { color: var(--accent); }
   function f3() {
     var b = D.bench;
     var traces = [
-      { x: b.month, y: b.benchmark, mode: "lines", name: "benchmark (49 industries, cap-weighted)", line: { color: "#1f5fa8", width: 1.4 }, hovertemplate: "%{x}: %{y:.2f}<extra>benchmark</extra>" },
-      { x: b.month, y: b.market, mode: "lines", name: "French's market", line: { color: "#d1731e", width: 1.4, dash: "dot" }, hovertemplate: "%{x}: %{y:.2f}<extra>market</extra>" },
-      { x: b.month, y: b.gap_cum_bp, mode: "lines", name: "cumulative gap, benchmark minus market", line: { color: "#2e8b57", width: 1.4 }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.0f} bp<extra>gap</extra>" }
+      { x: b.month, y: b.benchmark, mode: "lines", name: "benchmark (49 industries, cap-weighted)", line: { color: vcol(D.variants[0]), width: 2 }, hovertemplate: "%{x}: %{y:.2f}<extra>benchmark</extra>" },
+      { x: b.month, y: b.market, mode: "lines", name: "French's market", line: { color: vcol(D.variants[1]), width: 2, dash: "dot" }, hovertemplate: "%{x}: %{y:.2f}<extra>market</extra>" },
+      { x: b.month, y: b.gap_cum_bp, mode: "lines", name: "cumulative gap, benchmark minus market", line: { color: vcol(D.variants[2]), width: 2 }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.0f} bp<extra>gap</extra>" }
     ];
-    var layout = base({ grid: { rows: 2, columns: 1, pattern: "independent", roworder: "top to bottom" }, margin: { l: 70, r: 20, t: 20, b: 50 } });
+    var layout = base({ grid: { rows: 2, columns: 1, pattern: "independent", roworder: "top to bottom" }, margin: { l: 70, r: 20, t: 24, b: 60 } });
     layout.xaxis = axis({ domain: [0, 1], showticklabels: false });
-    layout.yaxis = axis({ type: "log", title: { text: "growth of 1 (log)" }, domain: [0.42, 1], tickvals: [1, 2, 5, 10, 20, 50, 100, 200], ticktext: ["1", "2", "5", "10", "20", "50", "100", "200"] });
-    layout.xaxis2 = axis({ domain: [0, 1], anchor: "y2" });
-    layout.yaxis2 = axis({ title: { text: "cumulative gap, bp" }, domain: [0, 0.34] });
-    layout.legend = { orientation: "h", y: -0.12 };
+    layout.yaxis = axis({ type: "log", title: { text: "growth of 1 (log)" }, domain: [0.42, 1], tickvals: [1, 2, 5, 10, 20, 50, 100, 200], ticktext: ["1", "2", "5", "10", "20", "50", "100", "200"], tickfont: TICK });
+    layout.xaxis2 = axis({ domain: [0, 1], anchor: "y2", tickfont: TICK });
+    layout.yaxis2 = axis({ title: { text: "cumulative gap, bp" }, domain: [0, 0.34], tickfont: TICK });
+    layout.legend = legendAt(-0.12);
     Plotly.newPlot("f3", traces, layout, CONFIG);
-    var w = D.bench_w, t2 = [];
+    // the composition: one small panel per industry, the same scale in every panel, the tilted industries marked
+    var w = D.bench_w, t2 = [], l2 = base({ margin: { l: 50, r: 20, t: 30, b: 60 } });
+    var cols = 4, rows = Math.ceil(w.ind.length / cols), ymax = 0;
+    w.ind.forEach(function (i) { w.w[i].forEach(function (v) { if (v * 100 > ymax) { ymax = v * 100; } }); });
+    ymax = Math.ceil(ymax / 5) * 5;
+    var shown = { plain: true, tilted: true };
     w.ind.forEach(function (i, k) {
-      t2.push({ x: w.month, y: w.w[i].map(function (v) { return v * 100; }), stackgroup: "one", name: i, mode: "none", hovertemplate: "%{x}: %{y:.1f}%<extra>" + i + "</extra>" });
+      var ax = pick(k === 0, "", String(k + 1)), xa = "x" + ax, ya = "y" + ax;
+      var row = Math.floor(k / cols), colIx = k % cols, tilted = D.tilted.indexOf(i) >= 0;
+      var key = pick(tilted, "tilted", "plain");
+      t2.push({ x: w.month, y: w.w[i].map(function (v) { return v * 100; }), mode: "lines", line: { color: pick(tilted, vcol(D.variants[1]), vcol(D.variants[0])), width: 2 },
+        name: pick(tilted, "an industry the tilt holds at half its weight", "an industry's share of the benchmark"), showlegend: !shown[key], legendgroup: key, xaxis: xa, yaxis: ya, hovertemplate: "%{x}: %{y:.1f}%<extra>" + i + "</extra>" });
+      shown[key] = true;
+      var x0 = colIx / cols + pick(colIx > 0, 0.015, 0), x1 = (colIx + 1) / cols - 0.015;
+      var y1 = 1 - row / rows - pick(row > 0, 0.06, 0), y0 = 1 - (row + 1) / rows + 0.06;
+      l2["xaxis" + ax] = axis({ domain: [x0, x1], showticklabels: row === rows - 1, tickfont: TICK, anchor: ya });
+      l2["yaxis" + ax] = axis({ domain: [y0, y1], range: [0, ymax], showticklabels: colIx === 0, tickfont: TICK, anchor: xa, ticksuffix: "%" });
+      l2.annotations = (l2.annotations || []).concat([{ text: i, x: x0, xanchor: "left", y: y1, yanchor: "bottom", xref: "paper", yref: "paper", showarrow: false, font: { size: 11 } }]);
     });
-    t2.push({ x: w.month, y: w.other.map(function (v) { return v * 100; }), stackgroup: "one", name: "the other 41", mode: "none", fillcolor: "rgba(140,140,140,0.35)", hovertemplate: "%{x}: %{y:.1f}%<extra>the other 41</extra>" });
-    var l2 = base({ margin: { l: 60, r: 20, t: 20, b: 50 } });
-    l2.yaxis = axis({ title: { text: "share of the benchmark, %" }, range: [0, 100] });
-    l2.xaxis = axis({});
-    l2.legend = { orientation: "h", y: -0.14 };
+    // the two legend entries, after the data so that the first panel's axes keep their date type
+    t2.push({ x: [w.month[0]], y: [null], mode: "lines", line: { color: vcol(D.variants[0]), width: 2 }, name: "an industry's share of the benchmark", legendrank: 1, hoverinfo: "skip" });
+    t2.push({ x: [w.month[0]], y: [null], mode: "lines", line: { color: vcol(D.variants[1]), width: 2 }, name: "an industry the tilt holds at half its weight", legendrank: 2, hoverinfo: "skip" });
+    l2.legend = legendAt(-0.08);
     Plotly.newPlot("f3b", t2, l2, CONFIG);
   }
 
-  // 4. estimators without constraints
+  // 4. estimators without constraints: a dot for each portfolio, the pair joined, so that no bar starts above zero
   function f4() {
     var ests = ["sample", "Ledoit-Wolf", "six-factor model", "principal components"];
-    var traces = [], layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "group", margin: { l: 60, r: 20, t: 40, b: 70 } });
+    var traces = [], layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, margin: { l: 140, r: 20, t: 36, b: 90 } });
+    var cU = vcol(D.variants[1]), cL = vcol(D.variants[0]);
+    var all4 = D.cov.map(function (c) { return c.unconstrained; }).concat(D.cov.map(function (c) { return c.long_only; }));
+    var lo4 = Math.min.apply(null, all4), hi4 = Math.max.apply(null, all4);
     [["monthly_120", "120 monthly returns", ""], ["daily_3y", "three years of daily returns", "2"]].forEach(function (spec, j) {
       var rows = D.cov.filter(function (c) { return c.data === spec[0]; });
       function val(key) { return ests.map(function (e) { var r = rows.filter(function (c) { return c.estimator === e; })[0]; return r[key]; }); }
-      traces.push({ x: ests, y: val("unconstrained"), type: "bar", name: "unconstrained", marker: { color: "#d1731e" }, showlegend: j === 0, xaxis: "x" + spec[2], yaxis: "y" + spec[2], hovertemplate: "%{x}: %{y:.1f}%<extra>unconstrained</extra>" });
-      traces.push({ x: ests, y: val("long_only"), type: "bar", name: "long-only", marker: { color: "#1f5fa8" }, showlegend: j === 0, xaxis: "x" + spec[2], yaxis: "y" + spec[2], hovertemplate: "%{x}: %{y:.1f}%<extra>long-only</extra>" });
-      layout["xaxis" + spec[2]] = axis({ domain: pick(j === 0, [0, 0.47], [0.53, 1]), title: { text: spec[1], font: { size: 11 } } });
-      layout["yaxis" + spec[2]] = axis({ range: [10, 15], title: pick(j === 0, { text: "realised volatility, % a year" }, {}) });
+      var u = val("unconstrained"), lo = val("long_only"), xa = "x" + spec[2], ya = "y" + spec[2];
+      ests.forEach(function (e, i) { traces.push({ x: [u[i], lo[i]], y: [e, e], mode: "lines", line: { color: css("--line"), width: 2 }, hoverinfo: "skip", showlegend: false, xaxis: xa, yaxis: ya }); });
+      traces.push({ x: u, y: ests, mode: "markers", name: "unconstrained", marker: { color: cU, size: 10 }, showlegend: j === 0, xaxis: xa, yaxis: ya, hovertemplate: "%{y}, " + spec[1] + "<br>unconstrained %{x:.1f}%<extra></extra>" });
+      traces.push({ x: lo, y: ests, mode: "markers", name: "long-only", marker: { color: cL, size: 10 }, showlegend: j === 0, xaxis: xa, yaxis: ya, hovertemplate: "%{y}, " + spec[1] + "<br>long-only %{x:.1f}%<extra></extra>" });
+      layout["xaxis" + spec[2]] = axis({ domain: pick(j === 0, [0, 0.46], [0.54, 1]), range: [lo4 - 0.4, hi4 + 0.4], title: { text: "realised volatility, % a year" }, tickfont: TICK, anchor: ya });
+      layout["yaxis" + spec[2]] = axis({ autorange: "reversed", showticklabels: j === 0, tickfont: TICK, anchor: xa });
     });
-    layout.legend = { orientation: "h", y: -0.28 };
+    layout.annotations = [panelTitle("120 monthly returns", 0), panelTitle("three years of daily returns", 0.54)];
+    layout.legend = legendAt(-0.34);
     Plotly.newPlot("f4", traces, layout, CONFIG);
   }
 
-  // 5. the frontier
+  // 5. the frontier: realised tracking error across the sets on the left; at the mandate, forecast beside realised on the right
   function f5() {
     var traces = [];
     var xs = D.sets.map(function (s) { return D.setlabel[s]; });
     D.variants.forEach(function (v) {
       var re = D.sets.map(function (s) { return D.frontier[v][s].realised; });
-      var fo = D.sets.map(function (s) { return D.frontier[v][s].forecast; });
-      traces.push({ x: xs, y: re, mode: "lines+markers", name: D.vlabel[v], line: { color: D.vcolour[v], width: 1.6 }, marker: { size: 7 }, legendgroup: v, hovertemplate: "%{x}<br>realised %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
-      traces.push({ x: xs, y: fo, mode: "markers", marker: hollow(D.vcolour[v]), showlegend: false, legendgroup: v, hovertemplate: "%{x}<br>forecast %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+      traces.push({ x: xs, y: re, mode: "lines+markers", name: D.vlabel[v], line: { color: vcol(v), width: 2 }, marker: { size: 8 }, legendgroup: v, hovertemplate: "%{x}<br>realised %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
     });
-    var last = D.sets.slice(3);
-    D.variants.forEach(function (v) {
-      traces.push({ x: last.map(function (s) { return D.setlabel[s]; }), y: last.map(function (s) { return D.frontier[v][s].realised; }), mode: "lines+markers", line: { color: D.vcolour[v], width: 1.6 }, marker: { size: 8 }, showlegend: false, legendgroup: v, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}<br>realised %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
-      traces.push({ x: last.map(function (s) { return D.setlabel[s]; }), y: last.map(function (s) { return D.frontier[v][s].forecast; }), mode: "markers", marker: hollow(D.vcolour[v]), showlegend: false, legendgroup: v, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}<br>forecast %{y:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+    var order = D.variants.slice().sort(function (a, b) { return D.frontier[a]["C3"].realised - D.frontier[b]["C3"].realised; });
+    var names = order.map(function (v) { return D.vlabel[v]; });
+    order.forEach(function (v, i) {
+      var f = D.frontier[v]["C3"];
+      traces.push({ x: [f.forecast, f.realised], y: [names[i], names[i]], mode: "lines", line: { color: css("--line"), width: 2 }, hoverinfo: "skip", showlegend: false, xaxis: "x2", yaxis: "y2" });
+      traces.push({ x: [f.forecast], y: [names[i]], mode: "markers", marker: hollow(vcol(v)), showlegend: false, legendgroup: v, xaxis: "x2", yaxis: "y2", hovertemplate: "forecast %{x:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
+      traces.push({ x: [f.realised], y: [names[i]], mode: "markers", marker: { color: vcol(v), size: 9 }, showlegend: false, legendgroup: v, xaxis: "x2", yaxis: "y2", hovertemplate: "realised %{x:.1f} bp<extra>" + D.vlabel[v] + "</extra>" });
     });
-    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, margin: { l: 60, r: 40, t: 40, b: 90 } });
-    layout.xaxis = axis({ domain: [0, 0.6] });
-    layout.yaxis = axis({ title: { text: "tracking error, basis points a year" } });
-    layout.xaxis2 = axis({ domain: [0.68, 1], tickangle: -15 });
-    layout.yaxis2 = axis({ range: [50, 100] });
-    layout.annotations = [{ text: "the four constraint sets and the tilt alone", x: 0, y: 1.12, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } },
-                          { text: "the last two, enlarged", x: 0.68, y: 1.12, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }];
-    layout.legend = { orientation: "h", y: -0.3 };
+    traces.push({ x: [null], y: [null], mode: "markers", marker: hollow(ink()), name: "forecast (hollow)", xaxis: "x2", yaxis: "y2" });
+    traces.push({ x: [null], y: [null], mode: "markers", marker: { color: ink(), size: 9 }, name: "realised (filled)", xaxis: "x2", yaxis: "y2" });
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, margin: { l: 60, r: 20, t: 36, b: 100 } });
+    layout.xaxis = axis({ domain: [0, 0.5], tickfont: TICK });
+    layout.yaxis = axis({ title: { text: "realised tracking error, bp a year" }, tickfont: TICK });
+    layout.xaxis2 = axis({ domain: [0.72, 1], title: { text: "tracking error, bp a year" }, tickfont: TICK, anchor: "y2" });
+    layout.yaxis2 = axis({ tickfont: TICK, anchor: "x2", automargin: true });
+    layout.annotations = [panelTitle("Realised, as the constraints accumulate", 0), panelTitle("Under the mandate: forecast beside realised", 0.56)];
+    layout.legend = legendAt(-0.3);
     Plotly.newPlot("f5", traces, layout, CONFIG);
   }
 
@@ -322,11 +364,12 @@ a { color: var(--accent); }
   function f6() {
     var src = pick(state.bias === "raw", D.bias_raw, D.bias_cal);
     var z = D.variants.map(function (v) { return src[v]; });
-    var traces = [{ z: z, x: D.decades, y: D.variants.map(function (v) { return D.vlabel[v]; }), type: "heatmap", colorscale: [[0, "#2e8b57"], [0.5, "#f4f4ef"], [1, "#c0392b"]], zmin: 0.5, zmax: 2.0,
-      text: z.map(function (row) { return row.map(function (x) { return x.toFixed(2); }); }), texttemplate: "%{text}", hovertemplate: "%{y}<br>%{x}: %{z:.2f}<extra></extra>", colorbar: { title: { text: "realised over forecast" }, thickness: 12 } }];
-    var layout = base({ margin: { l: 190, r: 20, t: 20, b: 60 } });
-    layout.yaxis = axis({ autorange: "reversed" });
-    layout.xaxis = axis({});
+    var traces = [{ z: z, x: D.decades, y: D.variants.map(function (v) { return D.vlabel[v]; }), type: "heatmap", colorscale: diverging(), zmin: 0, zmax: 2, zmid: 1, xgap: 2, ygap: 2,
+      text: z.map(function (row) { return row.map(function (x) { return x.toFixed(2); }); }), texttemplate: "%{text}", textfont: { size: 11 }, hovertemplate: "%{y}<br>%{x}: %{z:.2f}<extra></extra>",
+      colorbar: { title: { text: "realised over forecast", side: "right" }, thickness: 10, len: 0.9, tickfont: TICK } }];
+    var layout = base({ margin: { l: 190, r: 20, t: 24, b: 50 } });
+    layout.yaxis = axis({ autorange: "reversed", tickfont: TICK });
+    layout.xaxis = axis({ tickfont: TICK });
     Plotly.newPlot("f6", traces, layout, CONFIG);
   }
 
@@ -334,32 +377,33 @@ a { color: var(--accent); }
   function f7() {
     var a = D.active[state.set], traces = [];
     D.variants.forEach(function (v) {
-      traces.push({ x: D.active.month, y: a[v], mode: "lines", name: D.vlabel[v], line: { color: D.vcolour[v], width: 1.4 }, hovertemplate: "%{x}: %{y:.2f} pp<extra>" + D.vlabel[v] + "</extra>" });
+      traces.push({ x: D.active.month, y: a[v], mode: "lines", name: D.vlabel[v], line: { color: vcol(v), width: 1.6 }, hovertemplate: "%{x}: %{y:.2f} pp<extra>" + D.vlabel[v] + "</extra>" });
     });
-    var layout = base({ margin: { l: 60, r: 20, t: 20, b: 80 } });
-    layout.yaxis = axis({ title: { text: "cumulative active return, percentage points" }, zeroline: true, zerolinewidth: 1.5 });
-    layout.xaxis = axis({});
-    layout.legend = { orientation: "h", y: -0.2 };
+    var layout = base({ margin: { l: 60, r: 20, t: 24, b: 80 } });
+    layout.yaxis = axis({ title: { text: "cumulative active return, percentage points" }, zeroline: true, zerolinewidth: 1.5, zerolinecolor: css("--muted"), tickfont: TICK });
+    layout.xaxis = axis({ tickfont: TICK });
+    layout.legend = legendAt(-0.12);
     Plotly.newPlot("f7", traces, layout, CONFIG);
   }
 
-  // 8. turnover and cost
+  // 8. turnover and cost: horizontal, the estimator names once on the left
   function f8() {
-    var labels = D.variants.map(function (v) { return D.vlabel[v]; });
+    var labels = D.variants.map(function (v) { return D.vlabel[v]; }).reverse(), vs = D.variants.slice().reverse();
+    var cTurn = vcol(D.variants[0]), cCost = vcol(D.variants[1]);
     var traces = [
-      { x: labels, y: D.variants.map(function (v) { return D.turn[v].one_way; }), type: "bar", name: "one-way turnover, % a month", marker: { color: "#1f5fa8" }, hovertemplate: "%{x}: %{y:.2f}%<extra></extra>" },
-      { x: labels, y: D.variants.map(function (v) { return D.turn[v].gross; }), type: "bar", name: "gross active return, bp a year", marker: { color: "#8a8a8a" }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.1f} bp<extra>gross</extra>" },
-      { x: labels, y: D.variants.map(function (v) { return -D.turn[v].cost50; }), type: "bar", name: "trading cost at 50 bp, bp a year", marker: { color: "#c0392b" }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.1f} bp<extra>cost</extra>" },
-      { x: labels, y: D.variants.map(function (v) { return D.turn[v].net50; }), mode: "markers", name: "net active return", marker: { color: "#ffffff", symbol: "diamond", size: 10, line: { color: css("--fg"), width: 1.5 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{x}: %{y:.1f} bp<extra>net</extra>" }
+      { y: labels, x: vs.map(function (v) { return D.turn[v].one_way; }), type: "bar", orientation: "h", width: 0.55, name: "one-way turnover, % a month", marker: { color: cTurn }, hovertemplate: "%{y}: %{x:.2f}%<extra></extra>" },
+      { y: labels, x: vs.map(function (v) { return D.turn[v].gross; }), type: "bar", orientation: "h", width: 0.55, name: "gross active return, bp a year", marker: { color: resid(), line: { color: css("--card"), width: 1 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}: %{x:.1f} bp<extra>gross</extra>" },
+      { y: labels, x: vs.map(function (v) { return -D.turn[v].cost50; }), type: "bar", orientation: "h", width: 0.55, name: "trading cost at 50 bp, bp a year", marker: { color: cCost, line: { color: css("--card"), width: 1 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}: %{x:.1f} bp<extra>cost</extra>" },
+      { y: labels, x: vs.map(function (v) { return D.turn[v].net50; }), mode: "markers", name: "net active return", marker: { color: css("--card"), symbol: "diamond", size: 10, line: { color: ink(), width: 1.5 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}: %{x:.1f} bp<extra>net</extra>" }
     ];
-    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "relative", margin: { l: 60, r: 20, t: 30, b: 120 } });
-    layout.xaxis = axis({ domain: [0, 0.46], tickangle: -30 });
-    layout.yaxis = axis({ title: { text: "% a month" } });
-    layout.xaxis2 = axis({ domain: [0.56, 1], tickangle: -30 });
-    layout.yaxis2 = axis({ title: { text: "basis points a year" }, zeroline: true });
-    layout.shapes = [{ type: "line", xref: "x domain", yref: "y", x0: 0, x1: 1, y0: D.bench_turn, y1: D.bench_turn, line: { color: "#d1731e", width: 1.5, dash: "dot" } }];
-    layout.annotations = [{ text: "the benchmark's own turnover, " + D.bench_turn.toFixed(2) + "%", xref: "x domain", yref: "y", x: 0.98, y: D.bench_turn, yshift: 11, showarrow: false, font: { size: 10, color: css("--fg") }, bgcolor: css("--bg"), borderpad: 2, xanchor: "right" }];
-    layout.legend = { orientation: "h", y: -0.42 };
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "relative", bargap: 0.45, margin: { l: 190, r: 20, t: 36, b: 90 } });
+    layout.xaxis = axis({ domain: [0, 0.44], title: { text: "% a month" }, tickfont: TICK });
+    layout.yaxis = axis({ tickfont: TICK });
+    layout.xaxis2 = axis({ domain: [0.54, 1], title: { text: "basis points a year" }, zeroline: true, zerolinecolor: css("--muted"), tickfont: TICK, anchor: "y2" });
+    layout.yaxis2 = axis({ showticklabels: false, anchor: "x2" });
+    layout.shapes = [{ type: "line", xref: "x", yref: "y domain", x0: D.bench_turn, x1: D.bench_turn, y0: 0, y1: 1, line: { color: cCost, width: 1.5, dash: "dot" } }];
+    layout.annotations = [panelTitle("One-way turnover; dotted: the benchmark's own, " + D.bench_turn.toFixed(2) + "%", 0), panelTitle("Gross return, cost, and net (diamond)", 0.54)];
+    layout.legend = legendAt(-0.28);
     Plotly.newPlot("f8", traces, layout, CONFIG);
   }
 
@@ -368,52 +412,63 @@ a { color: var(--accent); }
     var A = D.att[state.aset], labels = D.variants.map(function (v) { return D.vlabel[v]; });
     var traces = [];
     var z = D.variants.map(function (v) { return D.factors.map(function (f) { return A[v].exposure[f]; }); });
-    traces.push({ z: z, x: D.factors.map(function (f) { return D.flabel[f]; }), y: labels, type: "heatmap", colorscale: [[0, "#d1731e"], [0.5, "#f4f4ef"], [1, "#1f5fa8"]], zmin: -0.02, zmax: 0.02,
-      text: z.map(function (row) { return row.map(function (x) { if (Math.abs(x) < 0.0005) { return "0.000"; } return pick(x > 0, "+", "") + x.toFixed(3); }); }), texttemplate: "%{text}", hovertemplate: "%{y}<br>%{x}: %{z:.4f}<extra>exposure</extra>", showscale: false, xaxis: "x", yaxis: "y" });
+    traces.push({ z: z, x: D.factors.map(function (f) { return D.flabel[f]; }), y: labels, type: "heatmap", colorscale: divergingRev(), zmin: -0.02, zmax: 0.02, zmid: 0, xgap: 2, ygap: 2,
+      text: z.map(function (row) { return row.map(function (x) { if (Math.abs(x) < 0.0005) { return "0.000"; } return pick(x > 0, "+", "") + x.toFixed(3); }); }), texttemplate: "%{text}", textfont: { size: 11 }, hovertemplate: "%{y}<br>%{x}: %{z:.4f}<extra>exposure</extra>", showscale: false, xaxis: "x", yaxis: "y" });
     D.factors.forEach(function (f) {
-      traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].contribution[f]; }), type: "bar", orientation: "h", name: D.flabel[f], marker: { color: D.fcolour[f] }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}<br>" + D.flabel[f] + ": %{x:.1f} bp<extra></extra>" });
+      traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].contribution[f]; }), type: "bar", orientation: "h", width: 0.6, name: D.flabel[f], marker: { color: fcol(f), line: { color: css("--card"), width: 1 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}<br>" + D.flabel[f] + ": %{x:.1f} bp<extra></extra>" });
     });
-    traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].residual; }), type: "bar", orientation: "h", name: "residual", marker: { color: D.resid }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}<br>residual: %{x:.1f} bp<extra></extra>" });
-    traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].active; }), mode: "markers", name: "active return (s.e. in hover)", marker: { color: css("--fg"), symbol: "line-ns-open", size: 14, line: { width: 2 } }, xaxis: "x2", yaxis: "y2",
+    traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].residual; }), type: "bar", orientation: "h", width: 0.6, name: "residual", marker: { color: resid(), line: { color: css("--card"), width: 1 } }, xaxis: "x2", yaxis: "y2", hovertemplate: "%{y}<br>residual: %{x:.1f} bp<extra></extra>" });
+    traces.push({ y: labels, x: D.variants.map(function (v) { return A[v].active; }), mode: "markers", name: "active return (s.e. in hover)", marker: { color: ink(), symbol: "line-ns-open", size: 14, line: { width: 2 } }, xaxis: "x2", yaxis: "y2",
       text: D.variants.map(function (v) { return A[v].active.toFixed(1) + " bp, standard error " + A[v].se.toFixed(1) + "; factor share " + (A[v].share * 100).toFixed(0) + "%"; }), hoverinfo: "text+y" });
-    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "relative", margin: { l: 190, r: 20, t: 30, b: 90 } });
-    layout.xaxis = axis({ domain: [0, 0.36] });
-    layout.yaxis = axis({ autorange: "reversed" });
-    layout.xaxis2 = axis({ domain: [0.5, 1], title: { text: "basis points a year" }, zeroline: true });
+    var layout = base({ grid: { rows: 1, columns: 2, pattern: "independent" }, barmode: "relative", bargap: 0.4, margin: { l: 190, r: 20, t: 36, b: 80 } });
+    layout.xaxis = axis({ domain: [0, 0.4], tickfont: { size: 10 }, side: "bottom" });
+    layout.yaxis = axis({ autorange: "reversed", tickfont: TICK });
+    layout.xaxis2 = axis({ domain: [0.5, 1], title: { text: "basis points a year" }, zeroline: true, zerolinecolor: css("--muted"), tickfont: TICK, anchor: "y2" });
     layout.yaxis2 = axis({ autorange: "reversed", showticklabels: false, anchor: "x2" });
-    layout.legend = { orientation: "h", y: -0.22 };
-    layout.annotations = [{ text: "mean active exposure", x: 0, y: 1.07, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } },
-                          { text: "contributions, residual and active return", x: 0.5, y: 1.07, xref: "paper", yref: "paper", showarrow: false, font: { size: 12 } }];
+    layout.legend = legendAt(-0.2);
+    layout.annotations = [panelTitle("Mean active exposure", 0), panelTitle("Contributions, residual and active return", 0.5)];
     Plotly.newPlot("f9", traces, layout, CONFIG);
     var dec = D.att_dec, t2 = [];
-    D.factors.forEach(function (f) { t2.push({ x: dec.period, y: dec.contribution[f], type: "bar", name: D.flabel[f], marker: { color: D.fcolour[f] }, hovertemplate: "%{x}<br>" + D.flabel[f] + ": %{y:.1f} bp<extra></extra>" }); });
-    t2.push({ x: dec.period, y: dec.residual, type: "bar", name: "residual", marker: { color: D.resid }, hovertemplate: "%{x}<br>residual: %{y:.1f} bp<extra></extra>" });
-    var l2 = base({ barmode: "relative", margin: { l: 60, r: 20, t: 20, b: 80 } });
-    l2.yaxis = axis({ title: { text: "basis points a year" }, zeroline: true });
-    l2.xaxis = axis({});
-    l2.legend = { orientation: "h", y: -0.25 };
+    D.factors.forEach(function (f) { t2.push({ x: dec.period, y: dec.contribution[f], type: "bar", width: 0.5, name: D.flabel[f], marker: { color: fcol(f), line: { color: css("--card"), width: 1 } }, hovertemplate: "%{x}<br>" + D.flabel[f] + ": %{y:.1f} bp<extra></extra>" }); });
+    t2.push({ x: dec.period, y: dec.residual, type: "bar", width: 0.5, name: "residual", marker: { color: resid(), line: { color: css("--card"), width: 1 } }, hovertemplate: "%{x}<br>residual: %{y:.1f} bp<extra></extra>" });
+    t2.push({ x: dec.period, y: dec.active, mode: "markers", name: "active return", marker: { color: ink(), symbol: "line-ew-open", size: 22, line: { width: 2 } }, hovertemplate: "%{x}<br>active return %{y:.1f} bp<extra></extra>" });
+    var l2 = base({ barmode: "relative", margin: { l: 60, r: 20, t: 24, b: 70 } });
+    l2.yaxis = axis({ title: { text: "basis points a year" }, zeroline: true, zerolinecolor: css("--muted"), tickfont: TICK });
+    l2.xaxis = axis({ tickfont: TICK });
+    l2.legend = legendAt(-0.16);
     Plotly.newPlot("f9b", t2, l2, CONFIG);
   }
 
-  // 10. the optimiser
+  // 10. the optimiser: the cost by month, one dot per estimator; the speed limit as one line with the distance written at five points
   function f10() {
-    var ests = []; D.opt_fixes.forEach(function (r) { if (ests.indexOf(r.estimator) < 0) { ests.push(r.estimator); } });
-    var traces = [], colours = ["#8a8a8a", "#1f5fa8", "#d1731e"];
-    D.opt_months.forEach(function (m, j) {
-      var rows = D.opt_fixes.filter(function (r) { return r.month === m; });
-      traces.push({ x: ests, y: ests.map(function (e) { var r = rows.filter(function (q) { return q.estimator === e; })[0]; if (r) { return r.tilt; } return null; }), type: "bar", name: "tilt alone, " + m, marker: { color: colours[j], opacity: 0.55 }, hovertemplate: "%{x}, " + m + "<br>tilt alone %{y:.1f} bp<extra></extra>" });
-      traces.push({ x: ests, y: ests.map(function (e) { var r = rows.filter(function (q) { return q.estimator === e; })[0]; if (r) { return r.mandate; } return null; }), type: "bar", name: "mandate, " + m, marker: { color: colours[j] }, hovertemplate: "%{x}, " + m + "<br>mandate %{y:.1f} bp<extra></extra>" });
+    var traces = [], months = D.opt_months, ests = [];
+    D.opt_fixes.forEach(function (r) { if (ests.indexOf(r.variant) < 0) { ests.push(r.variant); } });
+    var offs = ests.map(function (v, i) { return (i - (ests.length - 1) / 2) * 0.13; });
+    ests.forEach(function (v, i) {
+      var xt = [], yt = [], xm = [], ym = [], ht = [], hm = [];
+      months.forEach(function (m, j) {
+        var r = D.opt_fixes.filter(function (q) { return q.month === m && q.variant === v; })[0];
+        if (r) { xt.push(j + offs[i]); yt.push(r.tilt); ht.push(m + ", tilt alone: " + r.tilt.toFixed(1) + " bp"); xm.push(j + offs[i]); ym.push(r.mandate); hm.push(m + ", mandate: " + r.mandate.toFixed(1) + " bp"); }
+      });
+      xt.forEach(function (x, k) { traces.push({ x: [x, xm[k]], y: [yt[k], ym[k]], mode: "lines", line: { color: css("--line"), width: 2 }, hoverinfo: "skip", showlegend: false }); });
+      traces.push({ x: xt, y: yt, mode: "markers", marker: hollow(vcol(v)), name: D.vlabel[v], showlegend: false, legendgroup: v, text: ht, hoverinfo: "text+name" });
+      traces.push({ x: xm, y: ym, mode: "markers", marker: { color: vcol(v), size: 9 }, legendgroup: v, text: hm, hoverinfo: "text+name", name: D.vlabel[v] });
     });
-    var s = D.speed;
-    traces.push({ x: s.rebalance, y: s.distance, mode: "lines+markers", name: "distance to the benchmark, % one way", line: { color: "#1f5fa8" }, xaxis: "x2", yaxis: "y2", hovertemplate: "rebalance %{x}: %{y:.1f}%<extra>distance</extra>" });
-    traces.push({ x: s.rebalance, y: s.te, mode: "lines+markers", name: "forecast tracking error, bp a year", line: { color: "#d1731e" }, xaxis: "x2", yaxis: "y3", hovertemplate: "rebalance %{x}: %{y:.0f} bp<extra>tracking error</extra>" });
-    var layout = base({ barmode: "group", margin: { l: 60, r: 70, t: 30, b: 110 } });
-    layout.xaxis = axis({ domain: [0, 0.5], tickangle: -25 });
-    layout.yaxis = axis({ title: { text: "forecast tracking error, bp a year" } });
-    layout.xaxis2 = axis({ domain: [0.6, 1], title: { text: "monthly rebalance, from 1/N" }, anchor: "y2" });
-    layout.yaxis2 = axis({ title: { text: "distance, %" }, anchor: "x2" });
-    layout.yaxis3 = axis({ title: { text: "bp a year" }, overlaying: "y2", side: "right", anchor: "x2", showgrid: false });
-    layout.legend = { orientation: "h", y: -0.38 };
+    traces.push({ x: [null], y: [null], mode: "markers", marker: hollow(ink()), name: "tilt alone (hollow)" });
+    traces.push({ x: [null], y: [null], mode: "markers", marker: { color: ink(), size: 9 }, name: "mandate (filled)" });
+    var s = D.speed, marks = [1, 6, 12, 18, 24];
+    var mx = [], my = [], mt = [];
+    s.rebalance.forEach(function (rb, k) { if (marks.indexOf(rb) >= 0) { mx.push(rb); my.push(s.te[k]); mt.push(s.distance[k].toFixed(0) + "% away"); } });
+    traces.push({ x: s.rebalance, y: s.te, mode: "lines+markers", line: { color: grey(), width: 2 }, marker: { size: 7, color: grey() }, showlegend: false, xaxis: "x2", yaxis: "y2",
+      text: s.distance.map(function (d) { return d.toFixed(1) + "% of one-way turnover from the benchmark"; }), hovertemplate: "rebalance %{x}: %{y:.0f} bp<br>%{text}<extra></extra>" });
+    traces.push({ x: mx, y: my, mode: "text", text: mt, textposition: mx.map(function (x, k) { return pick(k === mx.length - 1, "middle right", "top right"); }), textfont: { size: 10, color: css("--muted") }, showlegend: false, hoverinfo: "skip", xaxis: "x2", yaxis: "y2" });
+    var layout = base({ margin: { l: 60, r: 30, t: 36, b: 100 } });
+    layout.xaxis = axis({ domain: [0, 0.5], tickvals: months.map(function (m, j) { return j; }), ticktext: months, tickfont: TICK, range: [-0.5, months.length - 0.5] });
+    layout.yaxis = axis({ title: { text: "forecast tracking error, bp a year" }, tickfont: TICK, rangemode: "tozero" });
+    layout.xaxis2 = axis({ domain: [0.6, 1], title: { text: "monthly rebalance, from 1/N" }, anchor: "y2", tickfont: TICK, range: [0, 29], tickvals: [0, 5, 10, 15, 20, 25] });
+    layout.yaxis2 = axis({ title: { text: "forecast tracking error, bp a year" }, anchor: "x2", tickfont: TICK, rangemode: "tozero" });
+    layout.annotations = [panelTitle("The tilt's cost at three months, by estimator", 0), panelTitle("The speed limit: the distance left is written at five points", 0.6)];
+    layout.legend = legendAt(-0.3);
     Plotly.newPlot("f10", traces, layout, CONFIG);
   }
 

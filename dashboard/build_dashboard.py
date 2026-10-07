@@ -92,14 +92,23 @@ VARIANTS = ["sample, daily 3y", "ledoit_wolf, daily 3y", "factor, daily 3y", "pc
 VLABEL = {"sample, daily 3y": "Sample, 3y daily", "ledoit_wolf, daily 3y": "Ledoit-Wolf, 3y daily", "factor, daily 3y": "Six-factor model, 3y daily",
           "pca, daily 3y": "Principal components, 3y daily", "sample, monthly 120": "Sample, 120 months", "robust, all five": "Robust (worst of five)",
           "RiskMetrics, daily 5y": "RiskMetrics, 5y daily"}
-VCOLOUR = {"sample, daily 3y": "#1f5fa8", "ledoit_wolf, daily 3y": "#4c9ed9", "factor, daily 3y": "#d1731e", "pca, daily 3y": "#e0a53a",
-           "sample, monthly 120": "#8a8a8a", "robust, all five": "#2e8b57", "RiskMetrics, daily 5y": "#9b4dca"}
+# Colours: one fixed categorical order for the seven estimator variants and one for the six factors, with a
+# separate step of each hue for dark surfaces; both sets pass the lightness, chroma, colour-vision-deficiency
+# separation and normal-vision checks of an OKLab palette validator in both modes (checked 7 October 2026).
+# The residual, the market reference and the "no verdict" markers are neutral greys by design.
+PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
+PALETTE_DARK = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+VCOLOUR = dict(zip(VARIANTS, PALETTE[:7]))
+VCOLOUR_DARK = dict(zip(VARIANTS, PALETTE_DARK[:7]))
 SETS = ["C0", "C1", "C2", "C3 tilt only", "C3"]
 SET_LABEL = {"C0": "long-only", "C1": "+ active weight bound", "C2": "+ turnover cap", "C3 tilt only": "+ tilt", "C3": "+ exclusions and beta neutrality"}
 FACTORS = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
 FLABEL = {"Mkt-RF": "market", "SMB": "size", "HML": "value", "RMW": "profitability", "CMA": "investment", "Mom": "momentum"}
-FCOLOUR = {"Mkt-RF": "#555555", "SMB": "#1f5fa8", "HML": "#d1731e", "RMW": "#2e8b57", "CMA": "#9b4dca", "Mom": "#e0a53a"}
-RESID_COLOUR = "#c9c9c9"
+FCOLOUR = dict(zip(FACTORS, PALETTE[:6]))
+FCOLOUR_DARK = dict(zip(FACTORS, PALETTE_DARK[:6]))
+RESID_COLOUR = "#c3c2b7"      # the residual: a neutral grey, the remainder after the six factors
+RESID_COLOUR_DARK = "#6b6a66"
+MISS_COLOUR, MISS_COLOUR_DARK = PALETTE[7], PALETTE_DARK[7]
 
 assert list(bench.columns) == ["benchmark", "market"]
 assert set(roll["variant"]) == set(VARIANTS) and set(roll["set"]) == set(SETS)
@@ -114,8 +123,10 @@ def r(x, d=4):
 
 
 # --- the data the page embeds ---
-D = {"vintage": V, "months": MONTHS, "first": FIRST, "last": LAST, "variants": VARIANTS, "vlabel": VLABEL, "vcolour": VCOLOUR,
-     "sets": SETS, "setlabel": SET_LABEL, "factors": FACTORS, "flabel": FLABEL, "fcolour": FCOLOUR, "resid": RESID_COLOUR,
+D = {"vintage": V, "months": MONTHS, "first": FIRST, "last": LAST, "variants": VARIANTS, "vlabel": VLABEL,
+     "vcolour": VCOLOUR, "vcolour_dark": VCOLOUR_DARK, "sets": SETS, "setlabel": SET_LABEL, "factors": FACTORS, "flabel": FLABEL,
+     "fcolour": FCOLOUR, "fcolour_dark": FCOLOUR_DARK, "resid": RESID_COLOUR, "resid_dark": RESID_COLOUR_DARK,
+     "miss": MISS_COLOUR, "miss_dark": MISS_COLOUR_DARK, "tilted": ["Oil", "Util", "Coal"],
      "rules": RULES, "rulelabel": RULE_LABEL, "datasets": DATASETS}
 
 # 1. replication
@@ -191,15 +202,17 @@ for s in ["C3", "C3 tilt only"]:
                        "residual": r(sub.loc[v, "residual (per year)"] * 1e4, 4), "active": r(sub.loc[v, "active return (per year)"] * 1e4, 4),
                        "se": r(sub.loc[v, "active return (standard error)"] * 1e4, 4), "share": r(sub.loc[v, "factor share"], 5)} for v in VARIANTS}
 D["att_dec"] = {"period": list(att_dec.iloc[:, 0]), "contribution": {f: [r(x * 1e4, 4) for x in att_dec[f"contribution {f}"]] for f in FACTORS},
-                "residual": [r(x * 1e4, 4) for x in att_dec["residual"]]}
+                "residual": [r(x * 1e4, 4) for x in att_dec["residual"]], "active": [r(x * 1e4, 4) for x in att_dec["active return"]]}
 mc = att_cost.set_index("variant")
 D["att_cost"] = {v: {"active": r(mc.loc[v, "active return"] * 1e4, 4), "factor": r(mc.loc[v, "factor total"] * 1e4, 4), "residual": r(mc.loc[v, "residual"] * 1e4, 4),
                      "se": r(mc.loc[v, "active return (standard error)"] * 1e4, 4)} for v in VARIANTS}
 
 # 10. the optimiser
 D["opt_months"] = list(dict.fromkeys(opt_fixes["month"]))
+OPT_VARIANT = {("sample", "daily_3y"): "sample, daily 3y", ("ledoit_wolf", "daily_3y"): "ledoit_wolf, daily 3y", ("factor", "daily_3y"): "factor, daily 3y",
+               ("pca", "daily_3y"): "pca, daily 3y", ("sample", "monthly_120"): "sample, monthly 120"}
 D["opt_fixes"] = [{"month": row.month, "estimator": EST_LABEL.get(row.estimator, row.estimator) + (" (120 months)" if row.data == "monthly_120" else ""),
-                   "tilt": r(row._4, 3), "mandate": r(row._5, 3)} for row in opt_fixes.itertuples()]
+                   "variant": OPT_VARIANT[(row.estimator, row.data)], "tilt": r(row._4, 3), "mandate": r(row._5, 3)} for row in opt_fixes.itertuples()]
 assert list(opt_fixes.columns)[3:5] == ["tilt only (bp)", "mandate C3 (bp)"]
 D["speed"] = {"rebalance": [int(x) for x in opt_speed["rebalance"]], "distance": [r(x * 100, 4) for x in opt_speed["one-way distance to the benchmark"]],
               "te": [r(x, 3) for x in opt_speed["forecast tracking error (bp a year)"]]}
@@ -288,6 +301,9 @@ P["lo_lo"] = f"{main['GMV long-only vol %'].min():.1f}"
 P["lo_hi"] = f"{main['GMV long-only vol %'].max():.1f}"
 P["build_date"] = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Amsterdam")).strftime("%-d %B %Y")
 P["top_ind"] = ", ".join(top_ind)
+tilted_in_top = [{"Util": "Utilities"}.get(i, i) for i in top_ind if i in D["tilted"]]   # French's label, written out in prose
+P["tilted_in_top"] = (", ".join(tilted_in_top[:-1]) + " and " + tilted_in_top[-1] if len(tilted_in_top) > 1 else tilted_in_top[0]) + " are " + \
+                     {1: "one", 2: "two", 3: "three"}[len(tilted_in_top)] + " of the three industries" if tilted_in_top else "none of the three industries"
 
 # --- the static figures ---
 import matplotlib  # noqa: E402
@@ -330,13 +346,13 @@ for ax, s, title in zip(axes, ["C3 tilt only", "C3"], ["Under the tilt alone", "
         vals = np.array([D["att"][s][v]["contribution"][f] for v in VARIANTS])
         pos = np.where(vals > 0, vals, 0)
         neg = np.where(vals < 0, vals, 0)
-        ax.barh(y, pos, left=left_pos, color=FCOLOUR[f], height=0.62, label=FLABEL[f])
-        ax.barh(y, neg, left=left_neg, color=FCOLOUR[f], height=0.62)
+        ax.barh(y, pos, left=left_pos, color=FCOLOUR[f], height=0.62, edgecolor="white", linewidth=0.6, label=FLABEL[f])
+        ax.barh(y, neg, left=left_neg, color=FCOLOUR[f], height=0.62, edgecolor="white", linewidth=0.6)
         left_pos += pos
         left_neg += neg
     resid = np.array([D["att"][s][v]["residual"] for v in VARIANTS])
-    ax.barh(y, np.where(resid > 0, resid, 0), left=left_pos, color=RESID_COLOUR, height=0.62, label="residual (the industries' own returns)")
-    ax.barh(y, np.where(resid < 0, resid, 0), left=left_neg, color=RESID_COLOUR, height=0.62)
+    ax.barh(y, np.where(resid > 0, resid, 0), left=left_pos, color=RESID_COLOUR, height=0.62, edgecolor="white", linewidth=0.6, label="residual (the industries' own returns)")
+    ax.barh(y, np.where(resid < 0, resid, 0), left=left_neg, color=RESID_COLOUR, height=0.62, edgecolor="white", linewidth=0.6)
     tot = np.array([D["att"][s][v]["active"] for v in VARIANTS])
     ax.plot(tot, y, "k|", ms=11, mew=1.6, label="active return")
     ax.axvline(0, color="#333", lw=0.8)
