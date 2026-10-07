@@ -418,11 +418,30 @@ EVAL_CALIBRATION_WINDOW = 60                 # months of a path's own past the c
 EVAL_CALIBRATION_MIN = 24                    # the forecast is left as it is while fewer months are available
 EVAL_CALIBRATED_BIAS_RANGE = (0.85, 1.15)    # expectation 9: the calibrated bias statistic under C3, four daily estimators
 
-# Attribution (notebook 13): factor-based attribution of each constrained
-# portfolio's realised active return against the factors above, contribution
-# by factor plus residual, with the identity as the check.
+# Notebook 13, the factor attribution, fixed 6 October 2026 before its code: each
+# path's monthly active return split into the contributions of the six factors
+# (the active exposure to each, from the industries' betas estimated on the data
+# before the month, times the factor's return in the month) plus a residual, the
+# industries' own returns; the identity is the check. The paths attributed are
+# the seven variants under the mandate's C3 and under the tilt alone, rebuilt
+# from the modules; the expectations are in the notebook's introduction.
 ATTRIBUTION_FACTORS = FACTOR_MODEL_FACTORS
-ATTRIBUTION_IDENTITY_MAX_ABS_ERROR = 1e-9        # contributions plus residual minus active return, per month, in return units
+ATTRIBUTION_IDENTITY_MAX_ABS_ERROR = 1e-9        # expectation 1: contributions plus residual minus active return, per month, in return units
+ATTRIBUTION_SETS = ("C3", "C3 tilt only")        # the two constraint sets whose paths are attributed
+ATTRIBUTION_REPRODUCTION_TOL = 0.00001           # expectation 1: the rebuilt paths reproduce notebook 12's realised tracking errors within 0.1 basis point a year
+ATTRIBUTION_REFERENCE_TE = {                     # notebook 12's realised tracking errors, per year, for the reproduction check
+    ("sample, daily 3y", "C3"): 0.0084654, ("ledoit_wolf, daily 3y", "C3"): 0.0084820, ("factor, daily 3y", "C3"): 0.0093449,
+    ("pca, daily 3y", "C3"): 0.0091482, ("sample, monthly 120", "C3"): 0.0095761, ("robust, all five", "C3"): 0.0087358,
+    ("RiskMetrics, daily 5y", "C3"): 0.0084278,
+    ("sample, daily 3y", "C3 tilt only"): 0.0080276, ("ledoit_wolf, daily 3y", "C3 tilt only"): 0.0080282, ("factor, daily 3y", "C3 tilt only"): 0.0088296,
+    ("pca, daily 3y", "C3 tilt only"): 0.0086722, ("sample, monthly 120", "C3 tilt only"): 0.0090924, ("robust, all five", "C3 tilt only"): 0.0082305,
+    ("RiskMetrics, daily 5y", "C3 tilt only"): 0.0079698,
+}
+ATTRIBUTION_MARKET_EXPOSURE_MAX = 0.05           # expectation 2: the mean active exposure to Mkt-RF, in absolute value, for every path
+ATTRIBUTION_SIGN_AGREEMENT_MIN = 4               # expectation 3: of the five factors other than the market, the number whose mean active exposure under the mandate has the same sign for all seven variants
+ATTRIBUTION_FACTOR_SHARE_MAX = 0.5               # expectation 4: the share of the active return's variance the six factors explain, for every path
+ATTRIBUTION_FACTOR_PART_MAX = 0.5                # expectation 5a: the share of the mandate's cost against the tilt alone that comes through the factor contributions, every variant
+ATTRIBUTION_ARITHMETIC_TOL = 0.0002              # expectation 5b: the exclusions' factor part (the five factors other than the market) within this of the arithmetic of the inputs, per year (2 basis points), every variant
 
 # Specification count, written down before the code runs and reported.
 EXT_SPEC_COUNT = (len(COV_ESTIMATORS) + 3) * len(CONSTRAINT_SETS)   # 28 optimised specifications: four daily-based estimators, the monthly sample covariance, the robust portfolio and RiskMetrics, times four constraint sets

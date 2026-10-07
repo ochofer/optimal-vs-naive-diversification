@@ -1,0 +1,5 @@
+dataset,rules_ranked,replicated_top3,published_top3,verdict
+Industry,"['ew', 'min', 'vw', 'mv-c', 'bs-c', 'min-c', 'g-min-c']","['min', 'g-min-c', 'min-c']","['min', 'g-min-c', 'min-c']",pass
+MKT/SMB/HML,"['ew', 'mv', 'bs', 'min', 'vw', 'mv-c', 'bs-c', 'min-c', 'g-min-c']","['min', 'min-c', 'g-min-c']","['bs', 'min-c', 'min']",MISS
+FF-1-factor,"['ew', 'min', 'vw', 'mv-c', 'bs-c', 'min-c', 'g-min-c']","['min', 'bs-c', 'mv-c']","['min', 'mv-c', 'bs-c']",MISS
+FF-4-factor,"['ew', 'min', 'vw', 'mv-c', 'bs-c', 'min-c', 'g-min-c']","['min-c', 'g-min-c', 'bs-c']","['min-c', 'g-min-c', 'bs-c']",pass

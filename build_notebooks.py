@@ -104,7 +104,7 @@ NB01 = [
 
 **What I expect to see, and where it comes from.**
 
-- The three portfolio files (10 industries, 49 industries, 25 size-and-value portfolios) and the three-factor file run monthly from 1926-07. On the vintage I read on 10 September 2026 (CRSP 202607) that is 1,201 rows to 2026-07; a later vintage adds one row per month. The five-factor file starts in 1963-07 (757 rows on that vintage) and the momentum factor in 1927-01.
+- The three portfolio files (10 industries, 49 industries, 25 size-and-value portfolios) and the three-factor file run monthly from 1926-07. On the vintage read on 10 September 2026 (CRSP 202607) that is 1,201 rows to 2026-07; a later vintage adds one row per month. The five-factor file starts in 1963-07 (757 rows on that vintage) and the momentum factor in 1927-01.
 - DGU's sample is 1963-07 to 2004-11 (their Table 2), which is **497 months**. With their 120-month estimation window the out-of-sample period is 1973-07 to 2004-11, **377 months**. Both counts are asserted below.
 - Their four French-sourced datasets have N = 11, 3, 21 and 24 assets (Table 2). The 21 and 24 come from 20 of the 25 size-and-value portfolios: DGU drop the five largest-size portfolios (their footnote 24), because the market, SMB and HML are almost a linear combination of all 25.
 - In French's 49-industry file nine industries have gaps coded -99.99 in the early decades. All 49 are populated from **1969-07**; the extension in later notebooks starts there.
@@ -239,7 +239,7 @@ print(f"difference to the published 0.1138: {sr_oos - 0.1138:+.4f}  (band for th
 
 The ten files parse, the DGU window holds 497 months with no gaps, the asset counts match Table 2, and all 49 industries are populated from 1969-07. The market Sharpe ratio on today's vintage sits within 0.0025 of the 0.1138 DGU printed, which is the size of revision to expect on the rule rows too.
 
-Three things this does not settle. French's risk-free rate is the one-month Treasury bill; DGU describe theirs as the 90-day bill taken from French's site, and French's site only carries the one-month series, so I use that. The vintage line names the CRSP cut French built the file from and nothing else; two files with the same vintage line can still differ if French changed a method. And the checks above count rows and columns; they do not verify a single return value, which only the replication itself can do.
+Three things this does not settle. French's risk-free rate is the one-month Treasury bill; DGU describe theirs as the 90-day bill taken from French's site, and French's site only carries the one-month series, so the study uses that. The vintage line names the CRSP cut French built the file from and nothing else; two files with the same vintage line can still differ if French changed a method. And the checks above count rows and columns; they do not verify a single return value, which only the replication itself can do.
 """),
 ]
 
@@ -287,7 +287,7 @@ NB02 = [
 | Covariance matrix | the table of all variances and covariances of a set of assets; the covariance of two assets says how they move together, positive when both tend to be above their averages in the same months |
 | Near-singular | said of a covariance matrix in which one asset's return is almost a combination of the others', so that the matrix carries almost no information about the difference between them; inverting it then divides by a number close to zero |
 
-**What this notebook does.** It builds the four DGU datasets from French's files, runs the 1/N rule and the sample-based mean-variance rule through DGU's rolling 120-month window, and puts the out-of-sample Sharpe ratio, certainty-equivalent return and turnover beside Tables 3, 4 and 5 of the paper, with the verdict of the band I wrote down before the run.
+**What this notebook does.** It builds the four DGU datasets from French's files, runs the 1/N rule and the sample-based mean-variance rule through DGU's rolling 120-month window, and puts the out-of-sample Sharpe ratio, certainty-equivalent return and turnover beside Tables 3, 4 and 5 of the paper, with the verdict of the band written down before the run.
 
 **Why it comes second.** These two rules are the paper's two extremes. 1/N estimates nothing. Sample-based mean-variance estimates everything, a mean and a covariance for every asset, and plugs the estimates into Markowitz's formula as if they were true. Every other rule in the paper is an attempt to move the second toward the first, so this pair has to be right before any of them is worth running.
 
@@ -641,9 +641,26 @@ for rule_name, rule, datasets_ in [("bs", S.bs, ["Industry", "FF-1-factor", "FF-
 pd.DataFrame(rows).set_index(["rule", "dataset"])
 """),
     md("""
+## Save
+
+The three comparison tables (Sharpe ratios, turnover, certainty-equivalent returns, each replicated beside published with its verdict) and the ranking check are written to `outputs/`, with the vintage (the version of French's files, named by the CRSP cut they were built from) in the file name, so that the write-up and the dashboard read the same numbers this notebook prints.
+"""),
+    code("""
+from bp import french_loader as fl
+records = [fl.download(key) for key in ("factors3", "momentum", "ind10", "size_bm25")]
+fl.write_provenance(records)
+vintage = records[0]["vintage_line"].split("using the ")[1].split(" ")[0]
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+sharpe_cmp.to_csv(f"{C.OUTPUT_DIR}/replication_sharpe_{vintage}.csv", float_format="%.6f")
+turn.to_csv(f"{C.OUTPUT_DIR}/replication_turnover_{vintage}.csv", float_format="%.6f")
+CMP.ceq_table(results).to_csv(f"{C.OUTPUT_DIR}/replication_ceq_{vintage}.csv", float_format="%.6f")
+top3.to_csv(f"{C.OUTPUT_DIR}/replication_ranking_{vintage}.csv")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("replication")))
+"""),
+    md("""
 ## What this notebook established, and what could be wrong
 
-Twenty-nine of the thirty gated Sharpe cells are within 0.03 of the paper, most within 0.01, and every gated turnover cell is within 25%. The CEQ returns of the constrained rules match to the fourth decimal on most cells. The Bayes-Stein shrinkage factor averages 0.33 on FF-4-factor and 0.68 on MKT/SMB/HML against the paper's 0.32 and 0.66, so the shrinkage is implemented as Jorion specified it. The paper's reading of Table 3 reproduces: the constrained rules beat their unconstrained versions on every dataset, minimum variance with constraints is the best of the optimising rules on three of four, and 1/N is beaten by a statistically significant margin only on the size-and-value datasets, where the assets are the portfolios the factors are built from.
+Twenty-nine of the thirty gated Sharpe cells are within 0.03 of the paper, most within 0.01, and every gated turnover cell is within 25%. The CEQ returns of the four constrained rules are within 0.0004 of the paper's on all 16 cells and within 0.0002 on 15. The Bayes-Stein shrinkage factor averages 0.33 on FF-4-factor and 0.68 on MKT/SMB/HML against the paper's 0.32 and 0.66, so the shrinkage is implemented as Jorion specified it. The paper's reading of Table 3 (its fourth and fifth observations) reproduces cell for cell in sign: constrained mean-variance and constrained Bayes-Stein have a lower Sharpe ratio than 1/N on Industry and MKT/SMB/HML and a higher one on FF-1-factor and FF-4-factor, and constrained minimum variance has a higher one than 1/N on Industry, MKT/SMB/HML and FF-4-factor and a lower one on FF-1-factor. Of the three differences the paper reports as significant at the 5% level, two are here (constrained Bayes-Stein above 1/N on FF-1-factor, p = 0.04; constrained minimum variance above 1/N on FF-4-factor, p = 0.0004) and the third, constrained mean-variance on FF-1-factor, has p = 0.06.
 
 One gated cell misses: minimum variance on FF-4-factor, 0.033 against the paper's -0.018. Ten basis points of noise move it across 0.08 and the published value lies outside that range, so fragility alone does not explain the miss; the data differ, as the in-sample rows on the size-and-value datasets showed in notebook 02. It is reported as a miss.
 
@@ -1140,7 +1157,7 @@ print(pd.DataFrame({label: (tables_pa.loc[label] - normal)[estimated].mean(axis=
 | 1. The rules that estimate nothing keep their Sharpe ratios within 0.013 under fat tails | 18 of 18 | MET |
 | 2. Every estimated rule's Sharpe ratio is no higher under fat tails, slack 0.01 | 125 of 126 comparisons inside the slack; average loss 0.002 at 5 degrees of freedom, +0.002 at 10, inside sampling error | MET |
 | 3. The crossing for 10 assets comes later under fat tails; none for 25 and 50 within 12,000 months | 3,000 months under normal shocks, 4,000 under both fat-tailed markets, against the formula's 4,536; none for 25 and 50 | MET |
-| P1 (added after the run). With a scale per asset, the mean loss is larger than under the common scale (P1a) and the minimum-variance rules lose most (P1b) | mean change +0.0011 and -0.0000 at 10 and 5 degrees of freedom against +0.0017 and -0.0022 under the common scale (P1a 1 of 2); the minimum-variance rules +0.0015 and +0.0013 against +0.0007 and -0.0010 for the other rules (P1b 0 of 2); 63 of 63 cells inside the slack at both levels | NOT MET; every change inside one-draw noise |
+| P1. With a scale per asset, the mean loss is larger than under the common scale (P1a) and the minimum-variance rules lose most (P1b) | mean change +0.0011 and -0.0000 at 10 and 5 degrees of freedom against +0.0017 and -0.0022 under the common scale (P1a 1 of 2); the minimum-variance rules +0.0015 and +0.0013 against +0.0007 and -0.0010 for the other rules (P1b 0 of 2); 63 of 63 cells inside the slack at both levels | NOT MET; every change inside one-draw noise |
 
 All three expectations are met, and the effect is small. Expectation 1: 18 of 18, so the fat-tailed markets are the same market with different tails. Expectation 2: 125 of 126 comparisons inside the slack, and the changes are small. With 5 degrees of freedom the estimated rules lose 0.002 in Sharpe ratio on average, 0.004 at the 120-month window and nothing at 6,000, and the largest single fall is 0.015; with 10 degrees of freedom the average change is +0.002, inside sampling error, so no effect is detectable. Expectation 3: for 10 assets the crossing moves from 3,000 months under normal shocks to 4,000 under both fat-tailed markets, against the formula's 4,536. The crossing is known only to the nearest window tested (the windows were 120, 240, 360, 600, 1,000, 2,000, 3,000, 4,000, 6,000, 9,000 and 12,000 months), and the gap between mean-variance and 1/N at 3,000 months under normal shocks is 0.0003, so the move is one step of that list and inside sampling error. For 25 and 50 assets no crossing occurs within 12,000 months under any distribution, as the formula says (17,753 months and none).
 
@@ -1152,7 +1169,7 @@ The covariances. The sample covariance between two assets is the average, over t
 
 Together: the inputs that carry most of the cost, the means, are exactly as uncertain as under normal shocks, and the inputs that became noisier, the covariances, became noisier in a way the weights hardly respond to. The paper's conclusion therefore does not depend on the normality assumption.
 
-P1, the test added after the run, was written to close the second limit below, and its two expectations were both wrong. With one scale per shock series the mean change in Sharpe ratio is +0.0011 at 10 degrees of freedom and -0.0000 at 5, against +0.0017 and -0.0022 under the common scale, so the loss is larger at one level and smaller at the other (P1a, 1 of 2); the minimum-variance rules change by +0.0015 and +0.0013 against +0.0007 and -0.0010 for the other estimated rules, so they lose less, not more (P1b, 0 of 2); every one of the 126 cells is inside the slack. Two things explain the miss, and both were foreseeable. First, the size. Notebook 04 measured how much a Sharpe ratio moves between draws of the same market: a range of 0.01 to 0.02 for a rule near 0.13. Every number in the P1 table is smaller than that, as is every number in the common-scale table, so neither construction produces an effect that one draw can read, and an expectation that predicted "larger" without a size below which the comparison is noise could only be met by chance. The miss is on the design side: the expectation should have named that size, two standard errors or about 0.013, and at that size no difference between the two constructions could have been expected. Second, the shape. An asset's return is the factor part plus its own part, and with independent scales the two parts are rarely extreme in the same month, so the asset's own return has thinner tails under the per-asset construction than under the common one: the excess kurtosis of one asset's return is 0.68 against 1.02 at 10 degrees of freedom and 3.03 against 3.70 at 5. The construction that was expected to move the shape of the estimated covariance more also feeds each estimate fewer extreme months, and the two effects offset in the sample covariance. What stands after P1 is a stronger form of the result above: fat tails that hit all assets at once and fat tails that hit them separately both leave the paper's comparison where it was.
+P1 was written after the run to close the second limit below, and its two expectations were both wrong. With one scale per shock series the mean change in Sharpe ratio is +0.0011 at 10 degrees of freedom and -0.0000 at 5, against +0.0017 and -0.0022 under the common scale, so the loss is larger at one level and smaller at the other (P1a, 1 of 2); the minimum-variance rules change by +0.0015 and +0.0013 against +0.0007 and -0.0010 for the other estimated rules, so they lose less, not more (P1b, 0 of 2); every one of the 126 cells is inside the slack. Two things explain the miss, and both were foreseeable. First, the size. Notebook 04 measured how much a Sharpe ratio moves between draws of the same market: a range of 0.01 to 0.02 for a rule near 0.13. Every number in the P1 table is smaller than that, as is every number in the common-scale table, so neither construction produces an effect that one draw can read, and an expectation that predicted "larger" without a size below which the comparison is noise could only be met by chance. The miss is on the design side: the expectation should have named that size, two standard errors or about 0.013, and at that size no difference between the two constructions could have been expected. Second, the shape. An asset's return is the factor part plus its own part, and with independent scales the two parts are rarely extreme in the same month, so the asset's own return has thinner tails under the per-asset construction than under the common one: the excess kurtosis of one asset's return is 0.68 against 1.02 at 10 degrees of freedom and 3.03 against 3.70 at 5. The construction that was expected to move the shape of the estimated covariance more also feeds each estimate fewer extreme months, and the two effects offset in the sample covariance. What stands after P1 is a stronger form of the result above: fat tails that hit all assets at once and fat tails that hit them separately both leave the paper's comparison where it was.
 
 **What this notebook does not settle.**
 
@@ -1442,7 +1459,7 @@ pd.DataFrame(rows).set_index("N")
 | 1. The rules that estimate nothing keep their Sharpe ratios within 0.013 under clustering | 12 of 12 | MET |
 | 2. Every estimated rule's Sharpe ratio is no higher under clustering, slack 0.01, with a visible loss expected | 63 of 63 inside the slack; average change +0.0015, so the loss the expectation predicted did not appear | MET as written, wrong in substance |
 | 3. The crossing for 10 assets comes later than in the normal market; none for 25 and 50 | 3,000 to 4,000 months, one step of the grid; none for 25 and 50 | MET |
-| Oracle check (added after the run) | knowing each month's covariance is worth 0.003 to 0.005 in Sharpe ratio to a rule that only splits wealth; scaling the whole position by the inverse of current variance is worth 0.010 | reported |
+| Oracle check | knowing each month's covariance is worth 0.003 to 0.005 in Sharpe ratio to a rule that only splits wealth; scaling the whole position by the inverse of current variance is worth 0.010 | reported |
 
 The three expectations are met as written. The second one predicted a visible loss, and no loss appears. The construction check: 12 of 12. The direction: 63 of 63 comparisons inside the slack, but the average change is +0.0015, the rules that depend on the shape of the covariance (minimum variance and its constrained versions) change by +0.001 to +0.002, and the only falls beyond noise are mean-variance and Bayes-Stein at the 120-month window on 10 and 50 assets (0.007 and 0.016), set against a rise of 0.005 on 25. The crossing for 10 assets moves from 3,000 to 4,000 months, as in notebook 05: one step of the grid, with the gap at 3,000 months within 0.001 of zero either way. Volatility that clusters at textbook strength, with the true correlation between assets moving from 0.31 in the calmest tenth of months to 0.59 in the stormiest, does not change the paper's comparison.
 
@@ -1697,6 +1714,25 @@ Sample-based mean-variance estimated once on all the months, the Sharpe ratio a 
     code("""
 pd.DataFrame({"in sample, whole sample": pd.Series(in_sample), "out of sample, whole period": table("sharpe", whole).loc["mv"],
               "1/N, whole period": table("sharpe", whole).loc["ew"]})
+"""),
+    md("""
+## Save
+
+The Sharpe ratios, certainty-equivalent returns and turnover of the nine rules in the three periods, and the comparison of every rule with 1/N in the new period, are written to `outputs/`, with the vintage in the file name, so that the write-up and the dashboard read the same numbers this notebook prints.
+"""),
+    code("""
+vintage = records[0]["vintage_line"].split("using the ")[1].split(" ")[0]
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+pd.concat({period: table("sharpe", period) for period in PERIODS}, names=["period", "rule"]).to_csv(f"{C.OUTPUT_DIR}/extended_sample_sharpe_{vintage}.csv", float_format="%.6f")
+pd.concat({period: table("ceq", period) for period in PERIODS}, names=["period", "rule"]).to_csv(f"{C.OUTPUT_DIR}/extended_sample_ceq_{vintage}.csv", float_format="%.6f")
+turnover_tables = {}
+for period in PERIODS:
+    t = table("turnover_rel", period)
+    t.loc["ew"] = table("turnover", period).loc["ew"]
+    turnover_tables[period] = t
+pd.concat(turnover_tables, names=["period", "rule"]).to_csv(f"{C.OUTPUT_DIR}/extended_sample_turnover_{vintage}.csv", float_format="%.6f")
+e4.to_csv(f"{C.OUTPUT_DIR}/extended_sample_vs_1N_{vintage}.csv", float_format="%.6f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("extended_sample")))
 """),
     md("""
 ## What this notebook established, and what could be wrong
@@ -2263,6 +2299,7 @@ Expectation 5, the rolling view. Across the 567 windows of 120 months, the first
 - The 44-month window from 2023 is short: a correlation measured on 44 months has a standard error of about 0.05 when its true value is near 0.9, so 0.837 against the level of 0.95 is two standard errors below it, and the rolling view confirms that the fall is real and not a feature of one short window.
 - A variance share says how much of the industries' movement a component explains over the months it was estimated on; how well a covariance built from it serves a portfolio in the following month is notebook 10's question, and the gaps of expectation 4 are the first measure of it.
 - Parallel analysis compares the data with independent returns of the same variances and nothing else; returns with fat tails or volatility clustering (notebooks 05 and 06) produce slightly larger extreme eigenvalues by chance, so the bar is slightly too low and the count of two is a generous one.
+- The count of five components is a design parameter with a convention behind it (statistical risk models keep three to ten), fixed before the run, and the data-driven rules for the count disagree with each other: the Kaiser rule (components of the correlation matrix with variance above one), the scree plot (where the ordered variances flatten), parallel analysis (where chance would produce as much, two here), the Marchenko-Pastur bound of random-matrix theory (the same idea as a formula) and the information criteria of Bai and Ng (2002). All of them judge how well the components describe the sample. The count that serves a portfolio is the one whose covariance matrix forecasts next month's risk best, found by running the estimator with each count month by month on the months before each forecast; notebook 10 runs two counts beside each other and reports the difference, and a rule that chooses the count inside each window is the data-driven version a later study could fix before its run.
 - The components were extracted from the covariance of excess returns, so an industry with twice the volatility weighs four times as much in the total variance; extracting them from the correlation matrix instead would treat every industry alike and give a different second and third component. The choice was fixed before the run because the estimator of notebook 10 works with covariances.
 """),
 ]
@@ -2309,7 +2346,7 @@ NB10 = [
 | Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
 | Provenance | the record of what was downloaded, when, with its checksum and vintage |
 
-**The problem, stated the way practitioners state it.** The key ingredient of every risk-based portfolio is the covariance matrix of the assets' returns. The natural estimate is the sample covariance, and it fails when the assets are many relative to the observations: for 49 industries and 120 monthly returns it has fewer than five observations per number. The literature answers with a long list of alternative estimators built on three ideas, shrinkage, time dynamics and factor structure, and it tests them almost always in one way, by the realised volatility of the unconstrained minimum-variance portfolio built from each. Dom, Howard, Jansen and Lohre (2024), whose introduction this paragraph follows, point out that such a portfolio is one no practitioner holds: it is leveraged, concentrated and trades a large part of its value every month, so the test rewards an estimator for what it does in positions nobody takes. They propose to judge estimators instead on realistic portfolios, long-only, weight-constrained and charged for trading, after costs, and they find that under those constraints the differences between estimators shrink, that time dynamics (recent days weighted more, as in RiskMetrics) matter more than shrinkage or structure, and that a simple dynamic estimator does as well as a complex one. This notebook takes their perspective. It builds four estimators at two data frequencies, judges each by the calibration of its risk forecasts and by both the unconstrained and the long-only minimum-variance portfolio it produces, and, in a section added after the first run, charges the portfolios for their trading, which is where the unconstrained portfolio's lower volatility turns out to be bought at a price no investor pays.
+**The problem, stated the way practitioners state it.** The key ingredient of every risk-based portfolio is the covariance matrix of the assets' returns. The natural estimate is the sample covariance, and it fails when the assets are many relative to the observations: for 49 industries and 120 monthly returns it has fewer than five observations per number. The literature answers with a long list of alternative estimators built on three ideas, shrinkage, time dynamics and factor structure, and it tests them almost always in one way, by the realised volatility of the unconstrained minimum-variance portfolio built from each. Dom, Howard, Jansen and Lohre (2024), whose introduction this paragraph follows, point out that such a portfolio is one no practitioner holds: it is leveraged, concentrated and trades a large part of its value every month, so the test rewards an estimator for what it does in positions nobody takes. They propose to judge estimators instead on realistic portfolios, long-only, weight-constrained and charged for trading, after costs, and they find that under those constraints the differences between estimators shrink, that time dynamics (recent days weighted more, as in RiskMetrics) matter more than shrinkage or structure, and that a simple dynamic estimator does as well as a complex one. This notebook takes their perspective. It builds four estimators at two data frequencies, judges each by the calibration of its risk forecasts and by both the unconstrained and the long-only minimum-variance portfolio it produces, and, in a final section, charges the portfolios for their trading, which is where the unconstrained portfolio's lower volatility turns out to be bought at a price no investor pays.
 
 **What this notebook does.** The paper estimated the covariance matrix of its assets by the sample covariance of 120 monthly returns, and notebooks 02, 03 and 09 showed what that costs for 49 assets: 1,225 numbers from fewer than five observations each. This notebook builds four estimators and judges them on the 49 industries. The sample covariance uses every number the window offers. Ledoit-Wolf shrinkage pulls the sample covariance part of the way towards a simple target. The factor model describes the covariance by each industry's betas to six Fama-French factors plus its own variance. The principal-component model takes the market as its first factor and finds four more components in what the market leaves. Each is built at two data frequencies: the paper's 120 monthly returns, and three years of daily returns scaled to monthly, which is what practitioners use (Dom, Howard, Jansen and Lohre, 2024, estimate from daily returns over three years and rebalance monthly). Every estimate is built on the data before a month and judged on that month's realised returns, for every month from 1979-07 to the vintage's last month.
 
@@ -2713,7 +2750,7 @@ Expectation 4, the scaling check, is met on average and fails in most windows. T
 
 Expectation 5, the sensitivities. One year of daily data gives the same unconstrained volatility as three (11.9%) with three times the turnover (1.18 a month against 0.40); five years gives 11.9% with 0.26. Exponential weighting with a one-year half-life over five years gives the lowest unconstrained volatility of all variants, 11.7%, and the best-calibrated forecast for the benchmark, a bias statistic of 0.998, at the cost of a turnover of 0.48: weighting recent days more is worth more than any choice of structure, which is what Dom, Howard, Jansen and Lohre found. The constant-correlation shrinkage target shrinks much harder (median intensity 0.27 on monthly data against 0.07 for the scaled identity) and does the same or slightly worse. The two-component model does worse than the five-component one without the constraint (13.3% against 12.7% on monthly data, 14.3% against 13.5% on daily) and the same with it. The condition numbers say what shrinkage does to the inverse: the sample covariance on monthly data has a median condition number of 1,859 and Ledoit-Wolf shrinkage 349, so the inverse of the sample covariance amplifies errors about five times more.
 
-**The tests added after the run.**
+**P1 to P3, the open points tested.**
 
 P1, the scale correction. The variance ratio measured inside each three-year window follows the ratio of expectation 4 (correlation 0.91 across windows) and moves with the decade: 1.52 for windows ending in the 1970s, 0.69 for windows ending in the 2010s. Scaling the daily covariance by that ratio times 21, in place of 21, brings the benchmark's bias statistic closer to 1 in four of the five decades (1.14 against 1.34 in 1979-07 to 1989-12, 1.07 against 0.87 in the 2000s, 0.95 against 0.78 in the 2010s, 1.02 against 0.89 from 2020) and further from it in the 1990s (1.11 against 1.08), the one decade where the 21 rule was already close. Over all 566 months at once the corrected statistic is 1.07 against 1.03 under the rule, and the two numbers do not say the same thing: under the rule the under-forecasts of the first decade and the over-forecasts of the 2000s and 2010s cancel inside one statistic; under the correction every decade but the 2010s sits between 1.02 and 1.14 and nothing cancels. The ten-year variance ratio does better than the three-year one in every decade: 1.09, 1.04, 0.97, 0.95 and 1.03, a range of 0.14, against 0.78 to 1.34 under the 21 rule and 0.84 to 1.20 for the forecast from 120 monthly returns. A three-year window gives a noisy ratio (its standard error is about 0.19 when days are independent) and the autocorrelation moves over decades, so ten years of it is the better estimate. This reopens the forecast half of expectation 2 after the fact: with a scale that accounts for the autocorrelation, three years of daily data forecast the benchmark's monthly risk more evenly across the decades than 120 monthly returns do. The correction does not help 1/N, the industries or the active portfolios (1.16, 1.16 and 1.13 against 1.12, 1.10 and 1.06), because the ratio is the benchmark's: 1/N and the single industries had stronger positive autocorrelation than the cap-weighted benchmark (under the 21 rule their bias statistics reach 1.46 and 1.36 in the first decade against the benchmark's 1.34), so a correction fitted to the benchmark fits them less. The other three daily estimators move with the sample estimator, within 0.02 of it.
 
@@ -2724,6 +2761,7 @@ P3, trading costs. The unconstrained portfolios earn less before costs than the 
 **What this notebook does not settle.**
 
 - The extension's portfolio is long-only with bounds on active weights and turnover, and expectation 3 says that under such constraints the estimators realise the same risk to within a tenth of a percentage point. Notebook 12 measures whether that holds for tracking error against the benchmark, which is the extension's question, and the answer may be that the choice of estimator does not matter there either.
+- The two-component model, the count parallel analysis gave in notebook 09, built the worst unconstrained minimum-variance portfolio of all variants on daily data (14.3% a year against 13.5% for the five-component model) and the same portfolio as the others under the long-only constraint. The minimum-variance weights come from the inverse of the covariance matrix, which gives the largest weights to the combinations of industries with the smallest variance; a model that drops a component sets to zero the shared movement it carried, so its matrix differs from the data's in exactly those low-variance combinations, and the inverse magnifies the error (a combination whose variance is understated by half gets twice the weight it should). Parallel analysis judges how well the components describe the sample, where a small component matters little; the portfolio depends on the inverse, where it matters most; the two tests give different counts, and the choice of five stands as the design parameter it was, with the rule that would choose the count inside each window named in notebook 09 as a later study's option.
 - The scale correction is one number taken from the benchmark. A portfolio whose autocorrelation differs from the benchmark's, 1/N or a single industry, keeps part of its miss, and a correction per portfolio would need each portfolio's own variance ratio, or the matrix of autocovariances, which three years of daily data cannot estimate with useful precision. Notebook 12 reports its forecast tracking error under the 21 rule and under the ten-year variance ratio.
 - The cost figures use one proportional cost per unit of turnover for every industry and every month, as the replication does; costs differ across industries and have fallen over the decades. The cost differences between the portfolios are arithmetic on their turnover and are not noisy; the differences in gross return are, because a mean return over 566 months has a standard error of about 1.8 percentage points a year, so the gross return gaps of 0.4 to 3.6 points between long-only and unconstrained portfolios are mostly within noise, and P3a and P3b rest on the costs.
 - P1 to P3 were designed after the first run, with their expectations fixed before their code but after the outcomes of expectations 1 to 5 were known. That is weaker than fixing them before any run: P2a in particular restates what the ratio table of expectation 4 already implied, and P1a was written knowing that the 21 rule missed by a factor of 1.8 and 0.6 in the decades where a correction has most to gain.
@@ -2794,7 +2832,7 @@ NB11 = [
 - Turnover cap (C2): one-way turnover at most 2% a month, measured against the drifted weights. Selling 2% of the portfolio and buying 2% in one month is about 24% a year, the range of enhanced indexing. The fund starts as the index, so the cap applies from the first rebalance.
 - Tilt (C3): Coal, Oil and Utilities each at no more than half their benchmark weight. If Oil is 3.0% of the benchmark, the portfolio holds at most 1.5%. The active weight bound does not apply to a tilted industry, because for any industry above 4% of the benchmark the two would contradict each other.
 - Exclusion: named industries at zero. Part of the mandate's C3 (the second part of this notebook), for Smoke (tobacco) and Guns (weapons), the standard exclusions of Dutch institutional mandates.
-- Beta-neutral: the portfolio's beta to the benchmark equal to one. Part of the mandate's C3, added after the first part of this notebook showed that the tilt's hedge left a beta bet standing when the covariance was noisy.
+- Beta-neutral: the portfolio's beta to the benchmark equal to one. Part of the mandate's C3 from the second part of this notebook on, after the first part showed that the tilt's hedge left a beta bet standing when the covariance was noisy.
 
 **How this notebook is organised, and the two versions of C3.** The notebook has three parts, and the order is the order in which the work was done, because every expectation was written into `constants.py` before the code that tests it, and that order is the record. The first part runs the optimiser at three months under the constraint sets as first designed (10 September 2026), in which C3 is the tilt alone: long-only, the bound, the cap and the tilt. Expectations 1 to 5 belong to it. The second part is four checks on the practical problem behind the tilt's hedge (D1 to D4, 4 October), which found three problems a manager would fix, and the three fixes (F1 to F3, the same day): C3 became the mandate, the tilt with beta neutrality and the exclusions, and a robust portfolio joined the variants. The mandate's C3 is the one notebook 12 runs; the tilt-only set is kept in `constants.py` as `CONSTRAINT_SET_TILT_ONLY` so that the cost of the fixes can be measured there. The third part is one check on the solver itself (D5, 6 October), prompted by a month of notebook 12's first run.
 
@@ -2885,7 +2923,7 @@ print(f"expectation 1 holds; CRSP vintage of the eight files: {vintage}")
     md("""
 ## The optimiser at three months
 
-This is the first part of the notebook: C3 is the tilt alone, as first designed. The report months are the first evaluation month (1979-07, the first with both a 120-month and a three-year daily window), the paper's last month (2004-11) and the vintage's last month. At each, the five estimator variants of the rolling evaluation (the four estimators on three years of daily returns and the sample covariance of 120 monthly returns) give five covariance matrices, and the optimiser runs under each constraint set with the benchmark as the previous portfolio. The table reports, for each portfolio, the forecast tracking error in basis points a year, the one-way turnover, the cap after any relaxation, how many industries it holds, its effective number of holdings, the active weights of the three tilted industries in percentage points, and how many constraints of each kind bind.
+This is the first part of the notebook: C3 is the tilt alone, the first of its two versions. The report months are the first evaluation month (1979-07, the first with both a 120-month and a three-year daily window), the paper's last month (2004-11) and the vintage's last month. At each, the five estimator variants of the rolling evaluation (the four estimators on three years of daily returns and the sample covariance of 120 monthly returns) give five covariance matrices, and the optimiser runs under each constraint set with the benchmark as the previous portfolio. The table reports, for each portfolio, the forecast tracking error in basis points a year, the one-way turnover, the cap after any relaxation, how many industries it holds, its effective number of holdings, the active weights of the three tilted industries in percentage points, and how many constraints of each kind bind.
 """),
     code("""
 SETS = {"C0": C.CONSTRAINT_SETS["C0"], "C1": C.CONSTRAINT_SETS["C1"], "C2": C.CONSTRAINT_SETS["C2"], "C3": C.CONSTRAINT_SET_TILT_ONLY}   # the first run: C3 as designed on 10 September, the tilt alone
@@ -2979,7 +3017,7 @@ print("constraints binding (count of bounds at their limit), by set, averaged ov
 print(report[bind_cols].groupby(level="set").mean().to_string(float_format=lambda x: f"{x:.1f}"))
 """),
     md("""
-## Expectation 4, continued: the tilt's cost with and without the transition cap (added after the first run)
+## Expectation 4, continued: the tilt's cost with and without the transition cap
 
 Reported, no verdict. Under C3 at a report month the previous portfolio is the benchmark, so the cap is relaxed to the smallest feasible turnover and the portfolio trades exactly the tilt and nothing else. The same tilt with free trading (long-only, active bound and tilt, no cap) is the cost of the tilt once the portfolio has settled, which notebook 12's rolling evaluation reaches after the first months. The two are reported side by side.
 """),
@@ -3025,13 +3063,13 @@ print()
 print(f"under C2 from 1/N the active bound demands a one-way turnover of {sol_c2.turnover:.3f} at once, so the cap is relaxed to it ({'relaxed' if sol_c2.relaxed else 'not relaxed'}); forecast tracking error {1e4 * sol_c2.tracking_error:.1f} basis points, the cost of landing inside the bound in one month")
 """),
     md("""
-## Part two, added after the first run: the practical problem behind the hedge (D1 to D4)
+## Part two: the practical problem behind the hedge (D1 to D4)
 
 A tilt removes exposure, and the optimiser replaces it with whatever the covariance says is closest. Four things about that replacement matter to a manager, each checked here with its expectation fixed in `constants.py` before the code (4 October 2026):
 
 - **D1, how much of the tilt is a market bet.** The forecast active variance a' Sigma a splits exactly into a market part, (a' beta)^2 times the benchmark's variance, with beta the industries' betas to the benchmark under the same covariance, and a residual part, the variance of what the benchmark leaves unexplained. Expectation D1a: the market part is below 5% of the whole in all fifteen month-estimator pairs, because the market is the largest direction of the covariance, so a beta away from one is the most expensive deviation and the optimiser removes it on its own.
 - **D2, forcing the beta to one.** A beta-neutral constraint, the portfolio's beta equal to the benchmark's, is added to C3 as a new switchable constraint. Expectation D2a: it raises the forecast tracking error by less than 1 basis point a year in every pair, for the same reason. The lesson, if it holds: with a tracking-error objective and a usable covariance, a manager does not need to impose beta neutrality by hand; the optimiser's first move is to restore it.
-- **D3, is the hedge consistent with the mandate.** At 2026-08 the tobacco industry (Smoke) received weight as a low-beta substitute for Utilities. A sustainability mandate that underweights carbon would not buy tobacco to hedge it. Reported, no verdict: the forecast tracking error of C3 plus the exclusion of Smoke, against C3, at every report month and estimator; written before the code, I expect a rise below 2 basis points, because the other low-beta industries are close substitutes.
+- **D3, is the hedge consistent with the mandate.** At 2026-08 the tobacco industry (Smoke) received weight as a low-beta substitute for Utilities. A sustainability mandate that underweights carbon would not buy tobacco to hedge it. Reported, no verdict: the forecast tracking error of C3 plus the exclusion of Smoke, against C3, at every report month and estimator; the expectation written before the code is a rise below 2 basis points, because the other low-beta industries are close substitutes.
 - **D4, how much the hedge depends on the covariance and on the month.** (a) The rank correlation between the C3 active-weight vectors of each pair of estimators at the same month, over the 46 untilted industries; expectation D4a: at every report month the four daily estimators agree with each other more than any of them agrees with the monthly sample covariance. (b) The cross-evaluation matrix at the last month: the C3 portfolio built with estimator i (the row), its tracking error forecast with estimator j's covariance (the column). Within a column the diagonal is the minimum by construction, because the column's estimator built that portfolio to minimise its own forecast and the other rows' portfolios are feasible under the same set; so the report is the excess of each entry over its column's diagonal, in basis points: how much worse the column's estimator thinks another estimator's portfolio is than its own. (c) The three industries that absorb most of the tilt at each report month under the sample covariance on daily data.
 """),
     code("""
@@ -3172,7 +3210,7 @@ a_new = pd.Series(fixed[(last, ("sample", "daily_3y"))].active, index=industries
 print(f"where the sample covariance's weight goes under the mandate's C3 at {last}: " + ", ".join(f"{k} +{100 * x:.2f} pp" for k, x in a_new.sort_values(ascending=False).head(5).items()))
 """),
     md("""
-## Part three: a check on the solver (D5, added after the first run of notebook 12)
+## Part three: a check on the solver (D5)
 
 A solver returns two things, a status word ("optimal", "optimal_inaccurate", "infeasible" or "unbounded") and a list of 49 weights, and both can be wrong at once. The first run of notebook 12 found such a case. At 1984-07, a July in which French rebuilds the industry portfolios from the end-of-June SIC codes, the index itself moved 4.3% one way, above the cap of 2%, so no portfolio satisfied the cap and the tilt at once; the right answer was "infeasible". The solver returned "optimal" and weights that summed to 1.0037. The independent check of the returned weights (`optimiser.check`: the weights sum to one, lie inside their bounds and respect the cap, each within 1e-6) failed them and the run stopped, which is what the check is for.
 
@@ -3271,11 +3309,11 @@ Expectation 2, the known answers, holds in every one of the 15 month-estimator p
 
 Expectation 3, the cost of the tilt, holds: 35 basis points a year at 2026-08 with the sample covariance on daily data, against the enhanced-indexing limit of 100. The cost depends on how much the tilt removes. In 1979-07 Oil was 15.1% of the benchmark and Utilities 8.0%, so the tilt took 11.7 percentage points out of the portfolio and cost 47 to 55 basis points with the daily estimators (108 with the sample covariance of 120 monthly returns); in 2004-11 it took 4.7 points and cost 49 to 56; in 2026-08 it takes 2.8 points and costs 33 to 36. Per percentage point removed, the cost rose from 4.6 basis points in 1979 to 12.7 in 2026: a concentrated benchmark (effective number of holdings 10.2 against 18.4) offers fewer substitutes of the right kind. The five estimators agree within 2 basis points in 2026-08 and within 8 in 1979-07 among the daily ones; the monthly sample covariance stands apart in 1979-07 (108 against 47 to 55) and is the lowest in 2004-11 and 2026-08.
 
-Expectation 4, where the weight goes. The pre-run reasoning said the optimiser would put the removed weight in the industries that move most with Oil and Utilities. That is half of it. Oil and Utilities have betas to the benchmark of 0.41 and 0.33, so removing 2.8 points of them leaves a portfolio with a beta above one, and the first thing the optimiser does is restore the beta: the weight goes to Other (beta 0.47), Food (0.12), Telcm (0.39) and Smoke (0.04), and the portfolio's beta ends at 1.004. Among the low-beta industries it prefers those whose movement after the market is taken out is correlated with the removed ones: across the 46 untilted industries the rank correlation between the active weight and the residual correlation with Oil is 0.57 and with Utilities 0.43, against -0.29 with the beta, -0.13 with the industry's own volatility and 0.04 with its benchmark weight. The commodity-linked industries (Agric, Steel, FabPr, Gold) receive weight too, and little of it, because their own volatility is 25% to 42% a year. Only 11 of the 46 untilted industries receive any weight, because the first month's cap is relaxed to the smallest feasible turnover, so the portfolio buys exactly 2.8 points and places them where each unit traded hedges most. The effective number of holdings is the benchmark's under C0 to C2 (18.4 in 1979-07, 18.6 in 2004-11, 10.2 in 2026-08) and rises under C3 in 1979-07 to about 24, because the tilt spreads a 15% industry's weight over others; in 2026-08 it barely moves. The comparison added after the first run separates the tilt from the transition: with free trading the same tilt costs 0.2 to 4 basis points less with the daily estimators and 5 to 17 less with the monthly sample covariance, which trades two to three times as much (0.24 against 0.12 in 1979-07) and holds fewer industries; that is the pattern of notebook 10 again, a noisy covariance sees hedges that a less noisy one does not, and notebook 12 will say whether those trades pay in realised tracking error.
+Expectation 4, where the weight goes. The pre-run reasoning said the optimiser would put the removed weight in the industries that move most with Oil and Utilities. That is half of it. Oil and Utilities have betas to the benchmark of 0.41 and 0.33, so removing 2.8 points of them leaves a portfolio with a beta above one, and the first thing the optimiser does is restore the beta: the weight goes to Other (beta 0.47), Food (0.12), Telcm (0.39) and Smoke (0.04), and the portfolio's beta ends at 1.004. Among the low-beta industries it prefers those whose movement after the market is taken out is correlated with the removed ones: across the 46 untilted industries the rank correlation between the active weight and the residual correlation with Oil is 0.57 and with Utilities 0.43, against -0.29 with the beta, -0.13 with the industry's own volatility and 0.04 with its benchmark weight. The commodity-linked industries (Agric, Steel, FabPr, Gold) receive weight too, and little of it, because their own volatility is 25% to 42% a year. Only 11 of the 46 untilted industries receive any weight, because the first month's cap is relaxed to the smallest feasible turnover, so the portfolio buys exactly 2.8 points and places them where each unit traded hedges most. The effective number of holdings is the benchmark's under C0 to C2 (18.4 in 1979-07, 18.6 in 2004-11, 10.2 in 2026-08) and rises under C3 in 1979-07 to about 24, because the tilt spreads a 15% industry's weight over others; in 2026-08 it barely moves. The comparison with free trading separates the tilt from the transition: with free trading the same tilt costs 0.2 to 4 basis points less with the daily estimators and 5 to 17 less with the monthly sample covariance, which trades two to three times as much (0.24 against 0.12 in 1979-07) and holds fewer industries; that is the pattern of notebook 10 again, a noisy covariance sees hedges that a less noisy one does not, and notebook 12 will say whether those trades pay in realised tracking error.
 
 Expectation 5, the cap as a speed limit, holds. From 1/N at 2026-08 the one-way distance to the benchmark is 0.528, which is 26 months of trading at 2% if every trade reduced the distance. Under C1 the first rebalance trades the whole 0.528 and lands on the benchmark; under long-only plus the cap the first rebalance trades exactly 0.0200 and leaves a forecast tracking error of 708 basis points, which falls to 472 after six rebalances, 254 after twelve and 28 after twenty-four, when the remaining distance is 0.078. The optimiser does not reduce the distance fastest; it reduces the tracking error fastest, which means trading the industries whose active weights contribute most to the deviation's variance first. Under C2 from the same start the active bound is hard and 1/N sits 0.387 of one-way turnover outside it, so the cap is relaxed to 0.387 and the portfolio lands inside the bound in one month with a forecast tracking error of 95 basis points.
 
-**The tests added after the first run: the practical problem behind the hedge.** A tilt is also a factor bet: removing low-beta industries leaves a high-beta portfolio, and the optimiser's hedge depends on the covariance it is given. D1 measured how much of the tilt's forecast risk is a market bet after the optimiser has done its work: under 1% of the active variance for the four daily estimators at 1979-07 and 2004-11, 0.3% to 3% at 2026-08, and 2.3% and 5.4% for the monthly sample covariance at 1979-07 and 2004-11, where the portfolio's beta ends at 1.010 and 1.007. The expectation (below 5% in every pair) fails in that one pair, and the failure is informative: a noisy covariance sees cheap hedges in its noise and leaves a beta bet standing that a less noisy one removes. D2 imposed beta neutrality as a constraint: it costs the daily estimators 0.0 to 1.2 basis points and the monthly sample covariance 3.4 and 5.6, so the expectation (below 1 basis point in every pair) fails in four pairs, for the same reason. The lesson stands with a qualification: with a tracking-error objective the optimiser restores the beta on its own when the covariance is estimated from daily data; with 120 monthly observations it leaves a beta of 1.007 to 1.010 standing, and a manager using such a matrix should impose the constraint. D3 priced the mandate problem: at 2026-08 the hedge buys tobacco (Smoke, a low-beta industry) to replace Utilities, which a sustainability mandate that underweights carbon would refuse; excluding Smoke from the hedge costs 2.4 to 3.2 basis points at 2026-08, 1.3 to 1.6 at 1979-07 and 5.5 to 6.5 at 2004-11, that is 2% to 13% of the tilt's cost. The guess written before the code (below 2 basis points) was wrong in 11 of 15 pairs; the next-best low-beta substitutes are further away than I assumed. D4 measured how much the hedge is a property of the estimator. The four daily estimators agree with each other on the active weights more than with the monthly sample covariance (expectation met), and the agreement is partial: the sample covariance and shrinkage are the same hedge (rank correlation 0.99 to 1.00, because the shrinkage intensity on daily data is 0.012), the factor model agrees with the sample covariance at 0.45 to 0.53, and the component model sits between. In the cross-evaluation at 2026-08, one estimator judges another's hedge 1 to 5 basis points worse than its own on a tilt that costs 33 to 36: a model risk of up to 13% of the number quoted. And the industries that absorb the tilt change with the month: Fin, Telcm and Food in 1979-07, Drugs, Mach and Banks in 2004-11, Other, Food and Telcm in 2026-08. For a manager this says four things: check the factor exposures the optimiser creates and removes, because it hedges a beta bet silently; check the hedge against the mandate, because the covariance does not know what the mandate forbids; treat the forecast cost of a tilt as model-dependent to within about a tenth; and expect the hedge to be rebuilt as the covariance moves, which is turnover the cap will ration. The first three are problems a manager fixes in the design, and the design was changed accordingly.
+**The practical problem behind the hedge (D1 to D4).** A tilt is also a factor bet: removing low-beta industries leaves a high-beta portfolio, and the optimiser's hedge depends on the covariance it is given. D1 measured how much of the tilt's forecast risk is a market bet after the optimiser has done its work: under 1% of the active variance for the four daily estimators at 1979-07 and 2004-11, 0.3% to 3% at 2026-08, and 2.3% and 5.4% for the monthly sample covariance at 1979-07 and 2004-11, where the portfolio's beta ends at 1.010 and 1.007. The expectation (below 5% in every pair) fails in that one pair, and the failure is informative: a noisy covariance sees cheap hedges in its noise and leaves a beta bet standing that a less noisy one removes. D2 imposed beta neutrality as a constraint: it costs the daily estimators 0.0 to 1.2 basis points and the monthly sample covariance 3.4 and 5.6, so the expectation (below 1 basis point in every pair) fails in four pairs, for the same reason. The lesson stands with a qualification: with a tracking-error objective the optimiser restores the beta on its own when the covariance is estimated from daily data; with 120 monthly observations it leaves a beta of 1.007 to 1.010 standing, and a manager using such a matrix should impose the constraint. D3 priced the mandate problem: at 2026-08 the hedge buys tobacco (Smoke, a low-beta industry) to replace Utilities, which a sustainability mandate that underweights carbon would refuse; excluding Smoke from the hedge costs 2.4 to 3.2 basis points at 2026-08, 1.3 to 1.6 at 1979-07 and 5.5 to 6.5 at 2004-11, that is 2% to 13% of the tilt's cost. The guess written before the code (below 2 basis points) was wrong in 11 of 15 pairs; the next-best low-beta substitutes are further away than the reasoning written before the code assumed. D4 measured how much the hedge is a property of the estimator. The four daily estimators agree with each other on the active weights more than with the monthly sample covariance (expectation met), and the agreement is partial: the sample covariance and shrinkage are the same hedge (rank correlation 0.99 to 1.00, because the shrinkage intensity on daily data is 0.012), the factor model agrees with the sample covariance at 0.45 to 0.53, and the component model sits between. In the cross-evaluation at 2026-08, one estimator judges another's hedge 1 to 5 basis points worse than its own on a tilt that costs 33 to 36: a model risk of up to 13% of the number quoted. And the industries that absorb the tilt change with the month: Fin, Telcm and Food in 1979-07, Drugs, Mach and Banks in 2004-11, Other, Food and Telcm in 2026-08. For a manager this says four things: check the factor exposures the optimiser creates and removes, because it hedges a beta bet silently; check the hedge against the mandate, because the covariance does not know what the mandate forbids; treat the forecast cost of a tilt as model-dependent to within about a tenth; and expect the hedge to be rebuilt as the covariance moves, which is turnover the cap will ration. The first three are problems a manager fixes in the design, and the design was changed accordingly.
 
 **The fixes.** Beta neutrality and the exclusions of Smoke and Guns joined C3, and the robust portfolio joined the variants. Under the mandate's C3 every portfolio has a beta of exactly one and holds no tobacco or weapons (F1). The mandate costs the daily estimators 1.9 to 2.2 basis points more than the tilt alone at 1979-07, 5.6 to 6.9 at 2004-11 and 4.5 to 6.6 at 2026-08, that is 4% to 19% of the tilt's cost; the monthly sample covariance pays 25.4 and 18.6 basis points at the first two months and 0.6 at the last, so F2 (below 15 everywhere) fails for that covariance, which is the covariance whose hedges the fixes were most needed against: a matrix that saw cheap hedges in its noise is the one that loses most when the hedges it liked are forbidden. The robust portfolio does what it was built for (F3): its worst forecast tracking error across the five covariances is 113, 64 and 42 basis points at the three months against 125, 67 and 42 for the best single-estimator portfolio, and under each covariance it sits 0.1 to 1.1 basis points above that covariance's own minimum on average, where the single-estimator portfolios sit up to 21, 13 and 7 above each other's. The compromise costs almost nothing and protects against the matrix being wrong. Under the mandate the weight at 2026-08 goes to Food, Other, Telcm, Soda and Agric, for the robust portfolio and for the sample covariance alike, and to nothing the mandate forbids.
 
@@ -3359,7 +3397,7 @@ NB12 = [
 - The path starts as the index: in the first evaluation month the previous portfolio is the benchmark of that month.
 - In month t the variant's covariance is estimated on the data before t (notebook 10's estimators; the robust portfolio uses all five), and the optimiser solves for the weights with the drifted previous weights as the turnover reference. Nothing from month t enters the weights.
 - The portfolio earns its weights times the industries' returns of month t, the benchmark earns its weights times the same returns, and the difference is recorded with the forecast tracking error, the one-way turnover, whether the cap was relaxed and the holdings.
-- 35 paths: seven variants (the four estimators on daily data, the sample covariance of 120 monthly returns, the robust portfolio, and RiskMetrics, added after the first run) times the four constraint sets, 28 specifications, plus seven sensitivity paths under the tilt alone (C3 without notebook 11's fixes), so that the fixes' cost is measured on realised numbers.
+- 35 paths: seven variants (the four estimators on daily data, the sample covariance of 120 monthly returns, the robust portfolio, and RiskMetrics) times the four constraint sets, 28 specifications, plus seven sensitivity paths under the tilt alone (C3 without notebook 11's fixes), so that the fixes' cost is measured on realised numbers.
 
 **Measures of a path.**
 
@@ -3462,7 +3500,7 @@ for i, month in enumerate(months):
         Sigmas[v][month], _, _ = CV.estimate(*v, month, P)
     if i % 100 == 0:
         print(f"{month}: {time.time() - t0:.0f}s")
-Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}   # the robust portfolio's set: the five of the 4 October design
+Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}   # the robust portfolio's set: the five estimator covariances of notebook 11
 print(f"{len(months) * (len(CV.EVALUATION_VARIANTS) + 1)} covariance matrices in {time.time() - t0:.0f}s")
 """),
     md("""
@@ -3539,6 +3577,15 @@ print(f"expectation 5: the mandate's C3 against the tilt alone, realised trackin
 relax = table.loc[(slice(None), ["C2", "C3"]), "relaxed share"]
 e6 = bool((relax < C.EVAL_RELAX_SHARE_MAX).all())
 print(f"expectation 6: share of months with a relaxed cap under C2 and C3, {relax.min():.3f} to {relax.max():.3f} (level {C.EVAL_RELAX_SHARE_MAX}): {'MET' if e6 else 'NOT MET'}")
+gross = table["active return (gross)"]
+years = len(months) / 12
+tilt_gross, mandate_gross = gross.xs("C3 tilt only", level="set"), gross.xs("C3", level="set")
+se_tilt = table.xs("C3 tilt only", level="set")["realised TE"] / np.sqrt(years)
+mandate_cost = mandate_gross - tilt_gross
+print(f"expectation 7: gross active return a year, the tilt alone {1e4 * tilt_gross.min():+.1f} to {1e4 * tilt_gross.max():+.1f} bp "
+      f"(standard error of a mean over {years:.0f} years, the realised tracking error over the square root of {years:.0f}: {1e4 * se_tilt.min():.0f} to {1e4 * se_tilt.max():.0f}); "
+      f"the mandate {1e4 * mandate_gross.min():+.1f} to {1e4 * mandate_gross.max():+.1f}; the mandate minus the tilt alone on the same months, variant by variant: "
+      + ", ".join(f"{k} {1e4 * v:+.1f}" for k, v in mandate_cost.items()))
 relaxed_months = pd.concat({cs: paths[(("sample", "daily_3y"), cs)]["relaxed"] for cs in ("C2", "C3")}, axis=1)
 by_cal = relaxed_months.groupby(relaxed_months.index.month).sum()
 by_cal.index = [pd.Timestamp(2000, m, 1).strftime("%b") for m in by_cal.index]
@@ -3573,7 +3620,7 @@ print("under C3, by decade (bp a year):")
 print(show_d.to_string(float_format=lambda x: f"{x:.1f}"))
 """),
     md("""
-## Expectations 8 and 9, added after the first run: RiskMetrics, and the forecasts calibrated on their own past
+## Expectations 8 and 9: RiskMetrics, and the forecasts calibrated on their own past
 
 Two additions after the first run (6 October 2026), each with its expectation in `constants.py` before the code. First, RiskMetrics as a seventh variant: Dom, Howard, Jansen and Lohre (2024) find that weighting recent days more does more for a covariance than shrinkage or factor structure and that this simple dynamic estimator does as well as the DCC model for minimum-variance portfolios; notebook 10 found it gave the lowest unconstrained volatility and the best-calibrated forecast; the first design of this notebook left it out, a design miss. Second, a calibration of the forecasts, the fix a risk-model vendor applies when the bias statistic drifts from 1: the forecast of month t is multiplied by the ratio of realised to forecast tracking error over the previous 60 months of the same path, computed from months before t only, so nothing from the future enters it. One setting, 60 months, long enough for a stable ratio (a standard deviation estimated from 60 observations has a standard error of about 9%) and short enough to follow a change of regime within five years. The calibration cannot repair a month that no past resembles; it can repair a bias that persists.
 """),
@@ -3633,7 +3680,7 @@ print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("r
 | 4. The robust portfolio | 87.4 basis points, against 84.7 for the best single estimator and 95.8 for the worst; its forecast the best calibrated (bias 1.09) | MET |
 | 5. The realised cost of the fixes | the mandate's C3 above the tilt alone by 4.4 to 5.2 basis points for all seven variants | MET |
 | 6. The cap | relaxed in 1 to 4 of 566 months (0.2% to 0.7%), the first month and Julys | MET |
-| 7. Active return, costs, holdings | the tilt had no opportunity cost: +1.8 to +6.9 basis points a year gross, inside one standard error (12 to 14) of zero; the mandate -1.0 to -6.9, the exclusions' cost 3 to 9; turnover costs 5 to 9 at 50 basis points; net -6 to -15; information ratios -0.07 to -0.17 | reported |
+| 7. Active return, costs, holdings | the tilt had no opportunity cost: +1.8 to +6.9 basis points a year gross, inside one standard error (12 to 13) of zero; the mandate -1.0 to -6.9; the mandate's two additions cost 8 to 10 against the tilt alone on the same months; turnover costs 5 to 9 at 50 basis points; net -6 to -15; information ratios -0.07 to -0.17 | reported |
 | 8. RiskMetrics (added 6 October) | 84.3 basis points against 84.7 for the sample covariance on daily data; a difference of 0.4, inside the noise | MET, direction only |
 | 9. Calibrated forecasts (added 6 October) | calibrated bias statistics 1.11, 1.11, 1.17 and 1.15 for the four daily estimators, 3 of 4 inside 0.85 to 1.15; the monthly covariance's 1.61 falls to 1.12; by decade 0.95 to 1.18 after 1989, 1.24 to 1.50 before | NOT MET |
 
@@ -3641,7 +3688,7 @@ Expectation 1 holds. 566 evaluation months, 35 paths, 566 records each; under C0
 
 Expectation 2, the extension's question, is met: under the mandate the four daily estimators realise 84.7 (sample), 84.8 (shrinkage), 91.5 (component model) and 93.4 (factor model) basis points a year of tracking error, a range of 8.8 against the level of 10, and the sample covariance of 120 monthly returns realises 95.8, above all four. The ranking is notebook 10's: on three years of daily data the sample covariance and shrinkage are the same estimate (shrinkage intensity 0.012) and the best, the two structured models pay 7 to 9 basis points for assuming that industries share nothing beyond their factors, and the monthly covariance pays for its noise. The pattern of Dom, Howard, Jansen and Lohre (2024) holds in tracking-error terms with a qualification: the constraints shrink the differences between estimators to about a tenth of the tracking error, and do not remove them.
 
-Expectation 3 is not met, and the way it fails is the notebook's main finding about forecasts. Over the 566 months the daily estimators' forecasts under-forecast the realised tracking error by 22% to 39% (bias statistics 1.22 to 1.39) and the monthly covariance's by 61%. The ten-year variance ratio, which repaired the benchmark's forecasts in notebook 10, changes these by 0.02 to 0.03, because its mean over the evaluation months is 1.00: the positive autocorrelation of the early decades and the negative autocorrelation of the later ones cancel over this sample, and the active portfolio's own autocorrelation is not the benchmark's. The by-decade table says where the miss is. In 1979-07 to 1989-12 the realised tracking error was 1.6 to 2.0 times the forecast for every variant (138 to 156 basis points against 76 to 90); in the 1990s 1.3 to 1.4 times; in the 2000s 1.1 to 1.2; in the 2010s and from 2020 the forecasts were right to within 10%. The first decade is the oil shock. Oil was 15% of the benchmark and the tilt removed 7.6 percentage points of it; the oil price doubled in 1979 and 1980 and collapsed in 1986, and in single months the portfolio's active return reached +1.45% (1980-07), +1.41% (1980-02) and -1.14% (1981-03) against a forecast monthly standard deviation of about 0.24%, five to six forecast standard deviations. A three-year window of daily returns estimated on 1976 to 1979 cannot know that Oil's own volatility is about to triple; this is a change of regime, which no window length repairs, and it is why the realised number is the one that counts. The second part of the miss is of a different kind and does not go away with the decades: the monthly sample covariance under-forecasts by 30% to 70% in every decade, the daily estimators by 10% to 40% in the first three. An optimiser handed a covariance with errors finds the portfolio that looks least risky in that covariance, and part of what makes it look least risky is the errors; the forecast is then an in-sample minimum and the realised number is out of sample. This is the optimisation bias of Michaud (1989), the error-maximisation property of optimised portfolios, and it is larger the noisier the covariance, which is why the monthly covariance's forecast is the worst calibrated (1.61) and the robust portfolio's worst-case forecast, the maximum over five matrices, the best (1.09): taking the worst case across estimates offsets the optimism of each. For a manager: a tracking-error forecast that comes out of an optimiser is biased low, here by a fifth to a third with a good covariance, and the worst case across estimators is a better number to quote than any single estimator's own.
+Expectation 3 is not met, and the way it fails is the notebook's main finding about forecasts. Over the 566 months the daily estimators' forecasts under-forecast the realised tracking error by 22% to 39% (bias statistics 1.22 to 1.39) and the monthly covariance's by 61%. The ten-year variance ratio, which repaired the benchmark's forecasts in notebook 10, changes these by 0.02 to 0.03, because its mean over the evaluation months is 1.00: the positive autocorrelation of the early decades and the negative autocorrelation of the later ones cancel over this sample, and the active portfolio's own autocorrelation is not the benchmark's. The by-decade table says where the miss is. In 1979-07 to 1989-12 the realised tracking error was 1.6 to 2.0 times the forecast for every variant (138 to 156 basis points against 76 to 90); in the 1990s 1.3 to 1.4 times; in the 2000s 1.1 to 1.2; in the 2010s and from 2020 the forecasts were right to within 10%. The first decade is the oil shock. Oil was 15% of the benchmark and the tilt removed 7.6 percentage points of it; the oil price doubled in 1979 and 1980 and collapsed in 1986, and in single months the portfolio's active return reached +1.45% (1980-07), +1.41% (1980-02) and -1.14% (1981-03) against a forecast monthly standard deviation of about 0.24%, five to six forecast standard deviations. A three-year window of daily returns estimated on 1976 to 1979 cannot know that Oil's own volatility is about to triple; this is a change of regime, which no window length repairs, and it is why the realised number is the one that counts. The second part of the miss is of a different kind and does not go away with the decades: the monthly sample covariance under-forecasts by 30% to 70% in every decade, the daily estimators by 10% to 40% in the first three. An optimiser handed a covariance with errors finds the portfolio that looks least risky in that covariance, and part of what makes it look least risky is the errors; the forecast is then an in-sample minimum and the realised number is out of sample. This is the optimisation bias of Michaud (1989), the error-maximisation property of optimised portfolios, and it is larger the noisier the covariance, which is why the monthly covariance's forecast is the worst calibrated (1.61) and the robust portfolio's worst-case forecast, the maximum over five matrices, the best (1.09): taking the worst case across estimates offsets the optimism of each. For a manager: a tracking-error forecast that comes out of an optimiser is biased low, here by a fifth to a third with a good covariance, and the worst case across estimators is the forecast whose bias statistic is nearest one.
 
 Whether the miss of expectation 3 was foreseeable. Its direction was, and the design did not use what it knew. Notebook 10's by-decade table had the benchmark's own forecasts under-forecasting by 34% in 1979 to 1989 under the 21 rule, and Michaud (1989) says that an optimised portfolio's forecast risk is biased low. Both were known on 4 October when the range 0.8 to 1.25 was written for the whole sample, as if the active portfolio's forecasts would be as well calibrated on average as the benchmark's. The miss is on the design side: the expectation should have been written by decade, with a statistic above 1 expected for the first decade and for every optimised portfolio. The size of the miss was not foreseeable from the literature: a first decade at 1.6 to 2.0 times the forecast is the oil shock acting on a portfolio tilted away from Oil, and notebook 10's table, which showed 1.34 for the benchmark, had no active portfolio in it. Expectation 9 below adds the fix for the part of the bias that persists; it uses only months before each forecast, so it is not fitted on the months it is judged on.
 
@@ -3651,7 +3698,7 @@ Expectation 5 holds. The mandate's fixes, beta neutrality and the exclusion of t
 
 Expectation 6 holds. The cap was relaxed in 2 of 566 months under C3 for the daily estimators and RiskMetrics (the first month, when the tilt is put on from the index, and one July), 3 for the robust portfolio, 4 for the monthly covariance, and once under C2; the share is 0.2% to 0.7% against a level of 10%. The months are the ones the design named.
 
-Expectation 7, the active returns. Opportunity cost, the return a fund gives up by obeying a constraint, is the first thing a client asks about a tilt, and the tilt portfolio's returns show that there was none: over 47 years the tilt alone earned between +1.8 and +6.9 basis points a year gross against the benchmark, and a mean active return over 47 years has a standard error of the realised tracking error divided by the square root of 47, 85 to 96 basis points divided by 6.9, 12 to 14 basis points a year, so the figure is inside one standard error of zero. Holding Coal, Oil and Utilities at half their index weight gave up no return that can be told from chance, which for a sustainability mandate is the result its holders want. The mandate earned between -1.0 and -6.9, also inside one standard error of zero. The difference between the mandate and the tilt alone, 3 to 9 basis points a year, is the opportunity cost of holding tobacco and weapons at zero, two industries that outperformed the market over the sample; it is a difference of two means on the same months and is less noisy than either, and it is the number a manager reports to the client who asked for the exclusions. Trading costs at 50 basis points per unit of turnover take 5 to 9 a year; they are arithmetic on the turnover and carry no noise. Net of them the mandate's portfolios trail the benchmark by 6 to 15 basis points a year, with information ratios of -0.07 to -0.17, on a tracking error of 85 to 96. A manager of such a mandate is judged on four numbers before the active return: the realised tracking error against the ex-ante limit (85 to 96 basis points against 100: inside, for every variant), the constraints obeyed in every month (the relaxed-cap months counted and explained), the turnover and its cost (0.9% to 1.5% a month, 5 to 9 basis points a year at 50), and the cost of each exclusion reported to the client. The information ratio measures skill at forecasting returns; this portfolio makes no return forecast, so an information ratio inside one standard error of zero is the outcome the design implies. The effective number of holdings is 19.0 to 19.8 against the benchmark's 18.9, and the portfolios hold 41 to 45 of the 49 industries. Where the active return came from, by factor, is notebook 13's question.
+Expectation 7, the active returns. Opportunity cost, the return a fund gives up by obeying a constraint, is the first thing a client asks about a tilt, and the tilt portfolio's returns show that there was none: over 47 years the tilt alone earned between +1.8 and +6.9 basis points a year gross against the benchmark, and a mean active return over 47 years has a standard error of the realised tracking error divided by the square root of 47, 80 to 91 basis points divided by 6.9, 12 to 13 basis points a year, so the figure is inside one standard error of zero. Holding Coal, Oil and Utilities at half their index weight gave up no return that can be told from chance, which for a sustainability mandate is the result its holders want. The mandate earned between -1.0 and -6.9, also inside one standard error of zero. The difference between the mandate and the tilt alone, 8 to 10 basis points a year, is the opportunity cost of the mandate's two additions, beta neutrality and holding tobacco and weapons at zero, two industries that outperformed the market over the sample; it is a difference of two means on the same months and is less noisy than either, and it is the number a manager reports to the client who asked for the exclusions; notebook 13 splits it between the factors and the industries' own returns and gives its standard error. Trading costs at 50 basis points per unit of turnover take 5 to 9 a year; they are arithmetic on the turnover and carry no noise. Net of them the mandate's portfolios trail the benchmark by 6 to 15 basis points a year, with information ratios of -0.07 to -0.17, on a tracking error of 85 to 96. A manager of such a mandate is judged on four numbers before the active return: the realised tracking error against the ex-ante limit (85 to 96 basis points against 100: inside, for every variant), the constraints obeyed in every month (the relaxed-cap months counted and explained), the turnover and its cost (0.9% to 1.5% a month, 5 to 9 basis points a year at 50), and the cost of each exclusion reported to the client. The information ratio measures skill at forecasting returns; this portfolio makes no return forecast, so an information ratio inside one standard error of zero is the outcome the design implies. The effective number of holdings is 19.0 to 19.8 against the benchmark's 18.9, and the portfolios hold 41 to 45 of the 49 industries. Where the active return came from, by factor, is notebook 13's question.
 
 Expectation 8, RiskMetrics, is met in direction and says nothing in size. Under the mandate RiskMetrics realises 84.3 basis points against 84.7 for the sample covariance on three years of daily data, a difference of 0.4 basis points on paths that share most of their months; a realised tracking error of 85 basis points measured on 566 months has a standard error of about 2.5, so the two are the same number. Its forecast is as low as the others' (bias 1.23 against 1.26), and its turnover is the highest of the daily variants (1.4% a month against 0.9% to 1.3%), because a covariance that weights recent days most changes more from month to month and the portfolio follows it; after costs at 50 basis points it nets -13.9 against -14.8. Dom, Howard, Jansen and Lohre (2024) found that time dynamics were the design choice that mattered most for a constrained minimum-variance portfolio of single stocks; notebook 10 found the same for the unconstrained minimum-variance portfolio of the 49 industries. Under the tracking-error mandate on 49 industries the gain is gone: the active weight bound of 2 percentage points and the turnover cap leave the optimiser too little room for a better covariance to show. The expectation was written as "at or below", and a result of equality meets it without teaching anything; written again, it would name a smallest difference worth calling a gain, 2.5 basis points, one standard error.
 
@@ -3666,12 +3713,403 @@ The robust portfolio's status column reports 154 and 113 months of inaccurate so
 - Where the tilt's and the exclusions' active returns came from, by Fama-French factor, is notebook 13's question.
 - The result holds for 49 industries, whose benchmark is concentrated (effective number 19); at the level of single stocks the differences between estimators, and the gain from time dynamics that expectation 8 did not find here, may be larger, which is the second study's question.
 - Trading costs are one proportional rate for every industry and month; the realised numbers are gross of costs, and the net figures use 50 and 100 basis points per unit of one-way turnover as the replication does.
-- The level for expectation 1 was raised from 1e-10 to 1e-6 after the first run, for the solver's precision. The two additions after the first run, RiskMetrics and the calibration, are labelled in the text and in `constants.py` with their date; the 30 paths of the first design give the same numbers to every printed decimal as in the first run.
+- The level for expectation 1 was raised from 1e-10 to 1e-6 after the first run, for the solver's precision. The 30 paths of the design without RiskMetrics and the calibration give the same numbers to every printed decimal with them in the notebook as without.
+"""),
+]
+
+# ---------------------------------------------------------------------------
+# 13: the factor attribution
+# ---------------------------------------------------------------------------
+
+NB13 = [
+    md("""
+# 13. Where the active return came from: a factor attribution of the paths
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08; its excess return tracks the excess return of all US stocks, French's Mkt-RF series, within 0.47 percentage points a year (correlation 0.9996), so the two are nearly the same series without being one |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves; volatility is the standard deviation of returns, stated per year here by multiplying the monthly figure by the square root of 12 |
+| Standard error | the uncertainty of a number estimated from a sample: the standard deviation that the estimate would show across repeated samples of the same size; for a mean it is the standard deviation of the observations divided by the square root of their number |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here, 1,225 distinct numbers |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Estimation error | the difference between a mean or covariance estimated from a window and its true value |
+| Factor | a return series that moves many assets at once; the six here are the market factor Mkt-RF, the return of all US stocks minus the risk-free rate, and five long-short portfolios built to isolate one source each: SMB (small firms over large, size), HML (cheap firms over expensive, value), RMW (profitable firms over unprofitable, profitability), CMA (firms that invest little over firms that invest much, investment) and Mom (recent winners over recent losers, momentum) |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09) |
+| Beta | how much an asset moves with a factor on average, estimated by regressing the asset's excess returns on the factors' returns over the estimation window; one beta per factor |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Active exposure | the portfolio's beta to a factor minus the benchmark's: the sum over industries of the active weight times the industry's beta to that factor; how much more or less of the factor the portfolio holds than the index |
+| Contribution | the part of a month's active return that one factor accounts for: the active exposure to the factor times the factor's return in the month |
+| Residual | the active return minus the sum of the six contributions: the part the factors do not explain, the industries' own returns |
+| Attribution | splitting a portfolio's active return into the contributions of named factors plus a residual, so that the parts add up to the whole |
+| Factor share | the share of the variance of the active return that the factor contributions explain: one minus the variance of the residual over the variance of the active return |
+| Tracking error | the standard deviation of the difference between two return series, stated per year; forecast (ex-ante) when computed from a covariance matrix before the month, realised (ex-post) when measured on the active returns afterwards |
+| Long-only | said of a portfolio in which no weight is negative |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought when the portfolio stays fully invested |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance; 2% a month here |
+| Drifted weights | the previous month's weights after that month's returns have moved them, so that they still sum to one |
+| Tilt | a constraint that holds named industries below their benchmark weight; here Coal, Oil and Utilities at no more than half of it |
+| Exclusion | a constraint that holds named industries at zero weight; Smoke (tobacco) and Guns (weapons) here |
+| Beta-neutral | a constraint that holds the portfolio's beta to the benchmark equal to one |
+| Mandate | the whole set of rules the fund obeys: the tilt, the exclusions and beta neutrality, the constraint set C3 |
+| Constraint set | one of the four cumulative sets C0 to C3: long-only; plus the active weight bound; plus the turnover cap; plus the mandate |
+| Optimiser | the extension's routine that solves the constrained tracking-error problem (notebook 11) |
+| Robust portfolio | the weights whose largest forecast tracking error across the five covariance estimates is smallest; a portfolio that trusts no single matrix (notebook 11) |
+| RiskMetrics | the covariance estimator of J.P. Morgan's 1996 RiskMetrics document: a weighted sample covariance in which each day's weight falls by half every half-life, one year of trading days here, so that recent days count most (notebook 10's sensitivity) |
+| Specification | one combination of a variant (an estimator, the robust portfolio or RiskMetrics) and a constraint set |
+| Path | the month-by-month sequence of portfolios of one specification, each built on the data before its month (notebook 12) |
+| Basis point | one hundredth of a percentage point, so 50 basis points is 0.50% |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** A mandate's rules create positions the client did not ask for. The tilt removes half of three industries, the optimiser replaces them with the industries whose movement comes closest, and the result is a set of exposures to the common sources of return that nobody chose. Dom, Howard, Jansen and Lohre (2024), whose framing the extension follows, judge covariance estimators on the constrained portfolio a practitioner would hold, after costs; the counterpart after the fact is the question a client's report answers every quarter: of the active return, how much came through exposures to the known factors, the market, size, value, profitability, investment and momentum, which a manager could have hedged, and how much from the industries themselves, which is the mandate. The attribution a factor risk model reports is the active exposure to each factor times the factor's return, month by month, plus a residual. The six factors here are the academic standard set, the five of Fama and French (2015) plus the momentum factor of Carhart (1997), and the set French's library provides; commercial risk models use larger sets of their own (style, industry, country and currency factors), and macro factor models use variables such as the oil price, inflation and interest rates, each turned into a portfolio that tracks it. Factors can also be derived from the data with no name attached: the principal components of notebook 09 are such factors, and notebook 10 built a covariance estimator from them; they change from window to window and mean nothing to a client, so they serve the risk forecast and the named factors serve the report. The set is a convention, and a client's report uses the one the client knows. Notebook 12 found that the tilt had no opportunity cost and that the mandate's two additions, beta neutrality and the exclusions, cost 8 to 10 basis points a year against the tilt alone; this notebook says where those numbers came from.
+
+**What this notebook does.** It rebuilds the fourteen paths of notebook 12 under the mandate's C3 and under the tilt alone (the seven variants under each), keeping their weights; for every month it estimates the 49 industries' betas to the six factors on the three years of daily returns before the month, the regression that notebook 10's factor covariance estimator runs; it computes each path's active exposures, the six contributions and the residual, checks that contributions plus residual equal the active return, and reports the attribution per path, by decade, and for the difference between the mandate and the tilt alone, which is the cost of the mandate's two additions, beta neutrality and the exclusions.
+
+**How a month is attributed.**
+
+- The active weights: the path's weights for the month minus the benchmark's, one number per industry, summing to zero.
+- The betas: each industry's excess returns over the three years of trading days before the month, regressed on the six factors' daily returns with an intercept; 49 industries by 6 factors. A beta is the return per unit of factor return and is estimated here on daily returns and applied to monthly ones, as factor risk models do.
+- Two uses of beta, by design. The optimiser's beta-neutrality rule uses each industry's beta to the index, read from the covariance matrix the optimiser works with, because the mandate is to track this index with a beta of one. The attribution uses each industry's betas to the six factors, estimated together by one regression, because the report splits the return across the factors a client knows. The index and the market factor move almost identically (correlation 0.9996), so the two market betas differ by about 0.005 at most, and the market exposure of a beta-neutral portfolio is near zero without being exactly zero.
+- The active exposures: for each factor, the sum over industries of the active weight times the industry's beta to it. Worked number: if the portfolio holds 3 percentage points less than the benchmark in an industry with a beta of 1.5 to the value factor and 3 points more in one with a beta of 0.5, its active exposure to value is -0.03 times 1.5 plus 0.03 times 0.5, that is -0.03.
+- The contributions: each active exposure times the factor's return in the month. With an active exposure to value of -0.03 in a month in which the value factor returns +2%, the value contribution is -0.06% of the portfolio.
+- The residual: the active return of the month minus the six contributions. It is the part of the active return that the industries earned on their own, beyond what their factor betas account for.
+- The identity: contributions plus residual equal the active return, by construction; the check is that the arithmetic holds within 1e-9 in every month.
+- The measures of a path: the mean active exposure to each factor; each factor's mean contribution per year with its standard error (the standard deviation of the monthly contributions over the square root of 566, times 12), the same for the residual and the active return; and the factor share.
+
+**What I expect to see, written before the run (`constants.py`, 6 October 2026).**
+
+1. Count first: 566 months from 1979-07; the six monthly factor series cover every one of them; 14 paths with 566 records each, whose realised tracking errors reproduce notebook 12's within 0.1 basis point a year; the identity holds within 1e-9 in every month of every path.
+2. Beta neutrality shows in the exposures: the mean active exposure to the market factor is within 0.05 of zero for every path. Under the mandate it is a constraint (beta neutrality to the benchmark, whose correlation with the market return is 0.9996); under the tilt alone notebook 11 found that the optimiser restores the beta on its own, to 1.004 with daily data and 1.010 with the monthly covariance.
+3. The exposures come from the tilt and the mandate, and from the estimator only at the margin: among the five factors other than the market, the mean active exposure under the mandate has the same sign across all seven variants for at least four. Reason: the exposures come from what is removed, half of Coal, Oil and Utilities and all of Smoke and Guns, which is the same for every variant; the estimator chooses only among the substitutes.
+4. The factors explain less than half of the active return's variance for every path (factor share below 0.5): a tilt on three industries is mostly industry-specific risk, and notebook 11 found the market part of the forecast active variance below 5% for the daily estimators.
+5. The mandate's cost against the tilt alone, the difference of the two paths' active returns on the same months (8 to 10 basis points a year in notebook 12), comes mostly through the industries' own returns. Two parts are tested. (a) The part that comes through the six factors is below half of the cost in every one of the seven variants. (b) The exclusions' factor part, the five factors other than the market, is within 2 basis points a year of the figure the arithmetic of the inputs gives, in every variant. The arithmetic: the mandate adds two rules to the tilt. Beta neutrality moves the market exposure by at most the 0.004 to 0.010 the optimiser leaves under the tilt alone (notebook 11), worth at most 0.01 times the market's excess return of 8.9% a year over the evaluation months, 9 basis points, and less wherever the beta was already restored. The exclusion of Smoke and Guns removes 1.3% of the benchmark on average over the evaluation months (0.9% at 2026-08), and the two industries' betas to profitability and investment, weighted by their benchmark weights and averaged over the months, sit 0.3 to 0.5 above the benchmark's (tobacco's at 2026-08 are 0.29 and 0.32 against the benchmark's 0.04 and 0.04); giving their weight to industries with the benchmark's betas moves the exposure to each of the two factors by 0.013 times 0.3 to 0.5, that is 0.004 to 0.006, and at those factors' mean returns over the evaluation months, 4.0% and 2.7% a year, that exposure is worth 1 to 2 basis points a year each. So the exclusions' factor part should be about 3 basis points a year, and the rest of the exclusions' cost, whatever its size, should be the industries' own returns: what tobacco and weapons earned beyond their factor betas, which Hong and Kacperczyk (2009) measured as a premium against three factors and momentum and Blitz and Fabozzi (2017, "Sin Stocks Revisited", Journal of Portfolio Management) found accounted for by the profitability and investment factors once those are in the model. The cell computes the arithmetic from the inputs, month by month, and tests the measurement against it; the 2 basis points of (b) allow for the substitutes' betas differing from the benchmark's and for the exposures varying over time.
+6. Reported, no verdict: each path's contributions by factor and its residual, with their standard errors; the exposures; the attribution by decade for the sample covariance's mandate path.
+
+Running time: about five minutes, most of it the 14 paths.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader`, `benchmark`, `rules`, `covariance`, `optimiser` and `evaluation` are those of earlier notebooks. `attribution` is new: the active exposures, the monthly attribution with its identity check, the measures of a path and the grouping by period, each tested on made-up data with hand-computed results in `tests/test_attribution.py`.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    writefile("attribution.py"),
+    md("""
+## Count first: the months, the factors, the paths to rebuild
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import evaluation as E
+from bp import attribution as A
+
+pd.set_option("display.width", 230)
+pd.set_option("display.max_rows", 200)
+pd.set_option("display.max_columns", 40)
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+industries = [c.strip() for c in weights.columns]
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+SETS = {"C3": C.CONSTRAINT_SETS["C3"], "C3 tilt only": C.CONSTRAINT_SET_TILT_ONLY}
+assert tuple(SETS) == C.ATTRIBUTION_SETS
+VARIANTS = list(CV.ALL_VARIANTS)
+LABEL = {v: ("robust, all five" if v == C.ROBUST_VARIANT else ("RiskMetrics, daily 5y" if v == C.EWMA_VARIANT else f"{v[0]}, {v[1].replace('_', ' ')}")) for v in VARIANTS}
+FACTORS = list(C.ATTRIBUTION_FACTORS)
+
+# Expectation 1, the counts
+assert len(months) == 566, len(months)
+factors_m = P.factors_m.loc[months, FACTORS]
+assert factors_m.notna().all().all() and len(factors_m) == len(months), "a factor is missing in an evaluation month"
+n_paths = len(VARIANTS) * len(SETS)
+assert n_paths == 14
+provenance = [fl.download(key) for key in P.files]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+print(f"{len(months)} evaluation months, {months[0]} to {months[-1]}; the six factors {', '.join(FACTORS)} have a return in every one of them")
+print(f"{n_paths} paths to rebuild: {len(VARIANTS)} variants under {' and '.join(SETS)}")
+print(f"CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## The covariances and the betas, once per month
+
+Each estimator variant's covariance is built once per month, as in notebook 12, and beside it the industries' betas to the six factors from the same three-year daily window, the regression of notebook 10's factor covariance estimator; the betas are the same for every path, because they describe the industries and not the portfolio.
+"""),
+    code("""
+t0 = time.time()
+Sigmas = {v: {} for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,)}
+betas = {}
+for i, month in enumerate(months):
+    for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,):
+        Sigmas[v][month], _, _ = CV.estimate(*v, month, P)
+    X = CV.daily_window(P.excess_d, month, C.EXT_COV_DAILY_WINDOW_YEARS)
+    _, betas[month] = CV.factor_cov(X.to_numpy(), P.factors_d.loc[X.index, FACTORS].to_numpy())
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}
+B_last = pd.DataFrame(betas[months[-1]], index=industries, columns=FACTORS)
+B_mean = pd.DataFrame(np.mean([betas[m] for m in months], axis=0), index=industries, columns=FACTORS)
+print(f"{len(months)} months of covariances and betas in {time.time() - t0:.0f}s")
+named = [c for c in industries if c in C.TILT_INDUSTRIES + C.MANDATE_EXCLUSIONS]
+for label, B_show, w_show in [(f"at {months[-1]}", B_last, weights.loc[months[-1]].to_numpy()), ("averaged over the evaluation months", B_mean, weights.loc[months].mean().to_numpy())]:
+    print()
+    print(f"the betas {label} of the tilted and the excluded industries, and of the benchmark (weights times betas):")
+    show_b = B_show.loc[named].copy()
+    show_b.loc["benchmark"] = w_show @ B_show.to_numpy()
+    print(show_b.to_string(float_format=lambda x: f"{x:.2f}"))
+"""),
+    md("""
+## The paths, rebuilt with their weights
+
+The fourteen paths of notebook 12 under the mandate's C3 and under the tilt alone, rebuilt from the same modules on the same files, this time keeping every month's weights. The first check of expectation 1 is that their realised tracking errors are the ones notebook 12 recorded.
+"""),
+    code("""
+paths = {}
+t0 = time.time()
+for v in VARIANTS:
+    for cs, names in SETS.items():
+        t1 = time.time()
+        paths[(v, cs)] = E.run_path(months, Sigmas[v], weights, returns_m, names, tilt_mask,
+                                    mandate_mask if "exclusion" in names else None, robust=(v == C.ROBUST_VARIANT), keep_weights=True)
+        print(f"{LABEL[v]:>24}  {cs:<13} {time.time() - t1:5.0f}s")
+print(f"{len(paths)} paths in {time.time() - t0:.0f}s")
+print()
+repro = []
+for (v, cs), path in paths.items():
+    te = E.realised_tracking_error(path["active_return"])
+    ref = C.ATTRIBUTION_REFERENCE_TE[(LABEL[v], cs)]
+    repro.append({"variant": LABEL[v], "set": cs, "realised TE (bp)": 1e4 * te, "notebook 12 (bp)": 1e4 * ref, "difference (bp)": 1e4 * (te - ref)})
+repro = pd.DataFrame(repro).set_index(["variant", "set"])
+print(repro.to_string(float_format=lambda x: f"{x:.3f}"))
+ok_repro = int((repro["difference (bp)"].abs() <= 1e4 * C.ATTRIBUTION_REPRODUCTION_TOL).sum())
+print()
+print(f"expectation 1, the rebuilt paths: {len(paths)} paths with {set(len(p) for p in paths.values())} records each; realised tracking error within {1e4 * C.ATTRIBUTION_REPRODUCTION_TOL:.1f} bp of notebook 12's in {ok_repro} of {len(repro)}: {'holds' if ok_repro == len(repro) else 'FAILS'}")
+"""),
+    md("""
+## The attribution, path by path
+
+One row per path. Exposures are averages over the 566 months; contributions, residual and active return are in basis points a year with their standard errors; the factor share is the share of the active return's variance that the six contributions explain.
+"""),
+    code("""
+atts, rows = {}, []
+bench_w = weights.loc[months]
+for (v, cs), path in paths.items():
+    W = pd.DataFrame(np.vstack(path["weights"].to_list()), index=path.index, columns=weights.columns)
+    att = A.attribute(W, bench_w, betas, factors_m, path["active_return"])
+    atts[(v, cs)] = att
+    rows.append({"variant": LABEL[v], "set": cs, **A.summarise(att)})
+summary = pd.DataFrame(rows).set_index(["variant", "set"])
+largest_identity = summary["largest identity error"].max()
+print(f"expectation 1, the identity: contributions plus residual equal the active return within {largest_identity:.1e} in every month of every path (level {C.ATTRIBUTION_IDENTITY_MAX_ABS_ERROR:g}): {'holds' if largest_identity <= C.ATTRIBUTION_IDENTITY_MAX_ABS_ERROR else 'FAILS'}")
+print()
+exp_cols = [f"exposure {f}" for f in FACTORS]
+print("mean active exposures:")
+print(summary[exp_cols].rename(columns=lambda c: c.replace("exposure ", "")).to_string(float_format=lambda x: f"{x:+.3f}"))
+print()
+con_cols = [f"contribution {f} (per year)" for f in FACTORS] + ["factor total (per year)", "residual (per year)", "active return (per year)"]
+se_cols = [c.replace("(per year)", "(standard error)") for c in con_cols]
+shown = (1e4 * summary[con_cols]).rename(columns=lambda c: c.replace("contribution ", "").replace(" (per year)", ""))
+shown["factor share"] = summary["factor share"]
+print("contributions, residual and active return, basis points a year:")
+print(shown.to_string(float_format=lambda x: f"{x:+.1f}"))
+print()
+print("standard errors of the same, basis points a year:")
+print((1e4 * summary[se_cols]).rename(columns=lambda c: c.replace("contribution ", "").replace(" (standard error)", "")).to_string(float_format=lambda x: f"{x:.1f}"))
+"""),
+    md("""
+## Expectations 2 to 5
+"""),
+    code("""
+mandate = summary.xs("C3", level="set")
+tilt_only = summary.xs("C3 tilt only", level="set")
+
+# Expectation 2: the market exposure
+mkt = summary["exposure Mkt-RF"]
+e2 = int((mkt.abs() <= C.ATTRIBUTION_MARKET_EXPOSURE_MAX).sum())
+print(f"expectation 2: mean active exposure to Mkt-RF from {mkt.min():+.3f} to {mkt.max():+.3f}; within {C.ATTRIBUTION_MARKET_EXPOSURE_MAX} of zero in {e2} of {len(mkt)} paths: {'MET' if e2 == len(mkt) else 'NOT MET'}; "
+      f"under the mandate {mandate['exposure Mkt-RF'].min():+.3f} to {mandate['exposure Mkt-RF'].max():+.3f}, under the tilt alone {tilt_only['exposure Mkt-RF'].min():+.3f} to {tilt_only['exposure Mkt-RF'].max():+.3f}")
+
+# Expectation 3: the sign of the exposures across variants, under the mandate
+others = [f for f in FACTORS if f != "Mkt-RF"]
+signs = np.sign(mandate[[f"exposure {f}" for f in others]])
+agree = {f: bool((signs[f"exposure {f}"] == signs[f"exposure {f}"].iloc[0]).all()) for f in others}
+e3 = sum(agree.values())
+print(f"expectation 3: the sign of the mean active exposure under the mandate is the same for all {len(mandate)} variants in {e3} of {len(others)} factors (" + ", ".join(f"{f}: {'same' if a else 'differs'}" for f, a in agree.items()) + f"; level {C.ATTRIBUTION_SIGN_AGREEMENT_MIN}): {'MET' if e3 >= C.ATTRIBUTION_SIGN_AGREEMENT_MIN else 'NOT MET'}")
+print("mean active exposures under the mandate, averaged over the seven variants: " + ", ".join(f"{f} {mandate[f'exposure {f}'].mean():+.3f}" for f in FACTORS))
+# The arithmetic of the tilt: holding half of Coal, Oil and Utilities and giving the weight to industries with the benchmark's betas
+tilt_idx = [i for i, c in enumerate(industries) if c in C.TILT_INDUSTRIES]
+implied_tilt = []
+for month in months:
+    B, b = betas[month], weights.loc[month].to_numpy()
+    beta_bench = b @ B
+    implied_tilt.append(-sum((1 - C.TILT_MAX_SHARE_OF_BENCHMARK) * b[i] * (B[i] - beta_bench) for i in tilt_idx))
+implied_tilt = pd.DataFrame(implied_tilt, index=months, columns=FACTORS).mean()
+print("the arithmetic of the tilt: holding half of Coal, Oil and Utilities and giving the weight to industries with the benchmark's betas would move the exposures by "
+      + ", ".join(f"{f} {v:+.3f}" for f, v in implied_tilt.items()) + "; measured under the tilt alone, averaged over the seven variants: "
+      + ", ".join(f"{f} {tilt_only[f'exposure {f}'].mean():+.3f}" for f in FACTORS))
+
+# Expectation 4: the factor share
+share = summary["factor share"]
+e4 = int((share < C.ATTRIBUTION_FACTOR_SHARE_MAX).sum())
+print(f"expectation 4: factor share from {share.min():.2f} to {share.max():.2f}; below {C.ATTRIBUTION_FACTOR_SHARE_MAX} in {e4} of {len(share)} paths: {'MET' if e4 == len(share) else 'NOT MET'}")
+
+# Expectation 5: the mandate's cost against the tilt alone, through the factors and through the industries' own returns
+cost = pd.DataFrame({"active return": mandate["active return (per year)"] - tilt_only["active return (per year)"],
+                     "factor total": mandate["factor total (per year)"] - tilt_only["factor total (per year)"],
+                     "residual": mandate["residual (per year)"] - tilt_only["residual (per year)"]})
+for f in FACTORS:
+    cost[f] = mandate[f"contribution {f} (per year)"] - tilt_only[f"contribution {f} (per year)"]
+cost["factor part of the cost"] = cost["factor total"] / cost["active return"]
+print()
+print("the mandate's C3 minus the tilt alone, basis points a year (the cost of beta neutrality and the exclusions), and the share of it that comes through the factors:")
+show_cost = cost.copy()
+for c in show_cost.columns:
+    if c != "factor part of the cost":
+        show_cost[c] = 1e4 * show_cost[c]
+print(show_cost.to_string(float_format=lambda x: f"{x:+.2f}"))
+se_rows = []
+for v in VARIANTS:
+    a3, a0 = atts[(v, "C3")], atts[(v, "C3 tilt only")]
+    row = {"variant": LABEL[v]}
+    for col in ("active return", "factor total", "residual"):
+        d = (a3[col] - a0[col]).to_numpy()
+        row[col] = 12 * d.std(ddof=1) / np.sqrt(len(d))
+    se_rows.append(row)
+cost_se = pd.DataFrame(se_rows).set_index("variant")
+print()
+print("standard errors of the cost and of its two parts (the difference of the two paths on the same months), basis points a year:")
+print((1e4 * cost_se).to_string(float_format=lambda x: f"{x:.2f}"))
+
+# The arithmetic of the inputs for the exclusions' factor part: excluding Smoke and Guns and giving their weight to industries with the
+# benchmark's betas moves each exposure by minus their weight times the distance of their beta from the benchmark's; times the factor's
+# mean return, that is a contribution a year. Averaged over the months, beside what the paths measured.
+excl_idx = [i for i, c in enumerate(industries) if c in C.MANDATE_EXCLUSIONS]
+implied = []
+for month in months:
+    B, b = betas[month], weights.loc[month].to_numpy()
+    beta_bench = b @ B
+    implied.append(-sum(b[i] * (B[i] - beta_bench) for i in excl_idx))
+implied = pd.DataFrame(implied, index=months, columns=FACTORS)
+excl_weight = weights.loc[months].iloc[:, excl_idx].sum(axis=1)
+arith = pd.DataFrame({"implied exposure change": implied.mean(),
+                      "factor mean return (per year)": 12 * factors_m.mean(),
+                      "implied contribution (bp a year)": 1e4 * 12 * implied.mean() * factors_m.mean(),
+                      "measured exposure change (mean of the seven variants)": pd.Series((mandate[exp_cols] - tilt_only[exp_cols]).mean().to_numpy(), index=FACTORS),
+                      "measured contribution change (bp a year, mean of the seven)": 1e4 * cost[FACTORS].mean()})
+print()
+print(f"the arithmetic of the inputs: Smoke and Guns are {excl_weight.mean():.1%} of the benchmark on average over the evaluation months ({excl_weight.iloc[-1]:.1%} at {months[-1]}); "
+      f"excluding them and giving their weight to industries with the benchmark's betas moves each exposure by minus their weight times their beta's distance from the benchmark's:")
+print(arith.round(4).to_string())
+implied_ex_market = 12 * (implied.mean() * factors_m.mean()).drop("Mkt-RF").sum()
+measured_ex_market = cost["factor total"] - cost["Mkt-RF"]
+e5a = int(((cost["active return"] < 0) & (cost["factor part of the cost"] < C.ATTRIBUTION_FACTOR_PART_MAX)).sum())
+e5b = int(((measured_ex_market - implied_ex_market).abs() <= C.ATTRIBUTION_ARITHMETIC_TOL).sum())
+print(f"the exclusions' factor part without the market, which beta neutrality removes: implied by the arithmetic {1e4 * implied_ex_market:+.2f} bp a year; measured, across the seven variants, {1e4 * measured_ex_market.min():+.2f} to {1e4 * measured_ex_market.max():+.2f}")
+print()
+print(f"expectation 5a: the factor part of the mandate's cost is below {C.ATTRIBUTION_FACTOR_PART_MAX:.0%} in {e5a} of {len(cost)} variants ({cost['factor part of the cost'].min():.0%} to {cost['factor part of the cost'].max():.0%}): {'MET' if e5a == len(cost) else 'NOT MET'}")
+print(f"expectation 5b: the exclusions' factor part is within {1e4 * C.ATTRIBUTION_ARITHMETIC_TOL:.0f} bp a year of the arithmetic's {1e4 * implied_ex_market:+.2f} in {e5b} of {len(cost)} variants (largest distance {1e4 * (measured_ex_market - implied_ex_market).abs().max():.2f}): {'MET' if e5b == len(cost) else 'NOT MET'}")
+"""),
+    md("""
+## By decade: the sample covariance's mandate path
+
+Contributions, residual and active return per year for each decade of the evaluation months, for the sample covariance on daily data under the mandate; the standard error of a mean over about 120 months is about 2.2 times the one over 566.
+"""),
+    code("""
+first_label, last_label = f"{months[0]} to 1989-12", f"2020-01 to {months[-1]}"
+decade = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in months], index=months)
+att_sample = atts[(("sample", "daily_3y"), "C3")]
+dec = A.by_period(att_sample, decade)
+print("sample covariance on daily data, mandate's C3, basis points a year by decade:")
+print((1e4 * dec).rename(columns=lambda c: c.replace("contribution ", "")).to_string(float_format=lambda x: f"{x:+.1f}"))
+print()
+exp_dec = att_sample[[f"exposure {f}" for f in FACTORS]].groupby(decade.loc[att_sample.index]).mean()
+print("mean active exposures by decade, same path:")
+print(exp_dec.rename(columns=lambda c: c.replace("exposure ", "")).to_string(float_format=lambda x: f"{x:+.3f}"))
+"""),
+    md("""
+## Save
+
+The attribution summary, the by-decade table, the cost decomposition and the monthly attribution of the sample covariance's mandate path are written to `outputs/`, with the vintage in the file name, as a record; beside them the industries' betas to the six factors, averaged over the evaluation months and at the last month, the benchmark weights, and the six factors' mean returns and volatilities per year over the evaluation months, so that the inputs of the arithmetic can be reused (the companion page in `companion/` is built from them).
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+summary.to_csv(f"{C.OUTPUT_DIR}/attribution_summary_{vintage}.csv", float_format="%.8f")
+dec.to_csv(f"{C.OUTPUT_DIR}/attribution_by_decade_{vintage}.csv", float_format="%.8f")
+cost.join(cost_se.add_suffix(" (standard error)")).to_csv(f"{C.OUTPUT_DIR}/attribution_mandate_cost_{vintage}.csv", float_format="%.8f")
+att_sample.to_csv(f"{C.OUTPUT_DIR}/attribution_monthly_sample_C3_{vintage}.csv", float_format="%.10f")
+B_mean.to_csv(f"{C.OUTPUT_DIR}/attribution_betas_mean_{vintage}.csv", float_format="%.6f")
+B_last.to_csv(f"{C.OUTPUT_DIR}/attribution_betas_{months[-1]}_{vintage}.csv", float_format="%.6f")
+pd.DataFrame({"mean weight": weights.loc[months].mean().to_numpy(), f"weight {months[-1]}": weights.loc[months[-1]].to_numpy()}, index=industries).to_csv(f"{C.OUTPUT_DIR}/attribution_benchmark_weights_{vintage}.csv", float_format="%.6f")
+pd.DataFrame({"mean return per year": 12 * factors_m.mean(), "volatility per year": factors_m.std() * np.sqrt(12), "months": len(factors_m)}).rename_axis("factor").to_csv(f"{C.OUTPUT_DIR}/factor_means_{months[0]}_to_{months[-1]}_{vintage}.csv", float_format="%.6f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("attribution", "factor_means"))))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 566 months, the six factors complete; 14 paths with 566 records each, realised tracking errors within 0.001 basis point of notebook 12's in 14 of 14; contributions plus residual equal the active return within 2e-18 in every month | holds |
+| 2. Mean active exposure to the market within 0.05 of zero, every path | -0.005 to +0.001 | MET |
+| 3. The sign of the mean exposure is the same across the seven variants for at least four of the five other factors | 5 of 5: size positive, value, profitability, investment and momentum negative | MET |
+| 4. The factors explain less than half of the active variance, every path | factor share 0.14 to 0.28 | MET |
+| 5. The mandate's cost against the tilt alone comes mostly through the industries' own returns: (a) the factor part below half, every variant; (b) the exclusions' factor part within 2 basis points of the arithmetic of the inputs, every variant | 8.0 to 10.4 basis points a year (standard errors 3.4 to 4.9): through the factors 1.6 to 3.7 (20% to 40%), of which the market 0.3 to 1.5 and the other five factors 1.3 to 2.9 against 2.9 from the arithmetic (largest distance 1.7); through the industries' own returns 4.8 to 7.4 (60% to 80%) | MET, 7 of 7 and 7 of 7 |
+| 6. Contributions, residual, exposures, by decade | the tilt alone: factor total -9 to -13 basis points a year, residual +12 to +20, the two within one to two standard errors of zero and offsetting; the mandate: -11 to -17 and +7 to +14 | reported |
+
+Expectation 1 holds. The six factors have a return in every one of the 566 months; the fourteen paths rebuilt from the modules give the realised tracking errors notebook 12 recorded to within 0.001 basis point (the one difference of 0.001 is the rounding of the recorded number), so the weights attributed here are the portfolios notebook 12 judged; and in every month of every path the six contributions plus the residual equal the active return to 2e-18, which is floating-point arithmetic and says the bookkeeping is right.
+
+Expectation 2 holds. The mean active exposure to the market factor is between -0.005 and +0.001 for all fourteen paths. Under the mandate it is a constraint; under the tilt alone it is the optimiser's own work, as notebook 11 found at three months (betas restored to 1.004 with daily data and 1.010 with the monthly covariance), and over 566 months the two sets are indistinguishable on this count. A market exposure is the most expensive position a tracking-error mandate can hold: an exposure of 0.05 times the market's volatility of 15.6% a year is 78 basis points of tracking error, most of the 100 the mandate allows, and this portfolio makes no forecast of the market's direction that would justify spending them. It makes none by design: the extension uses no expected returns anywhere, because the replication (notebooks 02 to 04) showed that estimated means are where estimation error does its damage, so the optimiser's only input is a covariance matrix, and the fund's promise to its client is to track the index within the tracking-error limit while obeying the mandate; a view on the market's direction would be a different product. So the optimiser, which minimises tracking error, removes the exposure first: the weight it takes from Oil and Utilities, whose betas to the index are 0.4 and 0.3, goes to other industries with betas below one, so that the weighted average returns to one. The 0.005 that remains is worth 0.005 times 8.9% a year, the market's mean excess return over the evaluation months, 4 basis points a year of return, and 0.005 times 15.6%, 8 basis points of tracking error.
+
+Expectation 3 holds in all five factors. Under the mandate every variant holds slightly more of the size factor than the benchmark (+0.013 on average) and slightly less of value (-0.014), profitability (-0.010), investment (-0.005) and momentum (-0.004). The signs come from what the tilt removes, and the cell's arithmetic shows it. Averaged over the evaluation months, Oil's betas are -0.16 to size, +0.27 to value, +0.12 to profitability and +0.45 to investment, and Utilities' -0.10, +0.35, +0.02 and +0.17, against the benchmark's +0.05, 0.00, -0.01 and +0.01 (at 2026-08 Oil's value beta is 0.71, Coal's 0.50 and Utilities' 0.37). Oil and Utilities behave like large firms, so holding half of them leaves the portfolio with more of the size factor than the index; they behave like value, profitable and low-investment firms, so it leaves the portfolio with less of those three. Holding half of the three industries and giving the weight to industries with the benchmark's betas would move the exposures by +0.010 size, -0.020 value, -0.010 profitability, -0.012 investment and -0.003 momentum; the paths under the tilt alone show +0.012, -0.014, -0.007, -0.004 and -0.004, and the difference is the substitutes' own betas (Food, Soda and Telcm have investment betas of 0.2 to 0.4, which brings investment back towards zero). The exclusions push the same way: tobacco's betas are -0.17 to size and +0.38 and +0.56 to profitability and investment. The estimator changes the size of each exposure by 0.001 to 0.005 and the sign of none. The exposures are small because the active weight bound is: 2 percentage points per industry times betas that differ by about 0.5 across industries gives exposures of about 0.01, and they were largest in the first decade (value -0.050, profitability -0.047 for the sample covariance's path), when Oil was 15% of the benchmark and the tilt removed 7.6 points of it.
+
+Expectation 4 holds. The six contributions explain between 14% and 28% of the variance of the active return; 72% to 86% is the industries' own returns. A tilt on three industries is an industry bet first and a factor bet at the margin, which is what the small exposures of expectation 3 and notebook 11's finding that the market part of the forecast active variance was below 5% had said in advance. The residual does not average away because the bet is concentrated: diversification works by holding many small unrelated positions whose own returns cancel, and the side the tilt sells is three industries, 7.6 percentage points of Oil alone in 1980, while the side it buys is spread over 41 to 45 industries within 2 points each. The buying side diversifies; the selling side cannot, and the residual risk is the selling side's. For a mandate whose purpose is the industry tilt, that split is the intended one: the industries' own returns are the bet the client asked for, and the factor exposures are the by-product nobody chose. A manager who wanted a different split has four routes, none of which this study runs. First, factor-neutral constraints in the optimiser, the same rule that beta neutrality applies to the market applied to the other five factors, which sets the contributions to zero by construction and would have removed the 9 to 13 basis points a year of factor exposures under the tilt alone, at the price of active-weight budget spent on the hedging industries and of the turnover needed to keep the exposures at zero as the betas move. Second, stocks in place of industries: a tilt built inside each industry, keeping the industry's weight and replacing its highest-emitting firms with its lowest-emitting ones, removes the industry bet itself, and the residual becomes firm-specific and diversifiable across hundreds of names, where 49 industries allow an industry only to be cut as a whole. Third, a commodity factor beside the six, so that the oil-price part of the residual becomes a named exposure that can be measured and hedged. Fourth, a covariance estimator with factor structure inside the optimiser: the factor-model variant has the lowest factor share here (0.14) and the smallest market part of the mandate's cost (0.3 basis points), because its risk forecast already contains the six factors, so the portfolio it finds least risky is the one with the smallest factor exposures.
+
+Expectation 5 holds in both parts. Against the tilt alone the mandate cost 8.0 to 10.4 basis points a year (standard errors 3.4 to 4.9), of which 1.6 to 3.7 (20% to 40%; standard errors 1.0 to 1.9) came through the six factors and 4.8 to 7.4 (60% to 80%; standard errors 3.3 to 4.9) through the industries' own returns. Within the factor part the market carries 0.3 to 1.5, beta neutrality's share, and the other five factors 1.3 to 2.9, the exclusions' share, against the 2.9 the arithmetic of the inputs gave (every variant within 1.7 of it, inside the 2 allowed): profitability 1.1 to 1.9 and value 0.8 to 1.4 carry it, in the direction Blitz and Fabozzi (2017) found for sin stocks (the cell prints the implied exposure change beside the measured one, factor by factor; the implied change in the exposure to profitability is -0.004 and the measured -0.003). The larger part of the exclusions' cost is the industries' own returns, 5 to 7 basis points a year at one to two standard errors from zero: on 566 months of two industries, the premium Hong and Kacperczyk (2009) measured and no premium at all are both inside the uncertainty. What the result says for the mandate: the exclusions cost the fund mostly what tobacco and weapons earned on their own, which no hedge of factor exposures would have recovered, and the number reported to the client who asked for them is the cost of the mandate's two additions, 8 to 10 basis points a year with a standard error of 3 to 5, almost all of it the exclusions'.
+
+Expectation 6, the contributions, is the notebook's main result, and it reads notebook 12's zero in two parts. Under the tilt alone the six factor exposures together cost 9 to 13 basis points a year (standard errors 5 to 6, so about two standard errors from zero): value -4 to -5, profitability -4 to -6, momentum -4 to -7 and the market -1 to -5, against size +2 to +3 and investment +2 to +4. The industries' own returns paid 12 to 20 basis points a year (standard errors 10 to 12, about one standard error from zero): the removed half of Coal, Oil and Utilities earned less than the substitutes did beyond what their factor betas account for. The sum is the +2 to +7 of notebook 12. So the tilt's absence of opportunity cost is the net of two parts of opposite sign, the factor bets it created and the industry bets it was, and a manager who hedged the factor exposures (notebook 11's open point) would have kept the second part and removed the first. Those exposures are unintended, in that nobody chose them (the client asked for less Oil and said nothing about value), and uncompensated, in that at 0.01 of a factor their expected contribution is about 2 to 3 basis points a year in either direction while they add variance to the active return: risk without expected return. A manager who wanted none of it would choose, among the industries that replace Oil, those whose betas to value and profitability match Oil's as well as its market beta does, which is what the factor-neutral constraints of the first route under expectation 4 do. Under the mandate the factor total is -11 to -17 and the residual +7 to +14. By decade, for the sample covariance's mandate path, the first decade carries most of both parts: the factor exposures cost 61 basis points a year in 1979 to 1989 (value -28, profitability -30, momentum -15, offset by investment +15) and the industries' own returns paid 35, the decade in which the oil tilt was largest and the oil price doubled and then collapsed; in the 1990s the factor part earned 11 and the residual lost 8; in the 2010s the residual paid 17 and the factors were flat.
+
+**What this notebook does not settle.**
+
+- The betas come from three years of daily returns and are applied to monthly factor returns, as factor risk models do. A beta estimated on 120 monthly returns can differ in level, as notebook 10 found for variances, and would move part of a contribution into the residual or out of it; the study does not run that version, and the residual absorbs the difference, so the factor contributions here are a lower bound on what a longer-horizon beta would attribute to the factors.
+- Six factors, all of them returns of stock portfolios. Oil's and Coal's own returns move with the oil price, and a commodity factor would absorb part of their residual. Macro variables such as the oil price, inflation and interest rates are not returns of stock portfolios, so a model that uses them first builds, for each, a portfolio of stocks that tracks it and attributes to that portfolio, which adds an estimation step; French's library carries no such series, so the residual here includes the oil price's part, and the study leaves it there.
+- Every contribution is a mean over 566 months with a standard error of 1 to 6 basis points a year, and every residual one of 10 to 12; the factor totals are about two standard errors from zero, the residuals about one. The decomposition of the mandate's cost into 20% to 40% and 60% to 80% is measured to about 15 percentage points either way.
+- The attribution is gross of trading costs. Notebook 12 charged them at 50 and 100 basis points per unit of turnover; they would be a seventh line of 5 to 9 basis points a year against every path and belong to no factor.
+- Notebook 14 writes the extension up: the README, the note and the report.
 """),
 ]
 
 
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))

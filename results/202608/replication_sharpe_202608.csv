@@ -1,0 +1,41 @@
+rule,dataset,replicated,published,difference,verdict
+mv (in sample),Industry,0.203408,0.212400,-0.008992,report
+ew,Industry,0.135294,0.135300,-0.000006,pass
+mv,Industry,-0.049385,0.067900,-0.117285,report
+bs,Industry,-0.038280,0.071900,-0.110180,report
+min,Industry,0.153717,0.155400,-0.001683,pass
+vw,Industry,0.116332,0.113800,0.002532,pass
+mv-c,Industry,0.062664,0.067800,-0.005136,pass
+bs-c,Industry,0.083122,0.081900,0.001222,pass
+min-c,Industry,0.144516,0.142500,0.002016,pass
+g-min-c,Industry,0.145406,0.145100,0.000306,pass
+mv (in sample),MKT/SMB/HML,0.260768,0.285100,-0.024332,report
+ew,MKT/SMB/HML,0.234734,0.224000,0.010734,pass
+mv,MKT/SMB/HML,0.213476,0.218600,-0.005124,pass
+bs,MKT/SMB/HML,0.254115,0.253600,0.000515,pass
+min,MKT/SMB/HML,0.257415,0.249300,0.008115,pass
+vw,MKT/SMB/HML,0.116332,0.113800,0.002532,pass
+mv-c,MKT/SMB/HML,0.109259,0.108400,0.000859,pass
+bs-c,MKT/SMB/HML,0.148033,0.151400,-0.003367,pass
+min-c,MKT/SMB/HML,0.257415,0.249300,0.008115,pass
+g-min-c,MKT/SMB/HML,0.255228,0.246700,0.008528,pass
+mv (in sample),FF-1-factor,0.450925,0.509800,-0.058875,report
+ew,FF-1-factor,0.161304,0.162300,-0.000996,pass
+mv,FF-1-factor,0.051306,0.012800,0.038506,report
+bs,FF-1-factor,0.062022,0.013800,0.048222,report
+min,FF-1-factor,0.249648,0.277800,-0.028152,pass
+vw,FF-1-factor,0.116332,0.113800,0.002532,pass
+mv-c,FF-1-factor,0.196309,0.197700,-0.001391,pass
+bs-c,FF-1-factor,0.197386,0.195500,0.001886,pass
+min-c,FF-1-factor,0.155401,0.154600,0.000801,pass
+g-min-c,FF-1-factor,0.162459,0.161500,0.000959,pass
+mv (in sample),FF-4-factor,0.499929,0.536400,-0.036471,report
+ew,FF-4-factor,0.174467,0.175300,-0.000833,pass
+mv,FF-4-factor,0.164970,0.184100,-0.019130,report
+bs,FF-4-factor,0.167214,0.179100,-0.011886,report
+min,FF-4-factor,0.032608,-0.018300,0.050908,MISS
+vw,FF-4-factor,0.116332,0.113800,0.002532,pass
+mv-c,FF-4-factor,0.197790,0.202400,-0.004610,pass
+bs-c,FF-4-factor,0.206357,0.206200,0.000157,pass
+min-c,FF-4-factor,0.364851,0.358000,0.006851,pass
+g-min-c,FF-4-factor,0.308046,0.302800,0.005246,pass

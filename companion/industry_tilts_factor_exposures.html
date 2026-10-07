@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Industry tilts and factor exposures</title>
+<meta name="description" content="How a portfolio that holds less oil and utilities than its benchmark ends up with exposures to the six Fama-French and momentum factors, with the betas of the 49 French industries and an interactive calculator.">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e;
+  --grid: #e1e0d9; --line: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --accent: #2a78d6; --accent-ink: #1c5cab; --sel: #e6eefa;
+  --warn-bg: #fdf1dc; --warn-ink: #6b4100; --ok-ink: #006300;
+  --neg: #b3261e; --mid: #f0efec; --pos: #184f95;
+  --bar-neg: #e34948; --bar-pos: #2a78d6;
+  --tag-tilted: #eb6834; --tag-excluded: #4a3aa7; --tag-bought: #1baf7a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7;
+    --grid: #2c2c2a; --line: #383835; --border: rgba(255,255,255,0.10);
+    --accent: #3987e5; --accent-ink: #86b6ef; --sel: #1b2635;
+    --warn-bg: #3a2a08; --warn-ink: #fab219; --ok-ink: #0ca30c;
+    --neg: #e66767; --mid: #383835; --pos: #6da7ec;
+    --bar-neg: #e66767; --bar-pos: #3987e5;
+    --tag-tilted: #d95926; --tag-excluded: #9085e9; --tag-bought: #199e70;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7;
+  --grid: #2c2c2a; --line: #383835; --border: rgba(255,255,255,0.10);
+  --accent: #3987e5; --accent-ink: #86b6ef; --sel: #1b2635;
+  --warn-bg: #3a2a08; --warn-ink: #fab219; --ok-ink: #0ca30c;
+  --neg: #e66767; --mid: #383835; --pos: #6da7ec;
+  --bar-neg: #e66767; --bar-pos: #3987e5;
+  --tag-tilted: #d95926; --tag-excluded: #9085e9; --tag-bought: #199e70;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 15.5px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.page { max-width: 1040px; margin: 0 auto; padding: 32px 16px 72px; }
+h1 { font-size: 2.05rem; line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.015em; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 0 0 6px; }
+h3 { font-size: 1.05rem; margin: 0 0 6px; }
+p, li { max-width: 74ch; }
+a { color: var(--accent-ink); }
+#data a { overflow-wrap: anywhere; }
+section { margin-top: 48px; }
+.eyebrow { color: var(--ink2); font-size: 0.85rem; margin: 0; letter-spacing: 0.02em; }
+.dek { font-size: 1.1rem; margin: 0 0 18px; }
+.sub { color: var(--ink2); margin: 0 0 14px; }
+.small { color: var(--ink2); font-size: 0.86rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.term { border-bottom: 1px dotted var(--ink2); cursor: help; }
+
+/* key numbers */
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 6px 0 6px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.tile .k { font-size: 0.8rem; color: var(--ink2); }
+.tile .v { font-size: 1.55rem; font-weight: 650; line-height: 1.2; }
+@media (max-width: 700px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* tables */
+table.tbl { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+table.tbl th, table.tbl td { padding: 5px 8px; border-bottom: 1px solid var(--grid); vertical-align: middle; text-align: left; }
+table.tbl thead th { color: var(--ink2); font-weight: 600; border-bottom: 1px solid var(--line); font-size: 0.82rem; vertical-align: bottom; }
+table.tbl thead th.num { text-align: right; white-space: normal; }
+table.tbl td.num { text-align: right; }
+table.tbl tfoot td { border-top: 1px solid var(--line); border-bottom: 0; font-weight: 650; }
+.tblwrap { overflow-x: auto; }
+caption { text-align: left; color: var(--ink2); font-size: 0.82rem; padding: 0 0 6px; }
+
+/* formula cards */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+.step .n { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: var(--sel); color: var(--accent-ink); font-weight: 700; font-size: 0.8rem; text-align: center; line-height: 22px; margin-right: 6px; }
+.eq { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.9rem; margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--accent); background: var(--page); border-radius: 0 6px 6px 0; }
+.step p { margin: 6px 0 0; font-size: 0.9rem; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 14px 0 8px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: inherit; font-size: 0.85rem; border: 0; background: transparent; color: var(--ink); padding: 5px 10px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--sel); color: var(--accent-ink); font-weight: 600; }
+select, input[type="number"] { font: inherit; font-size: 0.88rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; }
+button.act { font: inherit; font-size: 0.85rem; color: var(--accent-ink); background: transparent; border: 1px solid var(--accent); border-radius: 8px; padding: 5px 11px; cursor: pointer; }
+button.act:hover, .seg button:hover { background: var(--sel); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+/* map */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 0.78rem; color: var(--ink2); margin: 4px 0 8px; align-items: flex-end; }
+.legend .bar { width: 150px; height: 9px; border-radius: 3px; margin: 3px 0; }
+.legend .ticks { display: flex; justify-content: space-between; width: 150px; font-variant-numeric: tabular-nums; }
+.mapwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+table.map { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 0.78rem; }
+table.map th, table.map td { padding: 2px 5px; }
+table.map thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); font-weight: 600; color: var(--ink2); text-align: center; border-bottom: 1px solid var(--line); padding: 6px 4px; }
+table.map thead th .code { display: block; font-weight: 400; font-size: 0.7rem; }
+table.map th.ind { text-align: left; font-weight: 400; white-space: nowrap; }
+table.map th.ind .code { font-weight: 700; color: var(--ink); display: inline-block; min-width: 50px; margin-right: 4px; }
+table.map th.ind .full { color: var(--ink2); }
+table.map td.cell { text-align: center; font-variant-numeric: tabular-nums; border: 2px solid var(--surface); border-radius: 4px; min-width: 52px; }
+table.map td.wt { color: var(--ink2); text-align: right; }
+table.map tbody tr:hover th.ind { background: var(--sel); }
+table.map tfoot th, table.map tfoot td { border-top: 1px solid var(--line); font-weight: 650; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; color: var(--ink2); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px; margin-left: 6px; vertical-align: 1px; }
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.chip.tilted { --c: var(--tag-tilted); }
+.chip.excluded { --c: var(--tag-excluded); }
+.chip.bought { --c: var(--tag-bought); }
+@media (max-width: 640px) { table.map th.ind .full { display: none; } }
+.tip { position: fixed; z-index: 20; pointer-events: none; display: none; max-width: 280px; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.14); padding: 8px 10px; font-size: 0.8rem; line-height: 1.45; }
+.tip b { display: block; }
+ul.tight { margin: 8px 0 0; padding-left: 20px; }
+ul.tight li { margin: 3px 0; }
+
+/* data bars */
+.db { position: relative; height: 10px; width: 100px; min-width: 100px; background: linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat; }
+.db span { position: absolute; top: 0; height: 100%; border-radius: 2px; }
+.db .p { left: 50%; background: var(--bar-pos); }
+.db .m { right: 50%; background: var(--bar-neg); }
+td.dbc { width: 112px; }
+
+/* calculator */
+.tool { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+@media (max-width: 780px) { .tool { grid-template-columns: minmax(0, 1fr); } }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.tool h3 { font-size: 0.95rem; }
+.wrow { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.1fr) 70px; gap: 8px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--grid); }
+.wrow select { width: 100%; }
+.wrow input[type="number"] { width: 70px; text-align: right; }
+.wrow .bw { grid-column: 1 / -1; font-size: 0.74rem; color: var(--ink2); margin-top: -4px; }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 0.86rem; margin: 10px 0 8px; }
+.chk input { margin-top: 4px; }
+.sumline { font-size: 0.86rem; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border); }
+.sumline.ok { color: var(--ok-ink); }
+.sumline.warn { background: var(--warn-bg); color: var(--warn-ink); border-color: transparent; }
+.tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.tabs button { font: inherit; font-size: 0.8rem; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 2px 9px; cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--sel); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+table.wo { border-collapse: collapse; width: 100%; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.78rem; }
+table.wo td { padding: 3px 4px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+table.wo td.lab { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; white-space: normal; width: 40%; }
+table.wo tr.total td { border-top: 1px solid var(--line); border-bottom: 0; font-weight: 700; }
+.contrib { margin-top: 18px; }
+.contrib input[type="number"] { width: 76px; text-align: right; }
+.contrib input[readonly] { color: var(--ink2); background: transparent; border-color: var(--grid); }
+.contrib tr.sel td { background: var(--sel); }
+.reading-line { margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--page); }
+
+/* cases */
+.cases { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.case .setup { font-size: 0.88rem; color: var(--ink2); margin: 0 0 8px; }
+.case .take { margin: 10px 0 8px; }
+.case .take b { font-weight: 650; }
+
+details.terms { margin-top: 10px; }
+details.terms summary { cursor: pointer; color: var(--accent-ink); font-weight: 600; }
+dl.terms { display: grid; grid-template-columns: minmax(120px, 200px) minmax(0, 1fr); gap: 4px 16px; font-size: 0.9rem; margin: 10px 0 0; }
+dl.terms dt { font-weight: 600; }
+dl.terms dd { margin: 0; }
+@media (max-width: 600px) { dl.terms { grid-template-columns: minmax(0, 1fr); } dl.terms dd { margin-bottom: 6px; } h1 { font-size: 1.65rem; } }
+@media print {
+  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+    color-scheme: light;
+    --page: #ffffff; --surface: #ffffff; --ink: #0b0b0b; --ink2: #52514e;
+    --grid: #e1e0d9; --line: #c3c2b7; --border: rgba(11,11,11,0.14);
+    --accent: #2a78d6; --accent-ink: #1c5cab; --sel: #e6eefa;
+    --warn-bg: #fdf1dc; --warn-ink: #6b4100; --ok-ink: #006300;
+    --neg: #b3261e; --mid: #f0efec; --pos: #184f95;
+    --bar-neg: #e34948; --bar-pos: #2a78d6;
+    --tag-tilted: #eb6834; --tag-excluded: #4a3aa7; --tag-bought: #1baf7a;
+  }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { background: #fff; font-size: 10.5pt; }
+  .page { max-width: none; padding: 0; }
+  section { margin-top: 22px; }
+  .no-print, .tip { display: none !important; }
+  .mapwrap, .tblwrap { overflow: visible; border: 0; }
+  table.map { font-size: 7.5pt; }
+  table.map thead th { position: static; }
+  tr, .tile, .step, table.tbl { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .tool { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  a { color: inherit; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header>
+<p class="eyebrow">Factor attribution, worked through</p>
+<h1>From industry tilts to factor exposures</h1>
+<p class="dek">A portfolio that holds less oil and utilities than its <span class="term">benchmark</span> ends up long size and short value and investment. This page shows why, industry by industry, with the betas of Kenneth French's 49 industries to the five Fama-French factors and momentum.</p>
+<div class="tiles" aria-label="Case (a), the tilt in the first month of the study, at average betas">
+<div class="tile"><div class="k">Size exposure</div><div class="v">+0.018</div></div>
+<div class="tile"><div class="k">Value exposure</div><div class="v">−0.035</div></div>
+<div class="tile"><div class="k">Investment exposure</div><div class="v">−0.034</div></div>
+<div class="tile"><div class="k">Cost at average factor returns</div><div class="v">−18.7 bp a year</div></div>
+</div>
+<p class="small">The oil and utilities tilt as it stood in July 1979, the first month of the study (case (a) below), at the betas averaged over July 1979 to August 2026.</p>
+</header>
+
+<section id="portfolio">
+<h2>The portfolio</h2>
+<p class="sub">The benchmark is the cap-weighted combination of the 49 industries. The portfolio tracks it under three rules; the <span class="term">optimiser</span> gives the freed weight to the industries whose returns move closest to the ones removed.</p>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>Rule</th><th>Industries</th><th>Constraint</th></tr></thead>
+<tbody>
+<tr><td><span class="term">Tilt</span></td><td>Coal, Oil, Util</td><td>At most half the benchmark weight. In July 1979 this removed 7.6 points (pts) of Oil, 4.0 pts of Util and 0.1 pts of Coal.</td></tr>
+<tr><td>Exclusions</td><td>Smoke, Guns</td><td>Zero weight. On average they are 1.0% and 0.3% of the benchmark.</td></tr>
+<tr><td>Weight bound</td><td>All others</td><td>Within 2 pts of the benchmark weight. Food, Telcm, Other, Soda and Agric are among the industries the optimiser bought at August 2026.</td></tr>
+</tbody></table></div>
+</section>
+
+<section id="arithmetic">
+<h2>The arithmetic in three lines</h2>
+<div class="steps">
+<div class="card step"><h3><span class="n">1</span><span class="term">Active weight</span></h3>
+<div class="eq">a<sub>i</sub> = w<sub>i</sub><sup>P</sup> &minus; w<sub>i</sub><sup>B</sup></div>
+<p>P is the portfolio, B the benchmark; the 49 values sum to zero. In July 1979 Oil at 7.6% against a benchmark weight of 15.1% has a<sub>Oil</sub> = &minus;7.6 pts.</p></div>
+<div class="card step"><h3><span class="n">2</span><span class="term">Active exposure</span></h3>
+<div class="eq">x<sub>f</sub> = &Sigma;<sub>i</sub> a<sub>i</sub> &times; &beta;<sub>i,f</sub></div>
+<p>Round numbers for the arithmetic: 3 pts less of an industry with value <span class="term">beta</span> 0.7 and 3 pts more of one with 0.1: &minus;0.03 &times; 0.7 + 0.03 &times; 0.1 = &minus;0.018, short value.</p></div>
+<div class="card step"><h3><span class="n">3</span><span class="term">Contribution</span></h3>
+<div class="eq">c<sub>f</sub> = x<sub>f</sub> &times; r<sub>f</sub></div>
+<p>The same round numbers, with value at +3% in a month: &minus;0.018 &times; 3% = &minus;0.054%, or &minus;5.4 <span class="term">basis points</span> (bp).</p></div>
+</div>
+<p class="small">Because the active weights sum to zero, x<sub>f</sub> = &Sigma;<sub>i</sub> a<sub>i</sub> &times; (&beta;<sub>i,f</sub> &minus; &beta;<sub>B,f</sub>): an industry moves the exposure only through its beta gap to the benchmark.</p>
+</section>
+
+<section id="map">
+<h2>The map: 49 industries by six factors</h2>
+<div class="tblwrap"><table class="tbl">
+<thead><tr><th>Factor</th><th>Code</th><th>Long leg</th><th>Short leg</th><th>A positive beta moves like</th></tr></thead>
+<tbody>
+<tr><td>Market</td><td>Mkt-RF</td><td>All US stocks</td><td>One-month T-bill</td><td>Above 1: more than the market</td></tr>
+<tr><td>Size</td><td>SMB</td><td>Small firms</td><td>Large firms</td><td>Small firms</td></tr>
+<tr><td>Value</td><td>HML</td><td>High book-to-market</td><td>Low book-to-market</td><td>Cheap firms</td></tr>
+<tr><td>Profitability</td><td>RMW</td><td>High operating profitability</td><td>Low operating profitability</td><td>Profitable firms</td></tr>
+<tr><td>Investment</td><td>CMA</td><td>Low asset growth</td><td>High asset growth</td><td>Firms that invest little</td></tr>
+<tr><td>Momentum</td><td>Mom</td><td>Past-year winners, skipping the last month</td><td>Past-year losers</td><td>Recent winners</td></tr>
+</tbody></table></div>
+<p class="small">A negative beta moves like the short leg (below 1 for the market). Betas come from a six-factor least-squares regression of each industry's daily <span class="term">excess returns</span> over the three years before each month. The map shows the average of the 566 monthly estimates from July 1979 to August 2026, or the August 2026 estimate; benchmark weights follow the same choice.</p>
+
+<div class="controls">
+<div class="seg setseg" role="group" aria-label="Betas and benchmark weights"><button type="button" data-set="m" aria-pressed="true">Average, Jul 1979 to Aug 2026</button><button type="button" data-set="a" aria-pressed="false">August 2026</button></div>
+<label class="small no-print" for="order">Rows</label>
+<select id="order" class="no-print">
+<option value="french">French's order</option>
+<option value="w">Benchmark weight</option>
+<option value="0">Market beta</option>
+<option value="1">Size beta</option>
+<option value="2">Value beta</option>
+<option value="3">Profitability beta</option>
+<option value="4">Investment beta</option>
+<option value="5">Momentum beta</option>
+</select>
+</div>
+<div class="legend" id="legend" aria-hidden="true"></div>
+<div class="mapwrap"><table class="map" id="maptable"></table></div>
+<ul class="tight">
+<li>Oil and Util behave like large, cheap firms: size betas −0.16 and −0.10, value betas +0.27 and +0.35. Oil's investment beta, +0.45, is the fourth highest of the 49.</li>
+<li>Smoke has the highest profitability beta (+0.38) and the second highest investment beta (+0.56).</li>
+<li>Betas drift: Oil's value beta is 0.71 in August 2026, against 0.27 on average.</li>
+</ul>
+</section>
+
+<section id="calculator">
+<h2>Calculator</h2>
+<p class="sub">Choose up to six industries and set their active weights. Tick the box to fund the remainder pro rata from all other industries.</p>
+<div class="card" id="tool">
+<div class="toolbar">
+<div class="seg setseg" role="group" aria-label="Betas and benchmark weights"><button type="button" data-set="m" aria-pressed="true">Average betas</button><button type="button" data-set="a" aria-pressed="false">August 2026 betas</button></div>
+<button type="button" class="act no-print" id="reset">Reset to Oil &minus;3, Food +3</button>
+</div>
+<div class="tool">
+<div>
+<h3>Active weights, pts</h3>
+<div id="rows"></div>
+<label class="chk"><input type="checkbox" id="spread"> <span>Spread the rest pro rata over the industries not chosen</span></label>
+<div id="sumline" class="sumline" aria-live="polite"></div>
+</div>
+<div>
+<h3>Exposure, written out</h3>
+<div class="tabs" id="ftabs" role="group" aria-label="Factor written out"></div>
+<div id="written"></div>
+</div>
+</div>
+<div class="contrib">
+<div class="toolbar">
+<h3 style="margin:0">Exposures and contributions</h3>
+<div class="seg" id="rmode" role="group" aria-label="Factor returns"><button type="button" data-r="avg" aria-pressed="true">Average return a year</button><button type="button" data-r="month" aria-pressed="false">One month, typed in</button></div>
+</div>
+<div class="tblwrap"><table class="tbl" id="ctable"></table></div>
+<p class="reading-line" id="reading" aria-live="polite"></p>
+</div>
+</div>
+</section>
+
+<section id="cases">
+<h2>Three cases</h2>
+<p class="sub">Average betas and benchmark weights; factor returns at their July 1979 to August 2026 averages: market 8.90%, size 0.80%, value 2.58%, profitability 4.03%, investment 2.66%, momentum 6.46% a year.</p>
+<div class="cases">
+
+<article class="card case">
+<h3>(a) The tilt in July 1979</h3>
+<p class="setup">The study's sales in its first month, Oil &minus;7.6 pts, Util &minus;4.0 pts and Coal &minus;0.1 pts; the purchases are a stylised choice, 2 pts (the bound) to each of Food, Telcm and Other, three of the industries the optimiser bought; the remaining 5.7 pts spread pro rata over the other 43 industries.</p>
+<div class="tblwrap"><table class="tbl" id="tbl-a"></table></div>
+<p class="take">Oil and Util behave like large, cheap, low-investment firms, so selling them makes the portfolio long size and short value and investment. Oil alone accounts for −0.076 × (0.274 − 0.005) = −0.0205 of the value exposure.</p>
+<p class="small">Last column: the study's portfolio under the tilt alone, averaged over 566 months. Same signs on size, value, profitability and investment, smaller on size, value and investment: Oil fell to 3.0% of the benchmark by 2026, and the substitutes the optimiser buys (Food, Soda, Telcm, investment betas 0.20 to 0.36) offset part of the investment exposure.</p>
+<button type="button" class="act no-print loadcase" data-case="a">Open in the calculator</button>
+</article>
+
+<article class="card case">
+<h3>(b) The exclusions</h3>
+<p class="setup">Smoke &minus;1.0 pts and Guns &minus;0.3 pts, their average weights; the 1.3 pts spread pro rata over the other 47 industries.</p>
+<div class="tblwrap"><table class="tbl" id="tbl-b"></table></div>
+<p class="take">Tobacco behaves like profitable firms that invest little, so excluding it leaves the portfolio short profitability (−0.0043) and investment (−0.0064), −1.7 bp a year each. The market part (+0.0022) is what the study's beta-neutrality rule removes. The five other factors sum to −3.0 bp a year; the study measured 1.3 to 2.9 bp of cost across its seven versions. Notebook 13 makes the same calculation month by month, with each month's weights and betas, and the note reports its result; this page uses the averages over the months, so its figure differs in the last digit.</p>
+<button type="button" class="act no-print loadcase" data-case="b">Open in the calculator</button>
+</article>
+
+<article class="card case">
+<h3>(c) A value hedge</h3>
+<p class="setup">The sales of case (a), with 2 pts (the bound) going to each of the three industries with the highest value betas: Banks (+0.86), Fin (+0.49) and Insur (+0.40); 5.7 pts spread pro rata.</p>
+<div class="tblwrap"><table class="tbl" id="tbl-c"></table></div>
+<p class="take">The value exposure falls by 70% (−0.0345 to −0.0104). Banks, trading firms and insurers behave like firms that invest much and earn little, so the investment short grows 1.7 times (−0.0337 to −0.0567), the profitability short 2.8 times (−0.0073 to −0.0202) and the market exposure turns positive (+0.0111). Each industry carries six betas: hedging one factor moves the other five, and holding all six near zero takes six exposure constraints in the optimiser, at the cost of part of the 2-pt allowance.</p>
+<button type="button" class="act no-print loadcase" data-case="c">Open in the calculator</button>
+</article>
+</div>
+</section>
+
+<section id="closing">
+<h2>Reading the attribution</h2>
+<ul class="tight">
+<li><b>Identity.</b> <span class="term">Active return</span> = the six contributions + the <span class="term">residual</span>, the industries' own returns beyond their betas. In the study's tilt-only portfolio: −10.46 + 12.21 = +1.75 bp a year.</li>
+<li><b>Factor share.</b> The six factors explain 14% to 28% of the variance of the monthly active return across the study's fourteen portfolios. A three-industry tilt is mostly an industry bet.</li>
+<li><b>Unintended.</b> The tilt asks for less Oil and says nothing about value. The short value position comes with Oil, because Oil behaves like cheap firms.</li>
+<li><b>Uncompensated.</b> The study's average value exposure, −0.014, has an expected contribution of −0.036% a year (3.6 bp of cost) against a yearly swing of 0.014 &times; 10.83% volatility = 15 bp: risk with an expected return close to zero.</li>
+</ul>
+</section>
+
+<section id="terms">
+<details class="terms" id="termsbox">
+<summary>Terms</summary>
+<dl class="terms" id="glossary">
+<dt>Active exposure</dt><dd>The portfolio's beta to a factor minus the benchmark's beta: the sum over industries of active weight times beta. Exposure for short.</dd>
+<dt>Active return</dt><dd>The portfolio's return minus the benchmark's return.</dd>
+<dt>Active weight</dt><dd>The portfolio's weight in an industry minus the benchmark's weight in it, in percentage points.</dd>
+<dt>Attribution</dt><dd>The split of the active return into factor contributions plus a residual.</dd>
+<dt>Basis point</dt><dd>One hundredth of a percentage point (bp): 10 bp is 0.1%.</dd>
+<dt>Benchmark</dt><dd>The index the portfolio is measured against; here the cap-weighted combination of the 49 industries.</dd>
+<dt>Beta</dt><dd>How much an industry's return moves with a factor's return, with the other five factors held fixed.</dd>
+<dt>Cap-weighted</dt><dd>Weighted by market capitalisation, the number of shares times their price.</dd>
+<dt>Contribution</dt><dd>The part of the active return one factor accounts for: active exposure times the factor's return.</dd>
+<dt>Excess return</dt><dd>A return minus the risk-free rate, the one-month US Treasury bill.</dd>
+<dt>Factor</dt><dd>A return series that moves many stocks at once; five of the six here are long-short portfolios.</dd>
+<dt>Long, short</dt><dd>A positive (long) or negative (short) active exposure to a factor.</dd>
+<dt>Optimiser</dt><dd>The routine that chooses the weights closest to the benchmark, in forecast tracking error, under the rules.</dd>
+<dt>Percentage point</dt><dd>The unit of a difference between two weights in per cent (pts).</dd>
+<dt>Residual</dt><dd>The active return minus the factor contributions: the industries' own returns.</dd>
+<dt>Tilt</dt><dd>Holding Coal, Oil, Util at no more than half their benchmark weight.</dd>
+<dt>Tracking error</dt><dd>The standard deviation of the active return, per year.</dd>
+<dt>Uncompensated</dt><dd>Said of an exposure that adds risk without an expected return that pays for it.</dd>
+<dt>Unintended</dt><dd>Said of an exposure that nobody chose and that arrives as a side effect of another rule.</dd>
+<dt>Vintage</dt><dd>The version of French's files on the download date, named by the CRSP cut French built them from.</dd>
+<dt>Variance</dt><dd>The average squared distance of a return from its mean; its square root is the standard deviation, and per year the volatility.</dd>
+</dl>
+</details>
+</section>
+
+<section id="data">
+<h2>Data</h2>
+<p class="small">Returns: Kenneth R. French Data Library, <a href="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html</a>, 49 industry portfolios, Fama-French five factors and momentum, daily and monthly, built from the CRSP files of August 2026 (the vintage, the version of French's files named by the CRSP cut they were built from: 202608). Betas, benchmark weights, factor returns and the study's results: notebook 13 of <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Factors: Fama and French (2015), Journal of Financial Economics 116(1), 1-22; Carhart (1997), Journal of Finance 52(1), 57-82. Industry names follow French's 49-industry definitions.</p>
+<p class="small">Built by <code>companion/build.py</code> from the output files of notebook 13 (betas, benchmark weights, factor returns, the attribution summary and the mandate's cost) and notebook 11 (the optimiser's report), vintage 202608, on 7 October 2026; the page is rebuilt whenever those notebooks are rerun.</p>
+</section>
+
+</main>
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+  var D = {"factors":[{"code":"Mkt-RF","name":"Market","low":"market"},{"code":"SMB","name":"Size","low":"size"},{"code":"HML","name":"Value","low":"value"},{"code":"RMW","name":"Profitability","low":"profitability"},{"code":"CMA","name":"Investment","low":"investment"},{"code":"Mom","name":"Momentum","low":"momentum"}],"ind":[{"c":"Agric","n":"Agriculture","t":"bought","bm":[0.849001,0.29281,-0.024977,-0.012898,-0.005967,-0.012282],"ba":[0.625462,0.394447,0.363333,0.021776,0.371543,-0.04043],"wm":0.001646,"wa":0.000827},{"c":"Food","n":"Food products","t":"bought","bm":[0.76596,-0.075208,-0.109808,0.246787,0.357782,-0.000997],"ba":[0.325663,0.024428,0.207588,0.189732,0.363784,-0.316906],"wm":0.021978,"wa":0.00443},{"c":"Soda","n":"Candy and soda","t":"bought","bm":[0.813998,-0.108717,-0.12946,0.229441,0.324351,0.018272],"ba":[0.287073,-0.111955,0.179302,0.230706,0.229036,-0.16905],"wm":0.005167,"wa":0.006952},{"c":"Beer","n":"Beer and liquor","t":"","bm":[0.778394,-0.191154,-0.18959,0.377935,0.335669,0.01923],"ba":[0.372645,-0.114898,0.220077,0.205405,0.375019,-0.366774],"wm":0.013667,"wa":0.0039},{"c":"Smoke","n":"Tobacco products","t":"excluded","bm":[0.834489,-0.168523,-0.170782,0.379842,0.564959,-0.018325],"ba":[0.25108,-0.125509,0.304946,0.290989,0.32063,-0.005371],"wm":0.010197,"wa":0.005788},{"c":"Toys","n":"Recreation","t":"","bm":[1.009417,0.350806,-0.264754,0.030875,0.077865,-0.100891],"ba":[1.050538,0.737958,-0.118573,0.232716,0.378131,-0.296605],"wm":0.002296,"wa":0.000543},{"c":"Fun","n":"Entertainment","t":"","bm":[1.06138,0.214597,-0.063183,-0.264626,-0.192838,-0.021191],"ba":[0.850453,-0.14128,-0.220897,-0.020715,0.06626,-0.142508],"wm":0.009138,"wa":0.007232},{"c":"Books","n":"Printing and publishing","t":"","bm":[0.931986,0.31984,0.06569,0.128518,0.153206,-0.063055],"ba":[0.751304,0.353595,0.054734,0.229794,0.040961,-0.248978],"wm":0.00804,"wa":0.000517},{"c":"Hshld","n":"Consumer goods","t":"","bm":[0.84398,-0.155914,-0.250966,0.322555,0.472131,-0.038197],"ba":[0.420115,0.023061,0.09031,0.297927,0.291657,-0.218636],"wm":0.02606,"wa":0.008851},{"c":"Clths","n":"Apparel","t":"","bm":[1.071726,0.460762,0.01862,0.311501,0.016819,-0.09499],"ba":[1.169703,0.570033,-0.219031,0.44138,0.400075,-0.356682],"wm":0.005975,"wa":0.002317},{"c":"Hlth","n":"Healthcare","t":"","bm":[0.990938,0.460417,-0.14605,-0.01732,0.060726,-0.006347],"ba":[0.570343,0.260144,0.1616,0.111259,0.091328,-0.122514],"wm":0.006623,"wa":0.006583},{"c":"MedEq","n":"Medical equipment","t":"","bm":[0.920732,0.11071,-0.388762,-0.113613,0.112908,0.020549],"ba":[0.730236,0.05522,-0.077253,0.077356,0.203215,-0.280208],"wm":0.014825,"wa":0.012343},{"c":"Drugs","n":"Pharmaceutical products","t":"","bm":[0.853432,-0.152467,-0.549495,-0.021648,0.30725,0.002043],"ba":[0.499059,0.113824,-0.072743,-0.13046,0.299271,-0.201741],"wm":0.070638,"wa":0.059033},{"c":"Chems","n":"Chemicals","t":"","bm":[1.101461,0.133911,0.022156,0.09059,0.261991,-0.11554],"ba":[0.969139,0.337379,0.303614,0.069632,0.327288,-0.187952],"wm":0.02357,"wa":0.005655},{"c":"Rubbr","n":"Rubber and plastic products","t":"","bm":[0.952021,0.481893,0.076452,0.145683,0.151692,-0.025903],"ba":[0.899878,0.396422,0.140536,0.128034,0.187239,-0.094543],"wm":0.002121,"wa":0.000721},{"c":"Txtls","n":"Textiles","t":"","bm":[1.057951,0.728729,0.229707,0.321625,0.148275,-0.146318],"ba":[1.256415,1.054832,0.415709,0.306685,0.262478,-0.106155],"wm":0.001524,"wa":0.000165},{"c":"BldMt","n":"Construction materials","t":"","bm":[1.094644,0.437768,0.072951,0.168038,0.196807,-0.056296],"ba":[1.192656,0.733963,0.324689,0.339323,0.296665,0.113605],"wm":0.010061,"wa":0.004326},{"c":"Cnstr","n":"Construction","t":"","bm":[1.249213,0.626771,0.14611,0.001139,-0.028875,-0.008033],"ba":[1.001659,0.972574,0.067929,0.101198,0.300146,0.511081],"wm":0.00434,"wa":0.006444},{"c":"Steel","n":"Steel works","t":"","bm":[1.289457,0.463459,0.252908,-0.19583,0.106437,-0.142842],"ba":[1.191005,0.574126,0.532467,-0.057457,0.077884,0.312143],"wm":0.00716,"wa":0.004238},{"c":"FabPr","n":"Fabricated products","t":"","bm":[1.074247,0.851842,0.183508,0.014298,-0.085745,-0.098292],"ba":[1.386829,0.92037,0.196441,0.18805,0.395784,0.153914],"wm":0.000597,"wa":0.000106},{"c":"Mach","n":"Machinery","t":"","bm":[1.138677,0.326544,-0.007791,-0.058362,0.013654,-0.0826],"ba":[1.233234,0.306965,0.309098,-0.222773,0.279296,0.463476],"wm":0.020075,"wa":0.028167},{"c":"ElcEq","n":"Electrical equipment","t":"","bm":[1.092282,0.173343,-0.116016,0.055868,0.064527,-0.02833],"ba":[1.243263,0.656108,0.28083,-0.618942,-0.02833,0.437716],"wm":0.01159,"wa":0.00346},{"c":"Autos","n":"Automobiles and trucks","t":"","bm":[1.225862,0.13273,0.280359,0.038761,-0.024094,-0.175485],"ba":[1.88673,0.009327,0.027788,-0.404278,-0.532625,-0.164201],"wm":0.019019,"wa":0.02198},{"c":"Aero","n":"Aircraft","t":"","bm":[1.080074,0.038475,0.055737,0.049922,0.152189,-0.021638],"ba":[0.799926,0.059716,0.175159,-0.011856,0.019128,0.071073],"wm":0.012117,"wa":0.017601},{"c":"Ships","n":"Shipbuilding and railroad equipment","t":"","bm":[0.990088,0.368407,0.074793,0.088311,0.266762,-0.017943],"ba":[1.01286,0.410064,0.360827,0.231157,0.264327,0.232237],"wm":0.00125,"wa":0.000947},{"c":"Guns","n":"Defense","t":"excluded","bm":[0.843161,-0.055134,0.009862,0.106047,0.27039,0.015053],"ba":[0.443537,0.088777,-0.044886,-0.365601,-0.282094,0.013256],"wm":0.003044,"wa":0.00314},{"c":"Gold","n":"Precious metals","t":"","bm":[0.430037,0.163856,-0.57104,-0.705535,0.62642,-0.09513],"ba":[0.657561,0.054918,0.247166,-0.993236,0.208355,0.140966],"wm":0.001997,"wa":0.001813},{"c":"Mines","n":"Non-metallic and industrial metal mining","t":"","bm":[1.147396,0.373879,0.11955,-0.168985,0.029405,-0.091384],"ba":[1.191566,0.358672,0.174518,-0.301564,0.18763,0.27589],"wm":0.003601,"wa":0.004658},{"c":"Coal","n":"Coal","t":"tilted","bm":[1.12699,0.504063,0.216604,-0.182276,-0.184527,-0.136467],"ba":[0.747055,0.681147,0.502217,0.159851,-0.06541,0.298148],"wm":0.000955,"wa":0.000188},{"c":"Oil","n":"Petroleum and natural gas","t":"tilted","bm":[1.06387,-0.156681,0.274076,0.119983,0.453182,-0.067188],"ba":[0.720827,-0.136319,0.708472,0.237415,0.156702,-0.201624],"wm":0.072951,"wa":0.029598},{"c":"Util","n":"Utilities","t":"tilted","bm":[0.734669,-0.096594,0.354593,0.021709,0.171695,0.022364],"ba":[0.461457,-0.016827,0.372045,-0.021667,0.322888,0.018681],"wm":0.048706,"wa":0.025486},{"c":"Telcm","n":"Communication","t":"bought","bm":[0.9206,-0.169607,0.21866,0.020593,0.195803,-0.077446],"ba":[0.59906,-0.080137,0.386354,0.074831,0.248931,-0.201593],"wm":0.056256,"wa":0.014384},{"c":"PerSv","n":"Personal services","t":"","bm":[1.020737,0.542846,0.025284,0.119361,0.005893,-0.02424],"ba":[0.834825,0.354081,0.10315,0.334128,0.240866,-0.16166],"wm":0.00348,"wa":0.002557},{"c":"BusSv","n":"Business services","t":"","bm":[1.005193,0.375208,-0.065059,-0.03345,0.006754,-0.006845],"ba":[0.918546,0.080503,0.141556,0.017542,-0.030606,-0.411852],"wm":0.020002,"wa":0.023339},{"c":"Hardw","n":"Computers","t":"","bm":[0.995105,-0.191813,-0.44292,-0.112849,-0.376774,-0.061165],"ba":[1.200179,-0.049757,-0.033789,-0.360082,0.222408,0.427578],"wm":0.03842,"wa":0.016903},{"c":"Softw","n":"Computer software","t":"","bm":[1.092135,0.184675,-0.560365,-0.233525,-0.583719,0.078773],"ba":[1.083048,-0.098566,-0.463919,0.041305,-0.607828,-0.213689],"wm":0.07173,"wa":0.17409},{"c":"Chips","n":"Electronic equipment","t":"","bm":[1.078416,0.042182,-0.460291,-0.265305,-0.305807,-0.022144],"ba":[1.508819,-0.200551,-0.472443,0.13374,0.486938,0.422469],"wm":0.055835,"wa":0.21544},{"c":"LabEq","n":"Measuring and control equipment","t":"","bm":[1.035432,0.172928,-0.334463,-0.22757,0.032696,-0.029689],"ba":[1.083422,0.151349,0.132889,-0.462376,0.304854,0.008156],"wm":0.011409,"wa":0.016959},{"c":"Paper","n":"Business supplies","t":"","bm":[0.996524,0.100881,0.041528,0.098887,0.360566,-0.122157],"ba":[0.643956,0.215264,0.238088,0.225944,0.491845,-0.234663],"wm":0.013397,"wa":0.001275},{"c":"Boxes","n":"Shipping containers","t":"","bm":[0.989683,0.178637,0.066656,0.170875,0.212724,-0.086874],"ba":[0.818032,0.381525,0.353233,0.292231,0.487263,-0.162657],"wm":0.003805,"wa":0.000993},{"c":"Trans","n":"Transportation","t":"","bm":[1.087073,0.288594,0.106528,0.033775,0.069961,-0.068852],"ba":[1.055793,0.241504,0.258771,0.076061,0.142685,-0.163246],"wm":0.018486,"wa":0.016739},{"c":"Whlsl","n":"Wholesale","t":"","bm":[0.962143,0.353605,-0.039764,0.019092,0.139399,-0.021104],"ba":[0.688303,0.346691,0.207252,0.358887,0.167421,0.042837],"wm":0.012359,"wa":0.010336},{"c":"Rtail","n":"Retail","t":"","bm":[1.033919,0.076095,-0.118217,0.146784,-0.025089,-0.043701],"ba":[0.982067,0.14441,-0.177876,0.343847,-0.31616,-0.117958],"wm":0.064931,"wa":0.08198},{"c":"Meals","n":"Restaurants, hotels and motels","t":"","bm":[0.953829,0.20146,-0.107433,0.177917,0.093913,0.003689],"ba":[0.806634,0.126969,0.031531,0.228719,0.264687,-0.171189],"wm":0.011952,"wa":0.011094},{"c":"Banks","n":"Banking","t":"","bm":[1.167163,0.071066,0.863865,0.000732,-0.359386,-0.08189],"ba":[1.11565,0.089215,0.889713,-0.055986,-0.073862,-0.056244],"wm":0.075655,"wa":0.058134},{"c":"Insur","n":"Insurance","t":"","bm":[0.964964,-0.008889,0.398379,-0.291421,-0.150238,-0.01154],"ba":[0.526768,-0.063614,0.404514,0.043871,0.065859,-0.202458],"wm":0.043123,"wa":0.025767},{"c":"RlEst","n":"Real estate","t":"","bm":[0.951752,0.669532,0.201108,0.001151,-0.040005,-0.06692],"ba":[1.089705,0.748718,0.137258,-0.014631,0.241139,-0.247084],"wm":0.001539,"wa":0.001261},{"c":"Fin","n":"Trading","t":"","bm":[1.150173,0.156269,0.494382,-0.22829,-0.331225,-0.027595],"ba":[1.168254,0.061137,0.496052,-0.236295,-0.054305,-0.034177],"wm":0.033343,"wa":0.030075},{"c":"Other","n":"Firms in no other industry","t":"bought","bm":[0.994004,0.132791,0.09101,-0.047684,-0.005842,-0.069442],"ba":[0.696855,-0.169923,0.467385,0.112203,0.084626,-0.138724],"wm":0.023352,"wa":0.020664}],"fmean":[0.088959,0.008023,0.025768,0.040261,0.026574,0.06459],"fvol":[0.155598,0.100586,0.108302,0.085454,0.072713,0.154271],"presets":{"a":{"Coal":-0.1,"Oil":-7.6,"Util":-4.0,"Food":2.0,"Telcm":2.0,"Other":2.0},"b":{"Smoke":-1.0,"Guns":-0.3},"c":{"Coal":-0.1,"Oil":-7.6,"Util":-4.0,"Banks":2.0,"Fin":2.0,"Insur":2.0}},"study":{"tilt":[-0.00045033,0.01149349,-0.01394023,-0.00800647,-0.00327003,-0.00316218],"all":[-0.00090893,0.01302629,-0.01396792,-0.01096228,-0.00472827,-0.00354249]}};
+  var F = D.factors;
+  var IND = D.ind;
+  var BY = {};
+  IND.forEach(function (x) { BY[x.c] = x; });
+  var NROWS = 6, EPS = 0.0005, SPAN = 0.6;
+  var MINUS = "−", TIMES = "×";
+  var S = { set: "m", order: "french", spread: false, fsel: 2, rmode: "avg", rows: [], month: [0, 0, 3, 0, 0, 0] };
+
+  function exampleRows() {
+    var r = [{ i: "Oil", p: -3 }, { i: "Food", p: 3 }];
+    while (r.length < NROWS) { r.push({ i: "", p: 0 }); }
+    return r;
+  }
+  S.rows = exampleRows();
+
+  /* formatting: the true minus sign, an optional plus sign, no negative zero */
+  function num(x, d, sign) {
+    var s = Math.abs(x).toFixed(d);
+    if (Number(s) === 0) { return (0).toFixed(d); }
+    if (x < 0) { return MINUS + s; }
+    if (sign) { return "+" + s; }
+    return s;
+  }
+  function paren(x, d) { if (x < 0) { return "(" + num(x, d) + ")"; } return num(x, d); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function betasOf(ind, set) { if (set === "a") { return ind.ba; } return ind.bm; }
+  function weightOf(ind, set) { if (set === "a") { return ind.wa; } return ind.wm; }
+
+  /* the weighted average beta of a group of industries, weights from the benchmark */
+  function groupBeta(list, set) {
+    var tot = 0, out = [0, 0, 0, 0, 0, 0];
+    list.forEach(function (ind) {
+      var w = weightOf(ind, set), b = betasOf(ind, set);
+      tot += w;
+      for (var k = 0; k < 6; k++) { out[k] += w * b[k]; }
+    });
+    for (var k = 0; k < 6; k++) { out[k] = out[k] / tot; }
+    return out;
+  }
+  function benchBeta(set) { return groupBeta(IND, set); }
+
+  /* active weights as fractions, with the rest of the benchmark as one line when spread */
+  function activeLines(rows, spread, set) {
+    var lines = [], chosen = {}, sum = 0;
+    rows.forEach(function (r) {
+      if (!r.i) { return; }
+      chosen[r.i] = true;
+      sum += r.p / 100;
+      lines.push({ c: r.i, a: r.p / 100, b: betasOf(BY[r.i], set) });
+    });
+    if (spread) {
+      var rest = IND.filter(function (x) { return !chosen[x.c]; });
+      lines.push({ c: "rest", n: rest.length, a: -sum, b: groupBeta(rest, set) });
+    }
+    return { lines: lines, chosenSum: sum };
+  }
+  function exposures(lines) {
+    var e = [0, 0, 0, 0, 0, 0];
+    lines.forEach(function (l) { for (var k = 0; k < 6; k++) { e[k] += l.a * l.b[k]; } });
+    return e;
+  }
+  function caseResult(points) {
+    var rows = Object.keys(points).map(function (c) { return { i: c, p: points[c] }; });
+    var e = exposures(activeLines(rows, true, "m").lines);
+    return { e: e, c: e.map(function (x, k) { return x * D.fmean[k] * 1e4; }) };
+  }
+
+  /* data bar: a bar from a centre line, scaled to the largest absolute value in its table */
+  function dbar(v, max) {
+    var w = Math.min(1, Math.abs(v) / max) * 50;
+    var cls = "p";
+    if (v < 0) { cls = "m"; }
+    return '<div class="db" aria-hidden="true"><span class="' + cls + '" style="width:' + w.toFixed(1) + '%"></span></div>';
+  }
+  function absMax(arrs, floor) {
+    var m = floor;
+    arrs.forEach(function (a) { a.forEach(function (v) { m = Math.max(m, Math.abs(v)); }); });
+    return m;
+  }
+
+  /* colour: OKLab mixing between the neutral midpoint and the two poles */
+  function hexToRgb(h) { h = h.trim().replace("#", ""); return [0, 2, 4].map(function (i) { return parseInt(h.slice(i, i + 2), 16) / 255; }); }
+  function toLin(c) { if (c <= 0.04045) { return c / 12.92; } return Math.pow((c + 0.055) / 1.055, 2.4); }
+  function fromLin(c) { if (c <= 0.0031308) { return 12.92 * c; } return 1.055 * Math.pow(c, 1 / 2.4) - 0.055; }
+  function rgbToLab(rgb) {
+    var r = toLin(rgb[0]), g = toLin(rgb[1]), b = toLin(rgb[2]);
+    var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s, 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+  }
+  function labToRgb(L) {
+    var l = L[0] + 0.3963377774 * L[1] + 0.2158037573 * L[2];
+    var m = L[0] - 0.1055613458 * L[1] - 0.0638541728 * L[2];
+    var s = L[0] - 0.0894841775 * L[1] - 1.2914855480 * L[2];
+    l = l * l * l; m = m * m * m; s = s * s * s;
+    return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s]
+      .map(function (c) { return Math.min(1, Math.max(0, fromLin(c))); });
+  }
+  function mixHex(a, b, t) { var A = rgbToLab(hexToRgb(a)), B = rgbToLab(hexToRgb(b)); return labToRgb([0, 1, 2].map(function (i) { return A[i] + (B[i] - A[i]) * t; })); }
+  function css(c) { return "rgb(" + c.map(function (x) { return Math.round(x * 255); }).join(",") + ")"; }
+  function lum(c) { var v = c.map(toLin); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; }
+  function token(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function cellColour(beta, k) {
+    var mid = 0;
+    if (k === 0) { mid = 1; }
+    var t = Math.max(-1, Math.min(1, (beta - mid) / SPAN));
+    var pole = token("--pos");
+    if (t < 0) { pole = token("--neg"); }
+    var bg = mixHex(token("--mid"), pole, Math.abs(t));
+    var ink = "#0b0b0b";
+    if (lum(bg) < 0.18) { ink = "#ffffff"; }
+    return { bg: css(bg), ink: ink };
+  }
+
+  /* the map */
+  function renderLegend() {
+    function bar(lo, mid, hi) {
+      var stops = [];
+      for (var i = 0; i <= 10; i++) {
+        var t = -1 + i / 5, pole = token("--pos");
+        if (t < 0) { pole = token("--neg"); }
+        stops.push(css(mixHex(token("--mid"), pole, Math.abs(t))) + " " + (i * 10) + "%");
+      }
+      return '<div class="bar" style="background:linear-gradient(90deg,' + stops.join(",") + ')"></div><div class="ticks"><span>' + lo + "</span><span>" + mid + "</span><span>" + hi + "</span></div>";
+    }
+    document.getElementById("legend").innerHTML = "<div>Five long-short factors" + bar(MINUS + "0.6", "0", "+0.6") + "</div><div>Market" + bar("0.4", "1", "1.6") + "</div><div>Beyond the ends: strongest colour. Hover a cell for the gap to the benchmark.</div>";
+  }
+  function renderMap() {
+    var set = S.set, order = IND.slice();
+    if (S.order === "w") {
+      order.sort(function (x, y) { return weightOf(y, set) - weightOf(x, set); });
+    } else if (S.order !== "french") {
+      var k0 = Number(S.order);
+      order.sort(function (x, y) { return betasOf(y, set)[k0] - betasOf(x, set)[k0]; });
+    }
+    var h = ['<thead><tr><th class="ind" style="text-align:left">Industry</th><th class="num">Weight</th>'];
+    F.forEach(function (f) { h.push("<th>" + f.name + '<span class="code">' + f.code + "</span></th>"); });
+    h.push("</tr></thead><tbody>");
+    order.forEach(function (ind) {
+      var b = betasOf(ind, set), chip = "";
+      if (ind.t) { chip = '<span class="chip ' + ind.t + '">' + ind.t + "</span>"; }
+      h.push('<tr><th class="ind" scope="row"><span class="code">' + ind.c + '</span><span class="full">' + esc(ind.n) + "</span>" + chip + '</th><td class="num wt">' + num(weightOf(ind, set) * 100, 1) + "%</td>");
+      for (var k = 0; k < 6; k++) {
+        var col = cellColour(b[k], k);
+        h.push('<td class="cell" data-i="' + ind.c + '" data-k="' + k + '" style="background:' + col.bg + ";color:" + col.ink + '">' + num(b[k], 2) + "</td>");
+      }
+      h.push("</tr>");
+    });
+    var bb = benchBeta(set);
+    h.push('</tbody><tfoot><tr><th class="ind" scope="row"><span class="code">Benchmark</span></th><td class="num wt">100%</td>');
+    for (var k = 0; k < 6; k++) {
+      var col = cellColour(bb[k], k);
+      h.push('<td class="cell" data-i="bench" data-k="' + k + '" style="background:' + col.bg + ";color:" + col.ink + '">' + num(bb[k], 2) + "</td>");
+    }
+    h.push("</tr></tfoot>");
+    document.getElementById("maptable").innerHTML = h.join("");
+  }
+
+  /* tooltips: map cells and defined terms */
+  var tip = document.getElementById("tip");
+  var GLOSS = {};
+  document.querySelectorAll("#glossary dt").forEach(function (dt) { GLOSS[dt.textContent.toLowerCase()] = dt.nextElementSibling.textContent; });
+  function defOf(word) {
+    var w = word.toLowerCase();
+    if (GLOSS[w]) { return GLOSS[w]; }
+    if (w.slice(-1) === "s" && GLOSS[w.slice(0, -1)]) { return GLOSS[w.slice(0, -1)]; }
+    return "";
+  }
+  function placeTip(x, y) {
+    tip.style.display = "block";
+    var r = tip.getBoundingClientRect();
+    if (x + 14 + r.width > window.innerWidth - 8) { x = x - r.width - 28; }
+    if (y + 14 + r.height > window.innerHeight - 8) { y = y - r.height - 28; }
+    tip.style.left = Math.max(8, x + 14) + "px";
+    tip.style.top = Math.max(8, y + 14) + "px";
+  }
+  function cellTip(ev) {
+    var td = ev.target.closest("td.cell");
+    if (!td) { tip.style.display = "none"; return; }
+    var k = Number(td.getAttribute("data-k")), bb = benchBeta(S.set)[k];
+    if (td.getAttribute("data-i") === "bench") {
+      tip.innerHTML = "<b>Benchmark</b>" + F[k].name + " beta " + num(bb, 3);
+    } else {
+      var ind = BY[td.getAttribute("data-i")], b = betasOf(ind, S.set)[k];
+      tip.innerHTML = "<b>" + ind.c + ", " + esc(ind.n) + "</b>" + F[k].name + " beta " + num(b, 3) + "<br>Benchmark " + num(bb, 3) + ", gap " + num(b - bb, 3, true) + "<br>Benchmark weight " + num(weightOf(ind, S.set) * 100, 2) + "%";
+    }
+    placeTip(ev.clientX, ev.clientY);
+  }
+  function termTip(el) {
+    var d = defOf(el.textContent);
+    if (!d) { return; }
+    tip.innerHTML = "<b>" + esc(el.textContent) + "</b>" + esc(d);
+    var r = el.getBoundingClientRect();
+    placeTip(r.left, r.bottom);
+  }
+  document.querySelectorAll(".term").forEach(function (el) {
+    el.setAttribute("tabindex", "0");
+    el.addEventListener("mouseenter", function () { termTip(el); });
+    el.addEventListener("focus", function () { termTip(el); });
+    el.addEventListener("click", function () { termTip(el); });
+    el.addEventListener("mouseleave", function () { tip.style.display = "none"; });
+    el.addEventListener("blur", function () { tip.style.display = "none"; });
+  });
+
+  /* calculator */
+  function buildRows() {
+    var host = document.getElementById("rows"), h = [];
+    for (var j = 0; j < NROWS; j++) {
+      h.push('<div class="wrow" data-j="' + j + '"><select aria-label="Industry ' + (j + 1) + '"></select><input type="range" min="-10" max="10" step="0.1" aria-label="Active weight ' + (j + 1) + ', pts"><input type="number" min="-10" max="10" step="0.1" aria-label="Active weight ' + (j + 1) + ', pts"><div class="bw"></div></div>');
+    }
+    host.innerHTML = h.join("");
+    host.querySelectorAll(".wrow").forEach(function (row) {
+      var j = Number(row.getAttribute("data-j"));
+      var sel = row.querySelector("select"), rng = row.querySelector('input[type="range"]'), box = row.querySelector('input[type="number"]');
+      sel.addEventListener("change", function () { S.rows[j].i = sel.value; if (!sel.value) { S.rows[j].p = 0; } renderTool(); });
+      rng.addEventListener("input", function () { S.rows[j].p = Number(rng.value); renderTool(); });
+      box.addEventListener("change", function () {
+        var v = Number(box.value);
+        if (!isFinite(v)) { v = 0; }
+        S.rows[j].p = Math.max(-10, Math.min(10, Math.round(v * 10) / 10));
+        renderTool();
+      });
+    });
+  }
+  function syncRows() {
+    var used = {};
+    S.rows.forEach(function (r) { if (r.i) { used[r.i] = true; } });
+    document.querySelectorAll("#rows .wrow").forEach(function (row) {
+      var r = S.rows[Number(row.getAttribute("data-j"))];
+      var sel = row.querySelector("select"), rng = row.querySelector('input[type="range"]'), box = row.querySelector('input[type="number"]');
+      var opts = ['<option value="">Choose an industry</option>'];
+      IND.forEach(function (ind) {
+        var a = "";
+        if (used[ind.c] && ind.c !== r.i) { a += " disabled"; }
+        if (ind.c === r.i) { a += " selected"; }
+        opts.push('<option value="' + ind.c + '"' + a + ">" + ind.c + ", " + esc(ind.n) + "</option>");
+      });
+      sel.innerHTML = opts.join("");
+      rng.disabled = !r.i; box.disabled = !r.i;
+      rng.value = r.p; box.value = r.p.toFixed(1);
+      var bw = row.querySelector(".bw");
+      bw.textContent = "";
+      if (r.i) { bw.textContent = "Benchmark weight " + num(weightOf(BY[r.i], S.set) * 100, 1) + "%"; }
+    });
+  }
+  function renderTool() {
+    syncRows();
+    document.getElementById("spread").checked = S.spread;
+    var act = activeLines(S.rows, S.spread, S.set), lines = act.lines, e = exposures(lines);
+    var sum = act.chosenSum * 100, sl = document.getElementById("sumline");
+    var nChosen = S.rows.filter(function (r) { return r.i; }).length;
+    if (S.spread) {
+      sl.className = "sumline ok";
+      sl.textContent = "Chosen: " + num(sum, 1, true) + " pts. The other " + (49 - nChosen) + " industries: " + num(-sum, 1, true) + " pts pro rata. Sum: 0.0.";
+    } else if (Math.abs(act.chosenSum) < EPS) {
+      sl.className = "sumline ok";
+      sl.textContent = "Sum of active weights: 0.0 pts.";
+    } else {
+      sl.className = "sumline warn";
+      sl.textContent = "Sum of active weights: " + num(sum, 1, true) + " pts. Active weights must sum to zero: adjust a weight or tick the box.";
+    }
+
+    var tabs = document.getElementById("ftabs");
+    tabs.innerHTML = F.map(function (f, k) { return '<button type="button" data-k="' + k + '" aria-pressed="' + String(k === S.fsel) + '">' + f.name + "</button>"; }).join("");
+    var k = S.fsel, w = [];
+    if (!lines.length) {
+      w.push('<p class="small">Choose an industry.</p>');
+    } else {
+      w.push('<table class="wo"><tbody>');
+      lines.forEach(function (l) {
+        var lab = l.c;
+        if (l.c === "rest") { lab = "Other " + l.n + " industries, pro rata"; }
+        w.push('<tr><td class="lab">' + esc(lab) + '</td><td class="num">' + num(l.a, 3, true) + "</td><td>" + TIMES + '</td><td class="num">' + paren(l.b[k], 3) + '</td><td>=</td><td class="num">' + num(l.a * l.b[k], 4, true) + "</td></tr>");
+      });
+      w.push('<tr class="total"><td class="lab" colspan="5">' + F[k].name + " exposure</td><td class=\"num\">" + num(e[k], 4, true) + "</td></tr></tbody></table>");
+      w.push('<p class="small">Active weight &times; ' + F[k].low + " beta. The cases use beta gaps to the benchmark: same total.</p>");
+    }
+    document.getElementById("written").innerHTML = w.join("");
+
+    var per = "a year";
+    if (S.rmode === "month") { per = "month"; }
+    var ret = F.map(function (f, j) { if (S.rmode === "avg") { return D.fmean[j] * 100; } return S.month[j]; });
+    var c = e.map(function (x, j) { return x * ret[j]; });
+    var mx = absMax([e], 0.01), tot = 0;
+    var ct = ['<thead><tr><th>Factor</th><th class="num">Exposure</th><th></th><th class="num">Return, % ' + per + '</th><th class="num">Contribution, %</th><th class="num">bp</th></tr></thead><tbody>'];
+    F.forEach(function (f, j) {
+      tot += c[j];
+      var cls = "", ro = "";
+      if (j === S.fsel) { cls = ' class="sel"'; }
+      if (S.rmode === "avg") { ro = " readonly"; }
+      ct.push("<tr" + cls + "><td>" + f.name + '</td><td class="num">' + num(e[j], 4, true) + '</td><td class="dbc">' + dbar(e[j], mx) + '</td><td class="num"><input type="number" step="0.01" data-j="' + j + '" value="' + ret[j].toFixed(2) + '" aria-label="' + f.name + ' return, per cent"' + ro + '></td><td class="num">' + num(c[j], 3, true) + '</td><td class="num">' + num(c[j] * 100, 1, true) + "</td></tr>");
+    });
+    ct.push('</tbody><tfoot><tr><td colspan="4">Total</td><td class="num">' + num(tot, 3, true) + '</td><td class="num">' + num(tot * 100, 1, true) + "</td></tr></tfoot>");
+    var tbl = document.getElementById("ctable");
+    tbl.innerHTML = ct.join("");
+    tbl.querySelectorAll("input").forEach(function (inp) {
+      inp.addEventListener("change", function () {
+        var v = Number(inp.value);
+        if (!isFinite(v)) { v = 0; }
+        S.month[Number(inp.getAttribute("data-j"))] = v;
+        renderTool();
+      });
+    });
+
+    /* a sentence that reads the result for the factor written out */
+    var ek = e[k], ck = c[k], rk = ret[k];
+    var side = "long", verb = "earned", when = " a year";
+    if (ek < 0) { side = "short"; }
+    if (ck < 0) { verb = "cost"; }
+    if (S.rmode === "month") { when = " in the month"; }
+    var txt;
+    if (Math.abs(ek) < 0.00005) {
+      txt = "No " + F[k].low + " exposure.";
+    } else if (Math.abs(ck) < 0.0005) {
+      txt = side.charAt(0).toUpperCase() + side.slice(1) + " " + F[k].low + " by " + num(Math.abs(ek), 4) + "; at " + num(rk, 2, true) + "%" + when + " that is less than 0.001%.";
+    } else {
+      txt = side.charAt(0).toUpperCase() + side.slice(1) + " " + F[k].low + " by " + num(Math.abs(ek), 4) + "; at " + num(rk, 2, true) + "%" + when + " that " + verb + " " + num(Math.abs(ck), 3) + "% (" + num(Math.abs(ck) * 100, 1) + " bp).";
+    }
+    txt += " All six: " + num(tot * 100, 1, true) + " bp" + when + ".";
+    document.getElementById("reading").textContent = txt;
+  }
+
+  /* the three cases, always on the average betas */
+  function renderCases() {
+    var bb = benchBeta("m");
+    var ra = caseResult(D.presets.a), rb = caseResult(D.presets.b), rc = caseResult(D.presets.c);
+    function sideTable(id, r, cols, extra) {
+      var mx = absMax([r.e], 0.005);
+      var h = ['<thead><tr><th>Factor</th><th class="num">Benchmark beta</th>'];
+      cols.forEach(function (c) { h.push('<th class="num">' + c + " beta</th>"); });
+      h.push('<th class="num">Exposure</th><th></th><th class="num">bp a year</th>');
+      if (extra) { h.push('<th class="num">Study, tilt only</th>'); }
+      h.push("</tr></thead><tbody>");
+      var tot = 0;
+      F.forEach(function (f, k) {
+        tot += r.c[k];
+        h.push("<tr><td>" + f.name + '</td><td class="num">' + num(bb[k], 2) + "</td>");
+        cols.forEach(function (c) { h.push('<td class="num">' + num(BY[c].bm[k], 2) + "</td>"); });
+        h.push('<td class="num">' + num(r.e[k], 4, true) + '</td><td class="dbc">' + dbar(r.e[k], mx) + '</td><td class="num">' + num(r.c[k], 1, true) + "</td>");
+        if (extra) { h.push('<td class="num">' + num(D.study.tilt[k], 4, true) + "</td>"); }
+        h.push("</tr>");
+      });
+      var span = cols.length + 4;
+      h.push('</tbody><tfoot><tr><td colspan="' + span + '">Total</td><td class="num">' + num(tot, 1, true) + "</td>");
+      if (extra) { h.push("<td></td>"); }
+      h.push("</tr></tfoot>");
+      document.getElementById(id).innerHTML = h.join("");
+    }
+    sideTable("tbl-a", ra, ["Oil", "Util"], true);
+    sideTable("tbl-b", rb, ["Smoke", "Guns"], false);
+    var mx = absMax([ra.e, rc.e], 0.005), ta = 0, tc = 0;
+    var h = ['<thead><tr><th>Factor</th><th class="num">Exposure (a)</th><th></th><th class="num">Exposure (c)</th><th></th><th class="num">bp a year (a)</th><th class="num">bp a year (c)</th></tr></thead><tbody>'];
+    F.forEach(function (f, k) {
+      ta += ra.c[k]; tc += rc.c[k];
+      h.push("<tr><td>" + f.name + '</td><td class="num">' + num(ra.e[k], 4, true) + '</td><td class="dbc">' + dbar(ra.e[k], mx) + '</td><td class="num">' + num(rc.e[k], 4, true) + '</td><td class="dbc">' + dbar(rc.e[k], mx) + '</td><td class="num">' + num(ra.c[k], 1, true) + '</td><td class="num">' + num(rc.c[k], 1, true) + "</td></tr>");
+    });
+    h.push('</tbody><tfoot><tr><td colspan="5">Total</td><td class="num">' + num(ta, 1, true) + '</td><td class="num">' + num(tc, 1, true) + "</td></tr></tfoot>");
+    document.getElementById("tbl-c").innerHTML = h.join("");
+  }
+
+  function renderSetButtons() {
+    document.querySelectorAll(".setseg button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-set") === S.set)); });
+    document.querySelectorAll("#rmode button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-r") === S.rmode)); });
+  }
+
+  document.querySelectorAll(".setseg button").forEach(function (b) {
+    b.addEventListener("click", function () { S.set = b.getAttribute("data-set"); renderSetButtons(); renderMap(); renderTool(); });
+  });
+  document.querySelectorAll("#rmode button").forEach(function (b) {
+    b.addEventListener("click", function () { S.rmode = b.getAttribute("data-r"); renderSetButtons(); renderTool(); });
+  });
+  document.getElementById("order").addEventListener("change", function (ev) { S.order = ev.target.value; renderMap(); });
+  document.getElementById("spread").addEventListener("change", function (ev) { S.spread = ev.target.checked; renderTool(); });
+  document.getElementById("ftabs").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button");
+    if (b) { S.fsel = Number(b.getAttribute("data-k")); renderTool(); }
+  });
+  document.getElementById("reset").addEventListener("click", function () { S.rows = exampleRows(); S.spread = false; renderTool(); });
+  document.querySelectorAll(".loadcase").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var pts = D.presets[b.getAttribute("data-case")];
+      S.rows = Object.keys(pts).map(function (c) { return { i: c, p: pts[c] }; });
+      while (S.rows.length < NROWS) { S.rows.push({ i: "", p: 0 }); }
+      S.spread = true; S.set = "m"; S.rmode = "avg";
+      renderSetButtons(); renderMap(); renderTool();
+      document.getElementById("tool").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  var map = document.getElementById("maptable");
+  map.addEventListener("mousemove", cellTip);
+  map.addEventListener("mouseleave", function () { tip.style.display = "none"; });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", function () { renderLegend(); renderMap(); }); }
+  }
+  var termsBox = document.getElementById("termsbox"), termsWasOpen = false;
+  window.addEventListener("beforeprint", function () { termsWasOpen = termsBox.open; termsBox.open = true; renderLegend(); renderMap(); });
+  window.addEventListener("afterprint", function () { termsBox.open = termsWasOpen; renderLegend(); renderMap(); });
+
+  buildRows();
+  renderSetButtons(); renderLegend(); renderMap(); renderTool(); renderCases();
+})();
+</script>
+</body>
+</html>
