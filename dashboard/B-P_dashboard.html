@@ -88,8 +88,8 @@ a { color: var(--accent); }
 
 <h2 id="s6">6. Forecast bias by decade</h2>
 <div class="card">
-<p>The bias statistic, realised tracking error over the mean forecast, under the mandate: 1 is a calibrated forecast, above 1 an under-forecast. Over the whole period the daily estimators run at 1.22 to 1.39 and the monthly covariance at 1.61; calibrating each month's forecast by the same path's bias over the previous 60 months, with nothing from the future, brings the daily estimators to 1.11 to 1.17.</p>
-<div class="toggle" role="group" aria-label="Bias"><button type="button" data-bias="raw" aria-pressed="true">As forecast</button><button type="button" data-bias="cal" aria-pressed="false">Calibrated on the previous 60 months</button></div>
+<p>The bias statistic under the mandate: each month's active return is divided by that month's forecast standard deviation, and the statistic is the standard deviation of those ratios over the months, 1 for a calibrated forecast and above 1 for an under-forecast. Over the whole period the daily estimators run at 1.22 to 1.39 and the monthly covariance at 1.61; calibrating each month's forecast by the same path's ratio of realised to forecast tracking error over the previous 60 months, with nothing from the future, brings the daily estimators to 1.11 to 1.17. The chart's two states carry two measures: the first shows, for each decade, the realised tracking error divided by the mean forecast of the same months, a ratio of two tracking errors; the second the bias statistic of the calibrated forecast, decade by decade.</p>
+<div class="toggle" role="group" aria-label="Bias"><button type="button" data-bias="raw" aria-pressed="true">Realised over mean forecast, by decade</button><button type="button" data-bias="cal" aria-pressed="false">Bias statistic, calibrated forecast</button></div>
 <div id="f6" class="chart"></div>
 <p class="src">Source: results/202608/rolling_evaluation_by_decade_202608.csv and results/202608/rolling_evaluation_calibration_202608.csv (notebook 12).</p>
 </div>
@@ -140,7 +140,7 @@ a { color: var(--accent); }
 <dt>minimum-variance portfolio</dt><dd>the portfolio with the smallest forecast variance under its constraints.</dd>
 <dt>constraint set</dt>
 <dd>one of the cumulative sets C0 to C3: long-only; plus an active weight bound of 2 percentage points per industry; plus a one-way turnover cap of 2 per cent a month; plus the mandate (the tilt, the exclusions of tobacco and weapons and a beta of one to the benchmark). The tilt alone, C2 plus the tilt, runs beside them as a sensitivity and is the fourth step of figure 5.</dd>
-<dt>bias statistic</dt><dd>the realised tracking error divided by the mean forecast; 1 for a calibrated forecast.</dd>
+<dt>bias statistic</dt><dd>the standard deviation, over the months, of the monthly active return divided by that month's forecast standard deviation; 1 for a calibrated forecast, above 1 an under-forecast. Figure 6's first state shows a different measure of the same miss, each decade's realised tracking error divided by its mean forecast.</dd>
 <dt>active return</dt><dd>the portfolio's return minus the benchmark's; the active weight of an industry is its portfolio weight minus its benchmark weight.</dd>
 <dt>factor</dt><dd>a return series that many assets move with: the market (Mkt-RF), size (SMB), value (HML), profitability (RMW), investment (CMA) and momentum (Mom) factors of Fama and French and Carhart.</dd>
 <dt>active exposure</dt><dd>the sum over industries of the active weight times the industry's beta (the slope of its return on the factor's) to the factor.</dd>
@@ -166,7 +166,7 @@ a { color: var(--accent); }
 <dt>estimation window</dt><dd>the months of returns a rule sees when it forms its weights, 120 in the paper.</dd>
 </dl>
 
-<footer>Built by <code>dashboard/build_dashboard.py</code> from the tables in <code>results/202608/</code>, written by notebooks 03, 07, 08, 10, 11, 12 and 13 on vintage 202608 of French's files, on 7 October 2026; rebuilt whenever a notebook is rerun, from the tables committed with it. Data: Kenneth R. French's data library. Code and notebooks: <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Charts drawn with Plotly.</footer>
+<footer>Built by <code>dashboard/build_dashboard.py</code> from the tables in <code>results/202608/</code>, written by notebooks 03, 07, 08, 10, 11, 12 and 13 on vintage 202608 of French's files, on 9 October 2026; rebuilt whenever a notebook is rerun, from the tables committed with it. Data: Kenneth R. French's data library. Code and notebooks: <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Charts drawn with Plotly.</footer>
 </main>
 
 <script>
@@ -372,10 +372,11 @@ a { color: var(--accent); }
   // 6. bias by decade
   function f6() {
     var src = pick(state.bias === "raw", D.bias_raw, D.bias_cal);
+    var measure = pick(state.bias === "raw", "realised over mean forecast", "bias statistic, calibrated");
     var z = D.variants.map(function (v) { return src[v]; });
     var traces = [{ z: z, x: D.decades, y: D.variants.map(function (v) { return D.vlabel[v]; }), type: "heatmap", colorscale: diverging(), zmin: 0, zmax: 2, zmid: 1, xgap: 2, ygap: 2,
-      text: z.map(function (row) { return row.map(function (x) { return x.toFixed(2); }); }), texttemplate: "%{text}", textfont: { size: 11 }, hovertemplate: "%{y}<br>%{x}: %{z:.2f}<extra></extra>",
-      colorbar: { title: { text: "realised over forecast", side: "right" }, thickness: 10, len: 0.9, tickfont: TICK } }];
+      text: z.map(function (row) { return row.map(function (x) { return x.toFixed(2); }); }), texttemplate: "%{text}", textfont: { size: 11 }, hovertemplate: "%{y}<br>%{x}: %{z:.2f}<extra>" + measure + "</extra>",
+      colorbar: { title: { text: measure, side: "right" }, thickness: 10, len: 0.9, tickfont: TICK } }];
     var layout = base({ margin: { l: 190, r: 20, t: 24, b: 50 } });
     layout.yaxis = axis({ autorange: "reversed", tickfont: TICK });
     layout.xaxis = axis({ tickfont: TICK });
