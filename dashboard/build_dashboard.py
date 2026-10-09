@@ -87,28 +87,30 @@ RULES = ["ew", "mv", "bs", "min", "vw", "mv-c", "bs-c", "min-c", "g-min-c"]
 RULE_LABEL = {"ew": "1/N", "mv": "mean-variance", "bs": "Bayes-Stein", "min": "minimum variance", "vw": "value-weighted market",
               "mv-c": "mean-variance, constrained", "bs-c": "Bayes-Stein, constrained", "min-c": "minimum variance, constrained",
               "g-min-c": "minimum variance, generalised constraint"}
+RULE_SHORT = {"ew": "1/N", "mv": "mean-variance", "bs": "Bayes-Stein", "min": "min. variance", "vw": "VW market",
+              "mv-c": "mean-var., constr.", "bs-c": "Bayes-Stein, constr.", "min-c": "min. var., constr.", "g-min-c": "min. var., gen. constr."}   # phones only
 DATASETS = ["Industry", "MKT/SMB/HML", "FF-1-factor", "FF-4-factor"]
 VARIANTS = ["sample, daily 3y", "ledoit_wolf, daily 3y", "factor, daily 3y", "pca, daily 3y", "sample, monthly 120", "robust, all five", "RiskMetrics, daily 5y"]
 VLABEL = {"sample, daily 3y": "Sample, 3y daily", "ledoit_wolf, daily 3y": "Ledoit-Wolf, 3y daily", "factor, daily 3y": "Six-factor model, 3y daily",
           "pca, daily 3y": "Principal components, 3y daily", "sample, monthly 120": "Sample, 120 months", "robust, all five": "Robust (worst of five)",
           "RiskMetrics, daily 5y": "RiskMetrics, 5y daily"}
-# Colours: one fixed categorical order for the seven estimator variants and one for the six factors, with a
-# separate step of each hue for dark surfaces; both sets pass the lightness, chroma, colour-vision-deficiency
-# separation and normal-vision checks of an OKLab palette validator in both modes (checked 7 October 2026).
-# The residual, the market reference and the "no verdict" markers are neutral greys by design.
-PALETTE = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
-PALETTE_DARK = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"]
+# Colours: the house categorical palette of the public output standard of 9 October 2026, in one fixed slot
+# order for the seven estimator variants and one for the six factors, never cycled; on white it passes the
+# lightness, chroma, colour-vision-deficiency separation and normal-vision checks of an OKLab palette validator
+# for neighbouring slots, and the pages keep series in their slots and label marks directly where two series can
+# meet. The residual and the reference series are greys; a miss is the status red. Light only.
+PALETTE = ["#24599e", "#d9711c", "#12929f", "#c8423b", "#6b45b8", "#7c9a12", "#b03a72", "#a87b00"]
+NAVY, INK, INK2, META, FRAME, GRID = "#16213a", "#262b33", "#5d6470", "#6b7280", "#cfcfcf", "#e5e5e5"
 VCOLOUR = dict(zip(VARIANTS, PALETTE[:7]))
-VCOLOUR_DARK = dict(zip(VARIANTS, PALETTE_DARK[:7]))
+VSHORT = {"sample, daily 3y": "Sample, daily", "ledoit_wolf, daily 3y": "Ledoit-Wolf", "factor, daily 3y": "Six-factor", "pca, daily 3y": "Principal comp.",
+          "sample, monthly 120": "Sample, monthly", "robust, all five": "Robust", "RiskMetrics, daily 5y": "RiskMetrics"}
 SETS = ["C0", "C1", "C2", "C3 tilt only", "C3"]
 SET_LABEL = {"C0": "long-only", "C1": "+ active weight bound", "C2": "+ turnover cap", "C3 tilt only": "+ tilt", "C3": "+ exclusions and beta neutrality"}
 FACTORS = ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom"]
 FLABEL = {"Mkt-RF": "market", "SMB": "size", "HML": "value", "RMW": "profitability", "CMA": "investment", "Mom": "momentum"}
 FCOLOUR = dict(zip(FACTORS, PALETTE[:6]))
-FCOLOUR_DARK = dict(zip(FACTORS, PALETTE_DARK[:6]))
-RESID_COLOUR = "#c3c2b7"      # the residual: a neutral grey, the remainder after the six factors
-RESID_COLOUR_DARK = "#6b6a66"
-MISS_COLOUR, MISS_COLOUR_DARK = PALETTE[7], PALETTE_DARK[7]
+RESID_COLOUR = "#8c8c8c"      # the residual: a neutral grey, the remainder after the six factors
+MISS_COLOUR = "#b42318"       # the status red of the standard, always with its label
 
 assert list(bench.columns) == ["benchmark", "market"]
 assert set(roll["variant"]) == set(VARIANTS) and set(roll["set"]) == set(SETS)
@@ -123,11 +125,9 @@ def r(x, d=4):
 
 
 # --- the data the page embeds ---
-D = {"vintage": V, "months": MONTHS, "first": FIRST, "last": LAST, "variants": VARIANTS, "vlabel": VLABEL,
-     "vcolour": VCOLOUR, "vcolour_dark": VCOLOUR_DARK, "sets": SETS, "setlabel": SET_LABEL, "factors": FACTORS, "flabel": FLABEL,
-     "fcolour": FCOLOUR, "fcolour_dark": FCOLOUR_DARK, "resid": RESID_COLOUR, "resid_dark": RESID_COLOUR_DARK,
-     "miss": MISS_COLOUR, "miss_dark": MISS_COLOUR_DARK, "tilted": ["Oil", "Util", "Coal"],
-     "rules": RULES, "rulelabel": RULE_LABEL, "datasets": DATASETS}
+D = {"vintage": V, "months": MONTHS, "first": FIRST, "last": LAST, "variants": VARIANTS, "vlabel": VLABEL, "vshort": VSHORT,
+     "sets": SETS, "setlabel": SET_LABEL, "factors": FACTORS, "flabel": FLABEL, "tilted": ["Oil", "Util", "Coal"],
+     "rules": RULES, "rulelabel": RULE_LABEL, "ruleshort": RULE_SHORT, "datasets": DATASETS}
 
 # 1. replication
 D["rep_sharpe"] = [{"rule": row.rule, "dataset": row.dataset, "x": r(row.published, 6), "y": r(row.replicated, 6), "verdict": row.verdict}
@@ -192,6 +192,11 @@ D["turn"] = {v: {"one_way": r(c3.loc[v, "turnover (one-way)"] * 100, 5), "cost50
                  "gross": r(c3.loc[v, "active return (gross)"] * 1e4, 4), "net50": r(c3.loc[v, "net active return at 50 bp"] * 1e4, 4)} for v in VARIANTS}
 D["bench_turn"] = r(c3["benchmark turnover"].iloc[0] * 100, 5)
 bench_cost50 = c3["benchmark turnover"].iloc[0] * 0.005 * 12 * 1e4
+# Table 1: the key figures under the mandate, one row per path, with the standard error from the attribution
+att_c3 = att[att.set == "C3"].set_index("variant")
+D["table1"] = [{"variant": v, "forecast": r(c3.loc[v, "forecast TE (mean)"] * 1e4, 4), "realised": r(c3.loc[v, "realised TE"] * 1e4, 4), "bias": r(c3.loc[v, "bias"], 5),
+                "gross": r(c3.loc[v, "active return (gross)"] * 1e4, 4), "net50": r(c3.loc[v, "net active return at 50 bp"] * 1e4, 4), "se": r(att_c3.loc[v, "active return (standard error)"] * 1e4, 4),
+                "turnover": r(c3.loc[v, "turnover (one-way)"] * 100, 5), "cost50": r(c3.loc[v, "cost at 50 bp"] * 1e4, 4), "held": r(c3.loc[v, "industries held"], 4)} for v in VARIANTS]
 
 # 9. the attribution
 D["att"] = {}
@@ -218,11 +223,30 @@ D["speed"] = {"rebalance": [int(x) for x in opt_speed["rebalance"]], "distance":
               "te": [r(x, 3) for x in opt_speed["forecast tracking error (bp a year)"]]}
 
 # --- the prose numbers ---
+MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+
+def words(ym):
+    """'1979-07' as 'July 1979', for prose and captions; tables and axes keep the ISO form."""
+    y, m = ym.split("-")
+    return f"{MONTH_NAMES[int(m) - 1]} {int(y)}"
+
+
+def signed(x, d):
+    """A display number with the true minus sign and a plus sign on positive values, for active figures."""
+    v = round(float(x), d)
+    if v == 0:
+        return f"{0:.{d}f}"
+    return ("+" if v > 0 else "\u2212") + f"{abs(v):.{d}f}"
+
+
 P = {}
 P["vintage"] = V
 P["months"] = str(MONTHS)
 P["first"] = FIRST
 P["last"] = LAST
+P["first_w"] = words(FIRST)
+P["last_w"] = words(LAST)
 P["gated_pass"] = str(int((gated.verdict == "pass").sum()))
 P["gated_n"] = str(len(gated))
 P["turn_pass"] = str(int((gated_t.verdict == "pass").sum()))
@@ -230,32 +254,47 @@ P["turn_n"] = str(len(gated_t))
 new_lo, new_hi = re.search(r"\((\d{4}-\d{2}) to (\d{4}-\d{2})\)", periods[1]).groups()
 P["new_months"] = str((pd.Period(new_hi, "M") - pd.Period(new_lo, "M")).n + 1)
 P["new_lo"], P["new_hi"] = new_lo, new_hi
+P["new_lo_w"], P["new_hi_w"] = words(new_lo), words(new_hi)
 paper_lo, paper_hi = re.search(r"\((\d{4}-\d{2}) to (\d{4}-\d{2})\)", periods[0]).groups()
 P["paper_lo"], P["paper_hi"] = paper_lo, paper_hi
+P["paper_lo_w"], P["paper_hi_w"] = words(paper_lo), words(paper_hi)
 P["beats"] = str(int(ext_vs["beats 1/N at 5%"].sum()))
 P["cells"] = str(len(ext_vs))
 P["bench_te"] = f"{gap.std() * np.sqrt(12) * 1e4:.1f}"
 P["gap_share"] = f"{direct['expectation_2_predicted_vs_observed']['share_of_variance_explained'] * 100:.0f}"
 P["bench_months"] = str(len(bench))
 P["bench_first"] = bench.index[0]
+P["bench_first_w"] = words(bench.index[0])
 te_c3 = {v: roll[(roll.variant == v) & (roll.set == "C3")]["realised TE"].iloc[0] * 1e4 for v in VARIANTS}
 daily4 = [te_c3[v] for v in VARIANTS[:4]]
 P["te_lo"] = f"{min(daily4):.1f}"
 P["te_hi"] = f"{max(daily4):.1f}"
 P["te_monthly"] = f"{te_c3['sample, monthly 120']:.1f}"
 P["te_range"] = f"{max(daily4) - min(daily4):.1f}"
+c2 = [roll[(roll.variant == v) & (roll.set == "C2")]["realised TE"].iloc[0] * 1e4 for v in VARIANTS]
+tilt_te = [roll[(roll.variant == v) & (roll.set == "C3 tilt only")]["realised TE"].iloc[0] * 1e4 for v in VARIANTS]
+c3_add = [te_c3[v] - roll[(roll.variant == v) & (roll.set == "C3 tilt only")]["realised TE"].iloc[0] * 1e4 for v in VARIANTS]
+assert min(c3_add) > 0
+P["c2_lo"], P["c2_hi"] = f"{min(c2):.1f}", f"{max(c2):.1f}"
+P["tilt_te_lo"], P["tilt_te_hi"] = f"{min(tilt_te):.1f}", f"{max(tilt_te):.1f}"
+P["c3_add_lo"], P["c3_add_hi"] = f"{min(c3_add):.1f}", f"{max(c3_add):.1f}"
+gross_c3 = [c3.loc[v, "active return (gross)"] * 1e4 for v in VARIANTS]
+P["gross_lo"], P["gross_hi"] = signed(min(gross_c3), 1), signed(max(gross_c3), 1)
 bias_c3 = [roll[(roll.variant == v) & (roll.set == "C3")]["bias"].iloc[0] for v in VARIANTS[:4]]
 P["bias_lo"] = f"{min(bias_c3):.2f}"
 P["bias_hi"] = f"{max(bias_c3):.2f}"
-P["bias_monthly"] = f"{roll[(roll.variant == 'sample, monthly 120') & (roll.set == 'C3')]['bias'].iloc[0]:.2f}"
+bias_monthly = roll[(roll.variant == 'sample, monthly 120') & (roll.set == 'C3')]['bias'].iloc[0]
+P["bias_monthly"] = f"{bias_monthly:.2f}"
+P["bias_pct_lo"] = f"{(min(bias_c3) - 1) * 100:.0f}"
+P["bias_pct_hi"] = f"{(max(bias_c3 + [bias_monthly]) - 1) * 100:.0f}"
 cal4 = [calset.loc[v, "bias, calibrated"] for v in VARIANTS[:4]]
 P["cal_lo"] = f"{min(cal4):.2f}"
 P["cal_hi"] = f"{max(cal4):.2f}"
 att_tilt = att[att.set == "C3 tilt only"].set_index("variant")
 tilt_gross = [att_tilt.loc[v, "active return (per year)"] * 1e4 for v in VARIANTS]
 tilt_se = [att_tilt.loc[v, "active return (standard error)"] * 1e4 for v in VARIANTS]
-P["tilt_lo"] = f"{min(tilt_gross):+.0f}"
-P["tilt_hi"] = f"{max(tilt_gross):+.0f}"
+P["tilt_lo"] = signed(min(tilt_gross), 0)
+P["tilt_hi"] = signed(max(tilt_gross), 0)
 P["tilt_se_lo"] = f"{min(tilt_se):.0f}"
 P["tilt_se_hi"] = f"{max(tilt_se):.0f}"
 cost = [mc.loc[v, "active return"] * 1e4 for v in VARIANTS]   # the mandate minus the tilt alone, negative on every path
@@ -292,6 +331,11 @@ tilt_last = opt_fixes[(opt_fixes.month == last_month) & (opt_fixes.data != "mont
 P["tilt_cost_last"] = f"{tilt_last.min():.0f} to {tilt_last.max():.0f}"
 P["last_opt_month"] = last_month
 P["first_opt_month"] = first_month
+P["last_opt_month_w"], P["first_opt_month_w"] = words(last_month), words(first_month)
+opt_w = [words(m) for m in D["opt_months"]]
+P["opt_months_w"] = ", ".join(opt_w[:-1]) + " and " + opt_w[-1]
+P["oil_first"] = f"{bench_w.loc[FIRST, 'Oil'] * 100:.1f}"   # Oil's share at the first optimiser month
+P["oil_last"] = f"{bench_w['Oil'].iloc[-1] * 100:.1f}"
 P["tilt_cost_first"] = f"{opt_fixes[opt_fixes.month == first_month]['tilt only (bp)'].max():.0f}"
 mo = main[main.data == "monthly_120"].set_index("estimator")
 P["gmv_sample"] = f"{mo.loc['sample', 'GMV unconstrained vol %']:.1f}"
@@ -311,7 +355,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
-                     "svg.fonttype": "none", "figure.dpi": 100,
+                     "svg.fonttype": "none", "figure.dpi": 100, "text.color": INK, "axes.labelcolor": INK2, "axes.edgecolor": FRAME,
+                     "xtick.color": META, "ytick.color": META, "xtick.labelcolor": META, "ytick.labelcolor": META,
                      "svg.hashsalt": "B-P"})  # fixed element ids, so a rebuild from the same files is byte-identical
 os.makedirs(FIG_DIR, exist_ok=True)
 
@@ -328,11 +373,12 @@ for v in VARIANTS:
 ax.set_xticks(x)
 ax.set_xticklabels(["long-only", "+ active weight\nbound", "+ turnover cap", "+ tilt", "+ exclusions,\nbeta neutrality"])
 ax.set_ylabel("tracking error, basis points a year")
-ax.set_title("Realised (filled) and forecast (hollow) tracking error by constraint set, 1979-07 to 2026-08", loc="left", fontsize=9.5)
+ax.set_title(f"Realised (filled) and forecast (hollow) tracking error by constraint set, {words(FIRST)} to {words(LAST)}", loc="left", fontsize=9.5, color=INK)
 ax.legend(frameon=False, fontsize=8, ncol=2, loc="upper left")
-ax.grid(axis="y", lw=0.4, alpha=0.5)
-fig.text(0.01, 0.01, f"Source: results/{V}/rolling_evaluation_{V}.csv (notebook 12), {MONTHS} months; the first three sets realise {lo3:.0f} to {hi3:.1f} basis points.", fontsize=7.2, color="#555")
-fig.tight_layout(rect=(0, 0.03, 1, 1))
+ax.grid(axis="y", lw=0.6, color=GRID)
+fig.text(0.01, 0.035, "Source: Kenneth R. French Data Library and author's calculations.", fontsize=7.2, color=META)
+fig.text(0.01, 0.005, f"results/{V}/rolling_evaluation_{V}.csv (notebook 12), {MONTHS} months; the first three sets realise {lo3:.0f} to {hi3:.1f} basis points.", fontsize=7.2, color=META)
+fig.tight_layout(rect=(0, 0.06, 1, 1))
 fig.savefig(os.path.join(FIG_DIR, "fig_tracking_error.svg"), metadata={"Creator": None, "Date": None})
 plt.close(fig)
 
@@ -354,19 +400,20 @@ for ax, s, title in zip(axes, ["C3 tilt only", "C3"], ["Under the tilt alone", "
     ax.barh(y, np.where(resid > 0, resid, 0), left=left_pos, color=RESID_COLOUR, height=0.62, edgecolor="white", linewidth=0.6, label="residual (the industries' own returns)")
     ax.barh(y, np.where(resid < 0, resid, 0), left=left_neg, color=RESID_COLOUR, height=0.62, edgecolor="white", linewidth=0.6)
     tot = np.array([D["att"][s][v]["active"] for v in VARIANTS])
-    ax.plot(tot, y, "k|", ms=11, mew=1.6, label="active return")
-    ax.axvline(0, color="#333", lw=0.8)
+    ax.plot(tot, y, "|", color=INK, ms=11, mew=1.6, label="active return")
+    ax.axvline(0, color=FRAME, lw=0.8)
     ax.set_yticks(y)
     ax.set_yticklabels([VLABEL[v] for v in VARIANTS])
     ax.set_title(title, loc="left", fontsize=9.5)
     ax.set_xlabel("basis points a year")
     ax.set_xlim(-26, 26)
-    ax.grid(axis="x", lw=0.4, alpha=0.5)
+    ax.grid(axis="x", lw=0.6, color=GRID)
 axes[0].invert_yaxis()
 handles, labels = axes[0].get_legend_handles_labels()
 fig.legend(handles, labels, frameon=False, fontsize=7.5, loc="lower center", ncol=4, bbox_to_anchor=(0.5, 0.04))
-fig.text(0.01, 0.005, f"Source: results/{V}/attribution_summary_{V}.csv (notebook 13). The black mark is the active return, the sum of the bars.", fontsize=7.2, color="#555")
-fig.tight_layout(rect=(0, 0.12, 1, 1))
+fig.text(0.01, 0.03, "Source: Kenneth R. French Data Library and author's calculations.", fontsize=7.2, color=META)
+fig.text(0.01, 0.005, f"results/{V}/attribution_summary_{V}.csv (notebook 13). The mark is the active return, the sum of the bars.", fontsize=7.2, color=META)
+fig.tight_layout(rect=(0, 0.13, 1, 1))
 fig.savefig(os.path.join(FIG_DIR, "fig_attribution.svg"), metadata={"Creator": None, "Date": None})
 plt.close(fig)
 

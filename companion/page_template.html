@@ -13,44 +13,35 @@
 <meta property="og:image:width" content="2400">
 <meta property="og:image:height" content="1260">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="https://www.carlohofer.com/images/favicon.svg" type="image/svg+xml">
 <style>
+@font-face { font-family: "EB Garamond"; src: url("https://www.carlohofer.com/assets/fonts/EBGaramond-var-latin.woff2") format("woff2"); font-weight: 400 800; font-display: swap; }
 :root {
   color-scheme: light;
-  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e;
-  --grid: #e1e0d9; --line: #c3c2b7; --border: rgba(11,11,11,0.10);
-  --accent: #2a78d6; --accent-ink: #1c5cab; --sel: #e6eefa;
-  --warn-bg: #fdf1dc; --warn-ink: #6b4100; --ok-ink: #006300;
-  --neg: #b3261e; --mid: #f0efec; --pos: #184f95;
-  --bar-neg: #e34948; --bar-pos: #2a78d6;
-  --tag-tilted: #eb6834; --tag-excluded: #4a3aa7; --tag-bought: #1baf7a;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7;
-    --grid: #2c2c2a; --line: #383835; --border: rgba(255,255,255,0.10);
-    --accent: #3987e5; --accent-ink: #86b6ef; --sel: #1b2635;
-    --warn-bg: #3a2a08; --warn-ink: #fab219; --ok-ink: #0ca30c;
-    --neg: #e66767; --mid: #383835; --pos: #6da7ec;
-    --bar-neg: #e66767; --bar-pos: #3987e5;
-    --tag-tilted: #d95926; --tag-excluded: #9085e9; --tag-bought: #199e70;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink2: #c3c2b7;
-  --grid: #2c2c2a; --line: #383835; --border: rgba(255,255,255,0.10);
-  --accent: #3987e5; --accent-ink: #86b6ef; --sel: #1b2635;
-  --warn-bg: #3a2a08; --warn-ink: #fab219; --ok-ink: #0ca30c;
-  --neg: #e66767; --mid: #383835; --pos: #6da7ec;
-  --bar-neg: #e66767; --bar-pos: #3987e5;
-  --tag-tilted: #d95926; --tag-excluded: #9085e9; --tag-bought: #199e70;
+  --page: #ffffff; --surface: #ffffff; --tint: #f5f5f5; --ink: #262b33; --ink2: #5d6470; --meta: #6b7280; --navy: #16213a;
+  --grid: #e5e5e5; --line: #cfcfcf; --border: #dddddd;
+  --accent: #1f3a60; --accent-ink: #1f3a60; --sel: #eef2f8;
+  --warn-bg: #f5f5f5; --warn-ink: #b25e00; --ok-ink: #16213a;
+  --neg: #c8423b; --mid: #f2f2f2; --pos: #24599e;
+  --bar-neg: #c8423b; --bar-pos: #24599e;
+  --tag-tilted: #d9711c; --tag-excluded: #6b45b8; --tag-bought: #12929f;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--page); color: var(--ink); font: 15.5px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-.page { max-width: 1040px; margin: 0 auto; padding: 32px 16px 72px; }
-h1 { font-size: 2.05rem; line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.015em; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+h1, h2 { font-family: "EB Garamond", Garamond, Georgia, serif; font-weight: 500; color: var(--navy); }
+h3, h4 { color: var(--navy); }
+.ch-band { background: linear-gradient(90deg, #121a2c 0%, #172238 60%, #1a263b 100%); }
+.ch-band__in { max-width: 1180px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+.ch-word { font-family: "EB Garamond", Garamond, Georgia, serif; font-weight: 500; text-transform: uppercase; letter-spacing: .22em; color: #ece6d9; text-decoration: none; font-size: 17px; }
+.ch-nav a { color: rgba(236,230,217,.78); text-decoration: none; font-size: 15px; margin-left: 20px; }
+.ch-nav a:hover { color: #ece6d9; }
+.ch-back { max-width: 1040px; margin: 14px auto 0; padding: 0 16px; font-size: 14px; color: var(--ink2); }
+.ch-foot { background: var(--tint); border-top: 1px solid var(--rule, #dddddd); color: var(--ink2); font-size: 14px; margin-top: 40px; }
+.ch-foot > div { max-width: 1040px; margin: 0 auto; padding: 20px 16px 32px; }
+@media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
+.page { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; }
+h1 { font-size: 2.2rem; line-height: 1.15; margin: 4px 0 12px; }
 h2 { font-size: 1.35rem; line-height: 1.3; margin: 0 0 6px; }
 h3 { font-size: 1.05rem; margin: 0 0 6px; }
 p, li { max-width: 74ch; }
@@ -61,15 +52,15 @@ section { margin-top: 48px; }
 .dek { font-size: 1.1rem; margin: 0 0 18px; }
 .sub { color: var(--ink2); margin: 0 0 14px; }
 .small { color: var(--ink2); font-size: 0.86rem; }
-.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px 16px; }
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .term { border-bottom: 1px dotted var(--ink2); cursor: help; }
 
 /* key numbers */
 .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 6px 0 6px; }
-.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 10px 14px; }
 .tile .k { font-size: 0.8rem; color: var(--ink2); }
-.tile .v { font-size: 1.55rem; font-weight: 650; line-height: 1.2; }
+.tile .v { font-size: 1.4rem; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
 @media (max-width: 700px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* tables */
@@ -79,14 +70,16 @@ table.tbl thead th { color: var(--ink2); font-weight: 600; border-bottom: 1px so
 table.tbl thead th.num { text-align: right; white-space: normal; }
 table.tbl td.num { text-align: right; }
 table.tbl tfoot td { border-top: 1px solid var(--line); border-bottom: 0; font-weight: 650; }
-.tblwrap { overflow-x: auto; }
+.tblwrap { overflow-x: auto; position: relative; }
+table.tbl th:first-child, table.tbl td:first-child { position: sticky; left: 0; background: var(--surface); z-index: 1; }
+@media (max-width: 700px) { .tblwrap, .mapwrap { background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9)) right / 32px 100% no-repeat; background-attachment: scroll; } }
 caption { text-align: left; color: var(--ink2); font-size: 0.82rem; padding: 0 0 6px; }
 
 /* formula cards */
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 @media (max-width: 760px) { .steps { grid-template-columns: minmax(0, 1fr); } }
 .step .n { display: inline-block; width: 22px; height: 22px; border-radius: 50%; background: var(--sel); color: var(--accent-ink); font-weight: 700; font-size: 0.8rem; text-align: center; line-height: 22px; margin-right: 6px; }
-.eq { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.9rem; margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--accent); background: var(--page); border-radius: 0 6px 6px 0; }
+.eq { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.9rem; margin: 8px 0; padding: 6px 8px; border-left: 3px solid var(--navy); background: var(--tint); border-radius: 0 4px 4px 0; }
 .step p { margin: 6px 0 0; font-size: 0.9rem; }
 
 /* controls */
@@ -104,12 +97,12 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 0.78rem; color: var(--ink2); margin: 4px 0 8px; align-items: flex-end; }
 .legend .bar { width: 150px; height: 9px; border-radius: 3px; margin: 3px 0; }
 .legend .ticks { display: flex; justify-content: space-between; width: 150px; font-variant-numeric: tabular-nums; }
-.mapwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.mapwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); }
 table.map { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 0.78rem; }
 table.map th, table.map td { padding: 2px 5px; }
 table.map thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); font-weight: 600; color: var(--ink2); text-align: center; border-bottom: 1px solid var(--line); padding: 6px 4px; }
 table.map thead th .code { display: block; font-weight: 400; font-size: 0.7rem; }
-table.map th.ind { text-align: left; font-weight: 400; white-space: nowrap; }
+table.map th.ind { text-align: left; font-weight: 400; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 2; }
 table.map th.ind .code { font-weight: 700; color: var(--ink); display: inline-block; min-width: 50px; margin-right: 4px; }
 table.map th.ind .full { color: var(--ink2); }
 table.map td.cell { text-align: center; font-variant-numeric: tabular-nums; border: 2px solid var(--surface); border-radius: 4px; min-width: 52px; }
@@ -159,7 +152,7 @@ table.wo tr.total td { border-top: 1px solid var(--line); border-bottom: 0; font
 .contrib input[type="number"] { width: 76px; text-align: right; }
 .contrib input[readonly] { color: var(--ink2); background: transparent; border-color: var(--grid); }
 .contrib tr.sel td { background: var(--sel); }
-.reading-line { margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--page); }
+.reading-line { margin: 10px 0 0; padding: 8px 12px; border-left: 3px solid var(--navy); background: var(--tint); }
 
 /* cases */
 .cases { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -174,16 +167,6 @@ dl.terms dt { font-weight: 600; }
 dl.terms dd { margin: 0; }
 @media (max-width: 600px) { dl.terms { grid-template-columns: minmax(0, 1fr); } dl.terms dd { margin-bottom: 6px; } h1 { font-size: 1.65rem; } }
 @media print {
-  :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
-    color-scheme: light;
-    --page: #ffffff; --surface: #ffffff; --ink: #0b0b0b; --ink2: #52514e;
-    --grid: #e1e0d9; --line: #c3c2b7; --border: rgba(11,11,11,0.14);
-    --accent: #2a78d6; --accent-ink: #1c5cab; --sel: #e6eefa;
-    --warn-bg: #fdf1dc; --warn-ink: #6b4100; --ok-ink: #006300;
-    --neg: #b3261e; --mid: #f0efec; --pos: #184f95;
-    --bar-neg: #e34948; --bar-pos: #2a78d6;
-    --tag-tilted: #eb6834; --tag-excluded: #4a3aa7; --tag-bought: #1baf7a;
-  }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body { background: #fff; font-size: 10.5pt; }
   .page { max-width: none; padding: 0; }
@@ -200,6 +183,11 @@ dl.terms dd { margin: 0; }
 </style>
 </head>
 <body>
+<header class="ch-band"><div class="ch-band__in">
+  <a class="ch-word" href="https://www.carlohofer.com/">Carlo Hofer</a>
+  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Projects</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">CV</a></nav>
+</div></header>
+<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">All projects</a></p>
 <main class="page">
 
 <header>
@@ -210,7 +198,7 @@ dl.terms dd { margin: 0; }
 <div class="tile"><div class="k">Size exposure</div><div class="v">{{a_e_SMB}}</div></div>
 <div class="tile"><div class="k">Value exposure</div><div class="v">{{a_e_HML}}</div></div>
 <div class="tile"><div class="k">Investment exposure</div><div class="v">{{a_e_CMA}}</div></div>
-<div class="tile"><div class="k">Cost at average factor returns</div><div class="v">{{a_ctot}} bp a year</div></div>
+<div class="tile"><div class="k">Cost at mean factor returns</div><div class="v">{{a_ctot}} bp a year</div></div>
 </div>
 <p class="small">The oil and utilities tilt as it stood in {{first_month_text}}, the first month of the study (case (a) below), at the betas averaged over {{first_month_text}} to {{last_month_text}}.</p>
 </header>
@@ -390,6 +378,7 @@ dl.terms dd { margin: 0; }
 </section>
 
 </main>
+<footer class="ch-foot"><div>Carlo Hofer &middot; Data: Kenneth R. French Data Library &middot; <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a> &middot; Built {{build_date}}</div></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script>
@@ -506,7 +495,7 @@ dl.terms dd { margin: 0; }
     var pole = token("--pos");
     if (t < 0) { pole = token("--neg"); }
     var bg = mixHex(token("--mid"), pole, Math.abs(t));
-    var ink = "#0b0b0b";
+    var ink = "#262b33";
     if (lum(bg) < 0.18) { ink = "#ffffff"; }
     return { bg: css(bg), ink: ink };
   }
@@ -788,10 +777,6 @@ dl.terms dd { margin: 0; }
   var map = document.getElementById("maptable");
   map.addEventListener("mousemove", cellTip);
   map.addEventListener("mouseleave", function () { tip.style.display = "none"; });
-  if (window.matchMedia) {
-    var mq = window.matchMedia("(prefers-color-scheme: dark)");
-    if (mq.addEventListener) { mq.addEventListener("change", function () { renderLegend(); renderMap(); }); }
-  }
   var termsBox = document.getElementById("termsbox"), termsWasOpen = false;
   window.addEventListener("beforeprint", function () { termsWasOpen = termsBox.open; termsBox.open = true; renderLegend(); renderMap(); });
   window.addEventListener("afterprint", function () { termsBox.open = termsWasOpen; renderLegend(); renderMap(); });
