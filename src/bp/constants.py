@@ -454,3 +454,116 @@ EXT_COST_LEVELS = (DGU_TCOST, TCOST_SENSITIVITY)              # each reported ne
 OUTPUT_DIR = "outputs"
 PROVENANCE_FILE = "outputs/provenance_french.json"   # download date, URL, SHA-256 and CRSP vintage line per file
 TIMEZONE = "Europe/Amsterdam"
+
+# ---------------------------------------------------------------------------
+# 7. Version 2, module A: the factor objective under the mandate
+# ---------------------------------------------------------------------------
+# Fixed 8 October 2026, before any of the module's code was written, from the
+# design of 7 October 2026 and version 1's results at commit 6835d49. Version 1 found that
+# the mandate's tilt leaves incidental exposures of 0.004 to 0.018 in absolute
+# value to the six factors, costing 9 to 13 basis points a year. Module A makes
+# the exposures the objective: each month, with the data available before the
+# month, the optimiser maximises the sum of the active exposures to the four
+# targeted factors, s' B' (w - b), where B holds the industries' betas to the
+# six factors estimated as in notebook 13 (three years of daily returns before
+# the month) and s is FO_TARGET_SIGN, under every constraint of the mandate
+# (CONSTRAINT_SETS["C3"]) and one new constraint, the budget: the forecast
+# tracking error from the month's covariance estimate at most FO_BUDGETS_ANNUAL.
+# The study holds no view on expected returns, as version 1 did not: the
+# targets are the four of French's six factors with a documented premium, the
+# direction of each is the literature's, and the four are weighted equally in
+# beta units. Nothing estimates a premium or times a factor.
+# Naming, fixed in the design: "tilt" stays the industry reduction of version 1;
+# the new objective is the factor objective, the four are the targeted factors,
+# the limit is the budget.
+FO_DECISION_DATE = "2026-10-08"
+FO_TARGET_FACTORS = ("HML", "RMW", "CMA", "Mom")              # value, profitability, investment, momentum
+FO_TARGET_SIGN = {"Mkt-RF": 0.0, "SMB": 0.0, "HML": 1.0, "RMW": 1.0, "CMA": 1.0, "Mom": 1.0}   # s, on ATTRIBUTION_FACTORS; +1 is the direction of the documented premium
+FO_CONSTRAINT_SET = "C3"                                       # the mandate: every constraint of version 1's C3, unchanged
+FO_BUDGETS_ANNUAL = (0.0075, 0.0100, 0.0150)                   # tau, per year: just above the mandate's own realised cost (84.7 to 95.8 bp), the enhanced-indexing limit of OPT_TILT_TE_MAX_ANNUAL, and the generous case
+FO_BUDGET_MAIN = 0.0100                                        # the budget at which the robust, RiskMetrics and single-factor paths run and most expectations are tested
+FO_BETA_WINDOW_YEARS = EXT_COV_DAILY_WINDOW_YEARS              # the betas' window: notebook 13's three years of daily returns before the month
+# Infeasibility rule: in a month in which the budget cannot be met under the
+# mandate (the tracking-error-minimising solution of version 1 already exceeds
+# tau), the path takes that minimising solution, the month is counted and
+# reported, and nothing else is relaxed; the count is one of the results.
+FO_INFEASIBLE_RULE = "tracking-error minimiser"
+# The 19 paths, the count fixed here: the five estimator variants of version 1
+# at each of the three budgets (15); the robust and RiskMetrics variants at the
+# main budget (2); two single-factor sensitivities at the main budget with the
+# daily sample estimator, s on value alone and on momentum alone (2). Version
+# 1's mandate paths (tracking error minimised, no objective) are the comparison
+# and are not rerun. A path added after the first run is disclosed with its
+# date and reason, and the count restated.
+FO_SINGLE_FACTOR_PATHS = (("HML",), ("Mom",))
+FO_PATH_COUNT = 19
+# The two measures new to module A. The exposure the budget bought: the mean
+# over the months of the sum of the four targeted active exposures, divided by
+# the realised tracking error in basis points a year. The gap: for each month,
+# the targeted exposure the optimiser chose ex ante, s' B_t' a_t with B_t the
+# betas estimated before the month, minus the exposure the same weights carry
+# when the betas are estimated after the month, s' B_{t+1}' a_t; its mean
+# absolute value over the months is the path's gap.
+FO_GAP_DEFINITION = "s'(B_t - B_{t+1})' a_t, mean absolute value over the months"
+# The seven expectations, each a strict pass or fail; the levels from
+# version 1's results at 6835d49, with the design's reasons.
+# E1. At the main budget the budget binds (forecast tracking error within
+# FO_E1_BIND_TOL of the budget) in at least FO_E1_BIND_SHARE_MIN of the 566
+# months for each of the four daily estimators; the months where it cannot
+# be met are counted. Reason: version 1's forecast under the mandate was 55
+# to 68 bp on average and 47 to 55 for the tilt alone at the 1979 oil peak for
+# the daily estimators, so a budget of 100 should be reachable almost always;
+# the monthly estimator (108 at that peak) may fail it in the first years.
+FO_E1_BIND_TOL_ANNUAL = 0.0001           # one basis point a year
+FO_E1_BIND_SHARE_MIN = 0.95
+# E2. At the main budget the mean active exposure to each targeted factor is
+# positive on every main path, the average of the four is at least
+# FO_E2_MEAN_EXPOSURE_MIN for the daily sample estimator, and that average
+# rises with the budget (75, then 100, then 150) on every estimator. Reason:
+# version 1's incidental exposures were 0.004 to 0.018 in absolute value with
+# no objective; 49 industries within 2 percentage points of their weights can
+# reach three to ten times that when the objective asks for it.
+FO_E2_MEAN_EXPOSURE_MIN = 0.05
+# E3. Realised tracking error exceeds the budget by 20 to 60 per cent on the
+# daily estimators, and by more on the monthly sample covariance; tested at
+# every budget (the design names none), the monthly ratio against the largest
+# daily ratio at the same budget. Reason: version 1's bias was 1.22 to 1.39 on
+# daily data and 1.61 on monthly; a budget-binding solution concentrates risk
+# where the estimator sees least, so the miss may exceed version 1's, bounded
+# here at 1.6.
+FO_E3_REALISED_OVER_BUDGET_RANGE = (1.2, 1.6)
+# E4. The four targeted factors' contributions sum to a positive amount on
+# every main path, and at the main budget and above the six factors explain at
+# least FO_E4_FACTOR_SHARE_MIN of the active return's variance on every main
+# path. Reason: version 1's factors explained 14 to 28 per cent of incidental
+# exposures; deliberate exposures raise the share.
+FO_E4_FACTOR_SHARE_MIN = 0.30
+# E5. At the main budget the gross active return is positive for at least
+# FO_E5_POSITIVE_MIN of the five estimators; the net return at DGU_TCOST per
+# unit of turnover lies within FO_E5_NET_GAP_MAX of the gross. Whether the
+# active return is more than two standard errors from zero is reported, not
+# expected. Reason: the study holds no view on the premia; the sign follows
+# from the targets if the premia had their documented sign over the sample,
+# which is what the data say and not a claim of skill.
+FO_E5_POSITIVE_MIN = 4
+FO_E5_NET_GAP_MAX = 0.0010               # 10 basis points a year
+# E6. Of the two single-factor paths, momentum alone has the higher turnover
+# and the larger gap, and the turnover cap binds in more months on the
+# momentum path than on the value path. Reason: industry momentum betas rotate
+# within a year; value betas do not.
+# E7. At the main budget the spread across the four daily estimators in
+# realised tracking error is at most FO_E7_TE_RANGE_MAX, the exposure bought
+# per basis point differs across them by less than FO_E7_EXPOSURE_PER_BP_REL_MAX
+# of their mean (largest minus smallest over the mean), and the monthly sample
+# covariance remains the worst calibrated (the largest realised over forecast
+# of the five). Reason: version 1, a range of 9 basis points on a level of
+# about 90, the monthly covariance 61 per cent under-forecast.
+FO_E7_TE_RANGE_MAX = 0.0020              # 20 basis points a year
+FO_E7_EXPOSURE_PER_BP_REL_MAX = 0.30
+# Notebook 14 runs the objective at the report months of version 1 and over
+# the sample without a rolling path: a worked month, the exposure against the
+# budget at FO_CURVE_BUDGETS (the three budgets and points between), and the
+# feasibility of each budget in every month, from the forecast tracking error
+# of the tracking-error-minimising solution under the mandate.
+FO_CURVE_BUDGETS_ANNUAL = (0.0050, 0.0075, 0.0100, 0.0125, 0.0150, 0.0200)
+FO_TOL_TE = 1e-9                         # a forecast tracking error within this of the budget counts as on it, in the tests

@@ -4109,7 +4109,371 @@ Expectation 6, the contributions, is the notebook's main result, and it reads no
 ]
 
 
+# ---------------------------------------------------------------------------
+# 14: version 2, module A: the factor objective under the mandate
+# ---------------------------------------------------------------------------
+
+NB14 = [
+    md("""
+# 14. The factor objective under the mandate: what a budget buys
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four, and notebook 12 ran them with the robust portfolio and RiskMetrics as seven variants |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Factor | a return series that moves many assets at once; the six here are the market factor Mkt-RF and five long-short portfolios: SMB (small firms over large, size), HML (cheap firms over expensive, value), RMW (profitable firms over unprofitable, profitability), CMA (firms that invest little over firms that invest much, investment) and Mom (recent winners over recent losers, momentum) |
+| Premium | the average return of a factor over long samples, as the literature reports it; the four factors value, profitability, investment and momentum have a documented positive premium, and this study estimates none of them |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09); the estimator named after it builds the covariance from five of them (notebook 10) |
+| Beta | how much an asset moves with a factor on average, estimated by regressing the asset's excess returns on the factors' returns over the estimation window; one beta per factor |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Active exposure | the portfolio's beta to a factor minus the benchmark's: the sum over industries of the active weight times the industry's beta to that factor (notebook 13) |
+| Attribution | splitting a portfolio's active return into the contributions of named factors plus a residual, so that the parts add up to the whole (notebook 13) |
+| Tracking error | the standard deviation of the difference between two return series, stated per year; forecast (ex-ante) when computed from a covariance matrix before the month, realised (ex-post) when measured on the active returns afterwards |
+| Long-only | said of a portfolio in which no weight is negative |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance; 2% a month here |
+| Tilt | a constraint that holds named industries below their benchmark weight; here Coal, Oil and Utilities at no more than half of it. The word keeps this one meaning in version 2 |
+| Exclusion | a constraint that holds named industries at zero weight; Smoke (tobacco) and Guns (weapons) here |
+| Beta-neutral | a constraint that holds the portfolio's beta to the benchmark equal to one |
+| Mandate | the whole set of rules the fund obeys: the tilt, the exclusions and beta neutrality, with the active weight bound and the turnover cap, the constraint set C3 of version 1 |
+| Optimiser | the extension's routine that solves a constrained portfolio problem; version 1's minimises the forecast tracking error (notebook 11), this notebook's maximises the factor objective |
+| Factor objective | the quantity version 2's optimiser maximises: the sum of the portfolio's active exposures to the targeted factors, each counted in the direction of its premium |
+| Targeted factors | the four of the six factors with a documented premium, value, profitability, investment and momentum, each targeted in the direction of its premium and weighted equally in beta units |
+| Budget | the limit on the forecast tracking error of the factor objective's portfolio: 75, 100 or 150 basis points a year. A month in which the mandate's tracking-error-minimising portfolio already exceeds the budget takes that portfolio and is counted |
+| Cone | the set of weights whose forecast tracking error is at most the budget; the budget is written as a cone so that the problem stays convex, with one global maximum |
+| Stationary | said of the portfolio the budget allows when turnover is free, the destination the capped rebalances move towards |
+| Incidental exposure | the factor objective's value at a portfolio built without it, version 1's tracking-error-minimising portfolio; what the mandate's tilt leaves behind |
+| Robust portfolio | the weights whose largest forecast tracking error across the five covariance estimates is smallest (notebook 11); under the factor objective, the weights whose budget holds under all five at once |
+| Basis point | one hundredth of a percentage point, so 100 basis points is 1.00% |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** Version 1 built an enhanced index fund of the kind Dutch institutional mandates ask for: long-only, within 2 percentage points of the index in every industry, 2% one-way turnover a month, Coal, Oil and Utilities at half their index weight, tobacco and weapons excluded, a beta of one; and it judged five covariance estimators on how closely the result tracked the index. Notebook 13 found that the mandate left the portfolio with exposures of 0.004 to 0.018 in absolute value to the six factors that nobody chose, which cost 9 to 13 basis points a year. The question an enhanced index manager asks next is the one this module answers: under the same mandate, what active exposure to the factors with a documented premium a budget on the forecast tracking error can buy, what it costs in turnover, what it realised in active return, and whether the covariance estimator still matters once the budget is spent on purpose. Enhanced indexing in practice is this problem: Robeco's enhanced index products, for one, hold the index within an ex-ante tracking error near 1% a year and spend that budget on exposures to value, quality and momentum (Robeco, 2024, "The smarter alternative: Enhanced Indexing"). The study holds no view on expected returns, as version 1 did not: the four targeted factors are the four of French's six with a documented premium, the direction of each target is the literature's, the four are weighted equally in beta units, and nothing estimates a premium or times a factor.
+
+**The formulation.** Each month, with the data available before the month, the optimiser chooses the weights w that maximise the factor objective, s'B'(w - b), where b is version 1's cap-weighted benchmark, B is the 49-by-6 matrix of industry betas to French's six factors estimated on the previous three years of daily returns by the regression of notebook 13, and s = (0, 0, +1, +1, +1, +1) on (market, size, value, profitability, investment, momentum); subject to every constraint of version 1's mandate and to the budget: the forecast tracking error from the month's covariance estimate, the square root of 12 (w - b)'Sigma(w - b), at most tau. The objective is linear in w and the budget is a cone, so the problem is a second-order cone program, convex, with one global maximum; cvxpy solves it with the solver of notebook 11. Worked number: an industry with an active weight of +0.02 and betas of 0.5 to value and 0.3 to profitability adds 0.02 times (0.5 + 0.3), that is 0.016, to the factor objective; an industry with an active weight of -0.02 and a value beta of 1.0 removes 0.020. The budget in monthly units is tau over the square root of 12: 100 basis points a year is 29 basis points a month. The infeasibility rule, fixed before the code ran: in a month in which the budget cannot be met under the mandate, because the tracking-error-minimising portfolio of version 1 already exceeds tau, the path takes that portfolio, the month is counted and reported, and nothing else is relaxed; the count is one of the results.
+
+**What this notebook does.** It is the first of three (14 the problem, 15 the rolling evaluation of nineteen paths, 16 their attribution) and runs no path. It adds the factor objective to the optimiser beside version 1's problem, which stays as it is; tests it on made-up markets against an independent solver (`tests/test_factor_objective.py`); works one month through by hand; computes the exposure a budget buys at version 1's three report months for each of the five estimators, with turnover free and with one capped rebalance; and counts, over the 566 months, how often each budget can be met at all. The rolling evaluation, the realised results and the seven expectations of the design (E1 to E7 in `constants.py`, section 7) belong to notebooks 15 and 16; what this notebook establishes is that the problem is posed and solved as designed, and what the arithmetic before the run says about the budgets.
+
+**What I expect to see, written before the run (`constants.py`, section 7, 8 October 2026).**
+
+1. Count first: 566 evaluation months from 1979-07; the betas are 49 by 6 in every month; three report months, 1979-07, 2004-11 and 2026-08; five estimator variants; the three budgets of the design and the six of the curve.
+2. The solver's arithmetic, strict: at every report month and for every estimator, the factor objective's value does not fall as the budget rises; wherever the budget is at or above the minimiser's forecast tracking error the budget is met, and the forecast tracking error then equals the budget within 1 basis point unless the mandate's bounds stop the move first, in which case the objective equals the largest value the bounds alone allow; wherever the budget is below the minimiser's forecast the month takes the minimiser's portfolio, and the objective equals the incidental exposure.
+3. The objective buys something, strict: at the main budget of 100 basis points and every report month, the factor objective's value exceeds the incidental exposure for every estimator, and every one of the four targeted exposures is above its incidental value.
+4. Reported, no verdict: the worked month; the curves; what one capped rebalance buys from the minimiser's portfolio; the months in which the stationary minimum of the forecast tracking error exceeds each budget, by estimator (the lower bound of the infeasible months a path can have, since the cap adds a constraint); and the stationary factor objective at each budget month by month for the sample estimator, with its mean per targeted factor, read against E1 and E2 of the design.
+
+Running time: about two minutes, most of it the 566 months of feasibility.
+"""),
+    md("""
+## Modules
+
+`constants` gains its section 7, the design of module A with the seven expectations and their reasons; `optimiser` gains `solve_factor_objective`, `FactorSolution` and `targeted_exposure`, beside version 1's functions, which are unchanged; the others are those of earlier notebooks.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    writefile("attribution.py"),
+    md("""
+## Count first: the months, the betas, the report months, the budgets
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import attribution as A
+
+pd.set_option("display.width", 230)
+pd.set_option("display.max_rows", 200)
+pd.set_option("display.max_columns", 40)
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+industries = [c.strip() for c in weights.columns]
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+FACTORS = list(C.ATTRIBUTION_FACTORS)
+TARGETED = list(C.FO_TARGET_FACTORS)
+s = np.array([C.FO_TARGET_SIGN[f] for f in FACTORS])
+MANDATE = C.CONSTRAINT_SETS[C.FO_CONSTRAINT_SET]
+STATIONARY = tuple(c for c in MANDATE if c != "turnover_cap")      # the mandate with turnover free
+VARIANTS = list(CV.EVALUATION_VARIANTS)
+LABEL = {v: f"{v[0]}, {v[1].replace('_', ' ')}" for v in VARIANTS}
+REPORT = [months[0], pd.Period(C.OPT_REPORT_MONTHS[1], "M"), months[-1]]
+
+def betas_at(month):
+    X = CV.daily_window(P.excess_d, month, C.FO_BETA_WINDOW_YEARS)
+    _, B = CV.factor_cov(X.to_numpy(), P.factors_d.loc[X.index, FACTORS].to_numpy())
+    return B
+
+# Expectation 1, the counts
+assert len(months) == 566, len(months)
+assert all(np.isfinite(betas_at(m)).all() and betas_at(m).shape == (49, 6) for m in REPORT)
+assert tuple(s) == (0.0, 0.0, 1.0, 1.0, 1.0, 1.0) and len(TARGETED) == 4 and len(VARIANTS) == 5
+assert len(C.FO_BUDGETS_ANNUAL) == 3 and len(C.FO_CURVE_BUDGETS_ANNUAL) == 6 and C.FO_BUDGET_MAIN in C.FO_BUDGETS_ANNUAL
+provenance = [fl.download(key) for key in P.files]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+print(f"{len(months)} evaluation months, {months[0]} to {months[-1]}; betas 49 by 6 at each of the report months {', '.join(str(m) for m in REPORT)}")
+print(f"targeted factors {', '.join(TARGETED)}, s = {tuple(int(x) for x in s)} on {', '.join(FACTORS)}")
+print(f"budgets {', '.join(f'{1e4 * t:.0f}' for t in C.FO_BUDGETS_ANNUAL)} basis points a year (main {1e4 * C.FO_BUDGET_MAIN:.0f}); the curve at {', '.join(f'{1e4 * t:.0f}' for t in C.FO_CURVE_BUDGETS_ANNUAL)}")
+print(f"the mandate: {', '.join(MANDATE)}; stationary: the same without the turnover cap")
+print(f"CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## A worked month: 2026-08, the sample covariance on daily data, a budget of 100 basis points
+
+Turnover free, so that the portfolio is the stationary one the budget allows. The minimiser's portfolio is version 1's under the same mandate; the objective's is this notebook's. The table shows the industries that move most, the six active exposures of both portfolios, and the arithmetic of the objective, industry by industry, summed.
+"""),
+    code("""
+m = months[-1]
+b = weights.loc[m].to_numpy()
+B = betas_at(m)
+Sigma, _, _ = CV.estimate("sample", "daily_3y", m, P)
+base_worked = O.solve(Sigma, b, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+sol = O.solve_factor_objective(Sigma, b, B, s, C.FO_BUDGET_MAIN, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+assert sol.budget_met and sol.status == "optimal"
+base = base_worked
+print(f"{m}, sample covariance on daily data, budget {1e4 * C.FO_BUDGET_MAIN:.0f} bp a year ({1e4 * C.FO_BUDGET_MAIN / np.sqrt(12):.1f} bp a month)")
+print(f"  the minimiser's portfolio: forecast tracking error {1e4 * base.tracking_error:.1f} bp, factor objective {O.targeted_exposure(B, s, base.weights, b):+.4f} (the incidental exposure)")
+print(f"  the objective's portfolio: forecast tracking error {1e4 * sol.tracking_error:.1f} bp, factor objective {sol.objective:+.4f}; one-way turnover from the benchmark {O.one_way_turnover(sol.weights, b):.3f}, from the minimiser's portfolio {O.one_way_turnover(sol.weights, base.weights):.3f}")
+print(f"  the budget binds: {'yes' if sol.binding['budget'] else 'no'}; industries at the active weight bound {sol.binding['active_weight_bound']}, at zero {sol.binding['long_only']}, at the tilt {sol.binding['tilt']}")
+print()
+contrib = pd.DataFrame({"benchmark weight": b, "active weight": sol.active, "beta value": B[:, FACTORS.index("HML")], "beta profitability": B[:, FACTORS.index("RMW")],
+                        "beta investment": B[:, FACTORS.index("CMA")], "beta momentum": B[:, FACTORS.index("Mom")], "contribution to the objective": sol.active * (B @ s)}, index=industries)
+top = contrib.reindex(contrib["active weight"].abs().sort_values(ascending=False).index).head(12)
+print("the twelve largest active weights, with the betas to the four targeted factors and the contribution to the objective (active weight times the sum of the four betas):")
+print(top.to_string(float_format=lambda x: f"{x:+.4f}"))
+print(f"sum over all 49 industries: {contrib['contribution to the objective'].sum():+.4f} = the factor objective {sol.objective:+.4f}")
+print()
+expo = pd.DataFrame({"minimiser": A.active_exposures(B, base.weights, b), "factor objective": sol.exposures, "benchmark beta": b @ B}, index=FACTORS)
+print("active exposures to the six factors, and the benchmark's own betas:")
+print(expo.to_string(float_format=lambda x: f"{x:+.4f}"))
+"""),
+    md("""
+## The curve: what each budget buys at the three report months
+
+For each of the five estimators at 1979-07, 2004-11 and 2026-08, the stationary factor objective at six budgets from 50 to 200 basis points, with the minimiser's forecast tracking error and incidental exposure beside it. Where the budget is below the minimiser's forecast the month is infeasible and takes the minimiser's portfolio; where the mandate's bounds stop the move before the budget is spent, the forecast lies below the budget and the curve flattens.
+"""),
+    code("""
+rows = []
+for m in REPORT:
+    b = weights.loc[m].to_numpy()
+    B = betas_at(m)
+    for v in VARIANTS:
+        Sigma, _, _ = CV.estimate(*v, m, P)
+        base = O.solve(Sigma, b, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+        inc = O.targeted_exposure(B, s, base.weights, b)
+        roof = O.solve_factor_objective(Sigma, b, B, s, 1.0, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask).objective   # the bounds alone: the largest objective any budget can buy
+        rows.append({"month": str(m), "variant": LABEL[v], "budget (bp)": "minimiser", "forecast TE (bp)": 1e4 * base.tracking_error, "objective": inc, "met": True, "bounds stop": False, "roof": roof})
+        for tau in C.FO_CURVE_BUDGETS_ANNUAL:
+            sol = O.solve_factor_objective(Sigma, b, B, s, tau, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+            rows.append({"month": str(m), "variant": LABEL[v], "budget (bp)": f"{1e4 * tau:.0f}", "forecast TE (bp)": 1e4 * sol.tracking_error, "objective": sol.objective,
+                         "met": sol.budget_met, "bounds stop": bool(sol.budget_met and sol.tracking_error < tau - C.FO_E1_BIND_TOL_ANNUAL),
+                         "minimiser TE (bp)": 1e4 * base.tracking_error, "incidental": inc, "roof": roof,
+                         **{f"exposure {f}": x for f, x in zip(FACTORS, sol.exposures)}, **{f"incidental {f}": x for f, x in zip(FACTORS, A.active_exposures(B, base.weights, b))}})
+curves = pd.DataFrame(rows)
+for m in REPORT:
+    print(f"{m}: the factor objective by budget (columns, basis points a year) and estimator; 'min' is the minimiser's portfolio")
+    tab = curves[curves.month == str(m)].pivot(index="variant", columns="budget (bp)", values="objective")
+    tab = tab[["minimiser"] + [f"{1e4 * t:.0f}" for t in C.FO_CURVE_BUDGETS_ANNUAL]].rename(columns={"minimiser": "min"})
+    te = curves[(curves.month == str(m)) & (curves["budget (bp)"] == "minimiser")].set_index("variant")["forecast TE (bp)"]
+    tab.insert(0, "min TE (bp)", te)
+    print(tab.to_string(float_format=lambda x: f"{x:+.3f}"))
+    flat = curves[(curves.month == str(m)) & curves["bounds stop"]]
+    infeasible = curves[(curves.month == str(m)) & (~curves["met"])]
+    print(f"  infeasible budgets: {len(infeasible)} cells" + ("" if infeasible.empty else " (" + ", ".join(f"{r.variant} at {r['budget (bp)']}" for _, r in infeasible.iterrows()) + ")")
+          + f"; the bounds stop the move before the budget in {len(flat)} cells" + ("" if flat.empty else " (" + ", ".join(f"{r.variant} at {r['budget (bp)']}" for _, r in flat.iterrows()) + ")"))
+    print()
+
+# Expectation 2: the solver's arithmetic
+e2_monotone, e2_met, e2_inf = 0, 0, 0
+n_monotone, n_met, n_inf = 0, 0, 0
+for (m, v), grp in curves[curves["budget (bp)"] != "minimiser"].groupby(["month", "variant"], sort=False):
+    g = grp.copy()
+    g["tau"] = g["budget (bp)"].astype(float) / 1e4
+    g = g.sort_values("tau")
+    n_monotone += 1
+    e2_monotone += int((np.diff(g["objective"].to_numpy()) >= -1e-9).all())
+    for _, r in g.iterrows():
+        if r["tau"] >= r["minimiser TE (bp)"] / 1e4:
+            n_met += 1
+            on_budget = abs(r["forecast TE (bp)"] / 1e4 - r["tau"]) <= C.FO_E1_BIND_TOL_ANNUAL
+            at_roof = abs(r["objective"] - r["roof"]) <= 1e-6          # the bounds stopped the move: the objective is the largest the bounds allow
+            e2_met += int(r["met"] and (on_budget or at_roof))
+        else:
+            n_inf += 1
+            e2_inf += int((not r["met"]) and abs(r["objective"] - r["incidental"]) <= 1e-9)
+ok2 = (e2_monotone == n_monotone) and (e2_met == n_met) and (e2_inf == n_inf)
+print(f"expectation 2: the objective does not fall as the budget rises in {e2_monotone} of {n_monotone} month-estimator pairs; "
+      f"a budget at or above the minimiser's forecast is met, with the forecast on the budget or the objective at the bounds' own maximum, in {e2_met} of {n_met} cells; "
+      f"a budget below it takes the minimiser's portfolio with the incidental exposure in {e2_inf} of {n_inf} cells: {'MET' if ok2 else 'NOT MET'}")
+
+# Expectation 3: the objective buys something at the main budget
+main = curves[curves["budget (bp)"] == f"{1e4 * C.FO_BUDGET_MAIN:.0f}"]
+buys = (main["objective"] > main["incidental"] + 1e-9)
+each = pd.concat([main[f"exposure {f}"] > main[f"incidental {f}"] + 1e-9 for f in TARGETED], axis=1).all(axis=1)
+print(f"expectation 3: at {1e4 * C.FO_BUDGET_MAIN:.0f} bp the objective exceeds the incidental exposure in {int(buys.sum())} of {len(main)} month-estimator pairs, "
+      f"and every targeted exposure exceeds its incidental value in {int(each.sum())} of {len(main)}: {'MET' if buys.all() and each.all() else 'NOT MET'}")
+print(f"at {1e4 * C.FO_BUDGET_MAIN:.0f} bp the stationary objective runs from {main['objective'].min():+.3f} to {main['objective'].max():+.3f} across the fifteen pairs, "
+      f"{main['objective'].min() / 4:+.3f} to {main['objective'].max() / 4:+.3f} per targeted factor; incidental {main['incidental'].min():+.3f} to {main['incidental'].max():+.3f}")
+"""),
+    md("""
+## One capped rebalance: how fast the objective can be bought
+
+The stationary portfolio is a destination; the mandate allows 2% one-way turnover a month. Starting from the minimiser's portfolio at each report month, one rebalance under the cap at the main budget: the objective it reaches against the stationary one, and the months of such steps the distance would take if every step closed the same share of it.
+"""),
+    code("""
+rows = []
+for m in REPORT:
+    b = weights.loc[m].to_numpy()
+    B = betas_at(m)
+    for v in VARIANTS:
+        Sigma, _, _ = CV.estimate(*v, m, P)
+        base = O.solve(Sigma, b, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+        stat = O.solve_factor_objective(Sigma, b, B, s, C.FO_BUDGET_MAIN, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+        step = O.solve_factor_objective(Sigma, b, B, s, C.FO_BUDGET_MAIN, MANDATE, w_prev=base.weights, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+        inc = O.targeted_exposure(B, s, base.weights, b)
+        gained = (step.objective - inc) / (stat.objective - inc) if stat.objective > inc else np.nan
+        rows.append({"month": str(m), "variant": LABEL[v], "incidental": inc, "after one capped rebalance": step.objective, "stationary": stat.objective,
+                     "share of the distance in one step": gained, "distance to the stationary portfolio (one-way turnover)": O.one_way_turnover(stat.weights, base.weights),
+                     "step turnover": step.turnover, "step forecast TE (bp)": 1e4 * step.tracking_error, "budget met in the step": step.budget_met})
+steps = pd.DataFrame(rows).set_index(["month", "variant"])
+print(steps.to_string(float_format=lambda x: f"{x:+.3f}"))
+"""),
+    md("""
+## Feasibility across the sample
+
+For every evaluation month and estimator, the forecast tracking error of the mandate's tracking-error-minimising portfolio with turnover free: the stationary minimum. A budget below it cannot be met in that month by any portfolio, capped or not, so the count of such months is a lower bound on the infeasible months a path can have. For the sample covariance on daily data the stationary factor objective at the three budgets is computed month by month as well, which is what the budget buys before the cap slows it.
+"""),
+    code("""
+t0 = time.time()
+rows = []
+for i, m in enumerate(months):
+    b = weights.loc[m].to_numpy()
+    B = betas_at(m)
+    rec = {"month": m}
+    for v in VARIANTS:
+        Sigma, _, _ = CV.estimate(*v, m, P)
+        base = O.solve(Sigma, b, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+        rec[f"minimum TE {LABEL[v]}"] = base.tracking_error
+        if v == ("sample", "daily_3y"):
+            rec["incidental"] = O.targeted_exposure(B, s, base.weights, b)
+            for tau in C.FO_BUDGETS_ANNUAL:
+                sol = O.solve_factor_objective(Sigma, b, B, s, tau, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask)
+                rec[f"objective at {1e4 * tau:.0f}"] = sol.objective
+                rec[f"met at {1e4 * tau:.0f}"] = sol.budget_met
+                for f in TARGETED:
+                    rec[f"exposure {f} at {1e4 * tau:.0f}"] = sol.exposures[FACTORS.index(f)]
+    rows.append(rec)
+    if i % 100 == 0:
+        print(f"{m}: {time.time() - t0:.0f}s")
+feas = pd.DataFrame(rows).set_index("month")
+print(f"{len(months)} months in {time.time() - t0:.0f}s")
+print()
+cols = [f"minimum TE {LABEL[v]}" for v in VARIANTS]
+tab = pd.DataFrame({"mean (bp)": 1e4 * feas[cols].mean(), "largest (bp)": 1e4 * feas[cols].max(),
+                    **{f"months above {1e4 * tau:.0f}": (feas[cols] > tau).sum() for tau in C.FO_BUDGETS_ANNUAL}})
+tab.index = [c.replace("minimum TE ", "") for c in cols]
+print("the stationary minimum of the forecast tracking error under the mandate, by estimator, and the months in which it exceeds each budget (of 566):")
+print(tab.to_string(float_format=lambda x: f"{x:.1f}"))
+print()
+first_label, last_label = f"{months[0]} to 1989-12", f"2020-01 to {months[-1]}"
+decade = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in months], index=months)
+above = pd.DataFrame({f"{LABEL[v]} above {1e4 * C.FO_BUDGET_MAIN:.0f}": (feas[f"minimum TE {LABEL[v]}"] > C.FO_BUDGET_MAIN).groupby(decade).sum() for v in VARIANTS})
+above["months"] = decade.value_counts().reindex(above.index)
+print(f"the months above the main budget by decade:")
+print(above.to_string())
+print()
+obj_cols = [f"objective at {1e4 * tau:.0f}" for tau in C.FO_BUDGETS_ANNUAL]
+summ = pd.DataFrame({"mean": feas[obj_cols].mean(), "per targeted factor": feas[obj_cols].mean() / len(TARGETED), "smallest": feas[obj_cols].min(), "largest": feas[obj_cols].max(),
+                     "months met": [int(feas[f"met at {1e4 * tau:.0f}"].sum()) for tau in C.FO_BUDGETS_ANNUAL]})
+print(f"the stationary factor objective of the sample covariance on daily data, by budget, over the 566 months (incidental exposure {feas['incidental'].mean():+.4f} on average):")
+print(summ.to_string(float_format=lambda x: f"{x:+.4f}"))
+print()
+per_f = pd.DataFrame({f"{1e4 * tau:.0f}": [feas[f"exposure {f} at {1e4 * tau:.0f}"].mean() for f in TARGETED] for tau in C.FO_BUDGETS_ANNUAL}, index=TARGETED)
+print("mean stationary active exposure to each targeted factor, by budget:")
+print(per_f.to_string(float_format=lambda x: f"{x:+.4f}"))
+print()
+print(f"read against the design: E1 asks the budget of {1e4 * C.FO_BUDGET_MAIN:.0f} bp to bind in at least {C.FO_E1_BIND_SHARE_MIN:.0%} of months for each daily estimator, so at most {int(np.floor((1 - C.FO_E1_BIND_SHARE_MIN) * len(months)))} months may miss it; "
+      f"the stationary minimum alone exceeds {1e4 * C.FO_BUDGET_MAIN:.0f} bp in " + ", ".join(f"{int(tab.loc[LABEL[v], f'months above {1e4 * C.FO_BUDGET_MAIN:.0f}'])} ({LABEL[v]})" for v in VARIANTS[:4]) + " months.")
+print(f"E2 asks the mean of the four targeted exposures at {1e4 * C.FO_BUDGET_MAIN:.0f} bp to reach {C.FO_E2_MEAN_EXPOSURE_MIN} for the sample estimator; the stationary mean is {summ.loc[f'objective at {1e4 * C.FO_BUDGET_MAIN:.0f}', 'per targeted factor']:+.4f}, and a capped path can hold at most the stationary exposure on average.")
+"""),
+    md("""
+## Save
+
+The curves at the report months, the feasibility table with the sample estimator's stationary objective month by month, the capped steps and the worked month's weights and exposures are written to `outputs/` with the vintage in the file name, as a record and for the write-up.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+curves.to_csv(f"{C.OUTPUT_DIR}/factor_objective_curves_{vintage}.csv", index=False, float_format="%.8f")
+feas.to_csv(f"{C.OUTPUT_DIR}/factor_objective_feasibility_{vintage}.csv", float_format="%.8f")
+steps.to_csv(f"{C.OUTPUT_DIR}/factor_objective_capped_step_{vintage}.csv", float_format="%.8f")
+worked = contrib.copy()
+worked["minimiser weight"] = base_worked.weights
+worked.to_csv(f"{C.OUTPUT_DIR}/factor_objective_worked_{months[-1]}_{vintage}.csv", float_format="%.8f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("factor_objective")))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| 1. Count first | 566 months; betas 49 by 6 at 1979-07, 2004-11 and 2026-08; five estimators; budgets 75, 100 and 150, the curve at six points from 50 to 200 | holds |
+| 2. The solver's arithmetic: the objective does not fall with the budget; a budget the minimiser can meet is met, on the budget or at the bounds' own maximum; a budget it cannot meet takes the minimiser's portfolio | 15 of 15 pairs monotone; 82 of 82 feasible cells on the budget or at the roof; 8 of 8 infeasible cells with the incidental exposure | MET |
+| 3. At 100 basis points the objective exceeds the incidental exposure, and every targeted exposure exceeds its incidental value | the objective exceeds it in 15 of 15 pairs; every one of the four exposures in 10 of 15 | NOT MET in the second part |
+| 4. Reported: the worked month, the curves, one capped step, the feasibility over 566 months, the stationary objective by budget | below | reported |
+
+Expectation 1 holds: the counts are the design's, and the betas are the 49-by-6 matrices notebook 13 estimates, taken from the same function.
+
+Expectation 2 holds, and it is the check that the problem is solved as posed. At the three report months and for every estimator the factor objective is non-decreasing in the budget; wherever the budget is at or above the minimiser's forecast tracking error the solver meets it, with the forecast on the budget to within 1 basis point or, where the mandate's bounds stop the move first, with the objective equal to the largest value the bounds alone allow (the thirteen flat cells at 1979-07: the four daily estimators from 125 basis points up, whose curves stop at 0.177 with the forecast at 113 to 119 basis points, and the monthly covariance at 200, whose curve stops at 0.126 with the forecast at 193); and wherever the budget is below the minimiser's forecast (eight cells: the 50 basis point budget under the four daily estimators at 2004-11 and under the sample and Ledoit-Wolf estimators at 1979-07, and the monthly covariance at 1979-07 at 50 and 75) the month takes the minimiser's portfolio with its incidental exposure, as the infeasibility rule says. The independent checks are in `tests/test_factor_objective.py`: the solution agrees with a sequential quadratic programme on the budget-bound problem and with a linear programme when the budget is loose.
+
+Expectation 3 holds in its first part and fails in its second, and the failure is informative. At 100 basis points the objective exceeds the incidental exposure at every month-estimator pair, by 0.08 to 0.30; but in five of the fifteen pairs one of the four targeted exposures ends below its incidental value. The second clause was wrong in its reasoning: the optimiser maximises the sum of the four exposures, each weighted equally in beta units, so it buys the exposures that cost least tracking error and lets an expensive one fall if that buys more of the others. The monthly table shows which ones cost least: over the 566 months at 100 basis points the stationary portfolio holds +0.048 of profitability and +0.040 of investment against +0.021 of value and +0.008 of momentum. Momentum exposure is expensive because industry momentum betas are small and rotate, so a given exposure needs large active weights; the equal weighting in beta units, which the design fixed before the code, therefore buys mostly profitability and investment. This is a property of the design, and the notebook reports it as it stands; what it means for the rolling run is that the four targeted exposures will be of different sizes.
+
+The worked month shows the mechanism. At 2026-08, under the sample covariance on daily data, the minimiser's portfolio has a forecast tracking error of 37 basis points and an incidental exposure of -0.002; a budget of 100 basis points buys an objective of +0.131, spread as +0.025 value, +0.033 profitability, +0.041 investment and +0.032 momentum, with five industries at the active weight bound, eleven at zero besides the two excluded, and the three tilted ones at half their weight, and the market exposure held at +0.007 by beta neutrality. The largest contributions come from selling Software (an active weight of -0.02 against betas of -0.46 to value and -0.61 to investment, which adds +0.025) and buying Banks, Wholesale and Ships (value betas of 0.9, 0.2 and 0.4). The stationary portfolio sits 0.148 of one-way turnover away from the minimiser's, more than seven months of the cap.
+
+The curves say what a budget buys and when it stops buying. At 2004-11 and 2026-08 the objective rises with the budget through 200 basis points, under the sample covariance on daily data by 0.0024 and 0.0014 per basis point from 75 to 100 and by 0.0015 and 0.0008 from 150 to 200, so each further basis point buys less; the five estimators' curves lie within 0.07 of one another at 2004-11 and within 0.05 at 2026-08 at every budget. At 1979-07, the month of the oil peak, the minimiser's own forecast is 49 to 56 basis points for the daily estimators and 95 for the monthly covariance; the daily curves flatten at 0.177 once the budget passes 113 to 119 basis points, by estimator, because the active weight bound stops the move; and from 75 basis points up the monthly covariance's curve lies below the daily ones, by 0.19 to 0.22 at 75 and by 0.05 at 200, because its forecast prices the same move dearer. One capped rebalance from the minimiser's portfolio buys 0.19 to 0.51 of the distance to the stationary objective (0.19 to 0.20 for the daily estimators and 0.51 for the monthly covariance at 1979-07, 0.35 to 0.40 at 2004-11, 0.29 to 0.34 at 2026-08); the stationary portfolio lies 0.07 to 0.32 of one-way turnover from the minimiser's, four to sixteen months of the cap, so a path under the cap arrives there over that many months when the betas and the covariance stand still, and the rolling run will show how far it gets when they move.
+
+The feasibility count is the notebook's main result for the design, and it bears on two of the seven expectations before any path is run. The stationary minimum of the forecast tracking error under the mandate averages 55 to 62 basis points across the five estimators and exceeds 100 basis points in 22 (principal components), 37 (sample), 39 (six-factor model) and 43 (Ledoit-Wolf) of the 566 months for the daily estimators, 40 for the monthly covariance; every one of those months lies in 1979 to 1989 for principal components and the monthly covariance, and all but 5 (sample), 8 (Ledoit-Wolf) and 17 (six-factor model) for the other three, whose remainder falls in 2008 to 2011. A capped path can only do worse in such a month, because the cap adds a constraint. E1 asks the budget of 100 basis points to bind in at least 95% of months for each daily estimator, which allows 28 misses; the stationary count alone exceeds 28 for three of the four, so on the arithmetic available before the run E1 is unlikely to hold for the sample, Ledoit-Wolf and six-factor estimators, and the months that miss it are the oil decade's. E2 asks the mean of the four targeted exposures at 100 basis points to reach 0.05 for the sample estimator; the stationary mean over the 566 months is 0.030 (0.015 at 75, 0.048 at 150), and a capped path holds at most the stationary exposure on average, so E2 is unlikely to hold at 100 basis points either, and at 150 the stationary mean falls 0.002 short of the level. Both expectations stand as written in `constants.py`; the design's rule is that a level changed after this point is a post-run change, disclosed as such, and this notebook's job is to put the arithmetic in front of the decision before the run.
+
+**What this notebook does not settle.**
+
+- Everything realised. The curves and the counts are forecasts from covariance estimates; what the budget buys in realised tracking error, turnover, active return and attribution is notebooks 15 and 16.
+- The cap in motion. The stationary portfolio is a destination; with the betas and the covariance moving month by month the capped path may never arrive, and the exposure it holds is what notebook 15 measures.
+- The direction and the weights of the targets are the design's; a different weighting (per unit of tracking error, say) would buy more momentum and less profitability, and the study does not run it.
+- The robust and RiskMetrics variants and the two single-factor sensitivities are not drawn here; they run in notebook 15 at the main budget.
+"""),
+]
+
+
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))

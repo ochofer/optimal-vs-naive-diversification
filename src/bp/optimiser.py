@@ -295,3 +295,145 @@ def masks(columns, tilt=C.TILT_INDUSTRIES, exclude=()) -> tuple[np.ndarray, np.n
         if name not in cols:
             raise KeyError(f"{name} is not one of the {len(cols)} industries")
     return np.array([c in tilt for c in cols]), np.array([c in exclude for c in cols])
+
+
+# ---------------------------------------------------------------------------
+# Version 2, module A: the factor objective under the mandate (notebook 14)
+# ---------------------------------------------------------------------------
+# A second problem beside the first, which stays as it is. For a month with
+# benchmark weights b, a monthly covariance Sigma, the industries' betas B to
+# the six factors (N by K, estimated before the month as in notebook 13) and
+# the target vector s (constants.FO_TARGET_SIGN), the optimiser finds the
+# weights w that maximise the targeted exposure s' B' (w - b) under every
+# constraint of the named set and the budget: the forecast tracking error
+# sqrt(12 (w - b)' Sigma (w - b)) at most tau. The objective is linear and the
+# budget a second-order cone, so the problem is a convex program with one
+# global maximum, solved by cvxpy with the same solver as the first problem.
+# In a month in which the budget cannot be met (the tracking-error-minimising
+# portfolio of the first problem already exceeds tau), the path takes that
+# portfolio, the month is marked and counted, and nothing else is relaxed
+# (constants.FO_INFEASIBLE_RULE). Every returned portfolio is checked against
+# its bounds, the turnover cap and the budget, whatever the solver's status.
+
+@dataclass
+class FactorSolution(Solution):
+    budget: float = float("nan")              # tau, per year
+    budget_met: bool = True                   # False in a month that took the tracking-error-minimising portfolio
+    objective: float = float("nan")           # s' B' (w - b), the targeted exposure the month bought
+    exposures: np.ndarray = field(default_factory=lambda: np.full(0, np.nan))   # B' (w - b), one per factor
+
+
+def targeted_exposure(B: np.ndarray, s: np.ndarray, w: np.ndarray, b: np.ndarray) -> float:
+    """s' B' (w - b): the sum of the active exposures to the targeted factors, each weighted by its sign in s."""
+    return float(np.asarray(s, dtype=float) @ np.asarray(B, dtype=float).T @ (np.asarray(w, dtype=float) - np.asarray(b, dtype=float)))
+
+
+def _build_factor(Ls: list, b: np.ndarray, g: np.ndarray, tau_m: float, lower: np.ndarray, upper: np.ndarray,
+                  w0: np.ndarray | None, cap: float | None, betas: list | None):
+    """The cvxpy problem of the factor objective: maximise g' (w - b) with g = B s, under the bounds, the beta
+    equalities, the turnover cap written as buys and sells, and one budget cone per covariance factor in `Ls`
+    (one for the single-covariance problem, five for the robust one). Written in percent, as the robust problem is."""
+    N = len(b)
+    w = cp.Variable(N)
+    cons = [cp.sum(w) == 1]
+    finite_lo = np.isfinite(lower)
+    finite_up = np.isfinite(upper)
+    if finite_lo.any():
+        cons.append(w[finite_lo] >= lower[finite_lo])
+    if finite_up.any():
+        cons.append(w[finite_up] <= upper[finite_up])
+    for beta in betas or []:
+        cons.append(beta @ (w - b) == 0)
+    if w0 is not None:
+        p = cp.Variable(N, nonneg=True)
+        n = cp.Variable(N, nonneg=True)
+        cons.append(w - w0 == p - n)
+        if cap is not None:
+            cons.append(0.5 * cp.sum(p + n) <= cap)
+    cons += [cp.norm(100.0 * (L.T @ (w - b)), 2) <= 100.0 * tau_m for L in Ls]
+    return w, cp.Problem(cp.Maximize(g @ (w - b)), cons)
+
+
+def solve_factor_objective(Sigma, b: np.ndarray, B: np.ndarray, s: np.ndarray, budget_annual: float, constraints: tuple,
+                           w_prev: np.ndarray | None = None, tilt_mask: np.ndarray | None = None, exclude_mask: np.ndarray | None = None,
+                           turnover_cap: float = C.TURNOVER_CAP_MONTHLY_ONE_WAY, active_bound: float = C.ACTIVE_WEIGHT_BOUND,
+                           tilt_share: float = C.TILT_MAX_SHARE_OF_BENCHMARK, solver: str = C.OPT_SOLVER, tol: float = C.OPT_TOL) -> FactorSolution:
+    """The factor objective under the mandate for one month.
+
+    `Sigma` is one monthly covariance, or a list of them for the robust version, in which the budget holds under
+    every covariance at once and beta neutrality under the average of their beta vectors. `B` is N by K, `s` the
+    K signs, `budget_annual` tau per year. If the turnover cap alone makes the month infeasible it is raised to the
+    smallest feasible turnover, as in the first problem. If the budget cannot be met, the month takes the
+    tracking-error-minimising portfolio of the first problem and `budget_met` is False.
+    """
+    Sigmas = [np.asarray(S, dtype=float) for S in (Sigma if isinstance(Sigma, (list, tuple)) else [Sigma])]
+    b = np.asarray(b, dtype=float)
+    B = np.asarray(B, dtype=float)
+    s = np.asarray(s, dtype=float)
+    N = len(b)
+    if B.shape[0] != N or B.shape[1] != len(s):
+        raise OptimiserError(f"the betas are {B.shape} for {N} industries and {len(s)} targets")
+    if not budget_annual > 0:
+        raise OptimiserError("the budget must be positive")
+    tilt_mask = np.zeros(N, bool) if tilt_mask is None else np.asarray(tilt_mask, bool)
+    exclude_mask = np.zeros(N, bool) if exclude_mask is None else np.asarray(exclude_mask, bool)
+    if "turnover_cap" in constraints and w_prev is None:
+        raise OptimiserError("the turnover cap needs the previous portfolio")
+    if "exclusion" in constraints and not exclude_mask.any():
+        raise OptimiserError("the exclusion constraint needs a mask naming at least one industry")
+    lower, upper = bounds(b, constraints, tilt_mask, exclude_mask, active_bound, tilt_share)
+    if (lower > upper + tol).any():
+        raise OptimiserError("a weight's lower bound exceeds its upper bound; the constraint set is contradictory for this month")
+    Ls = [cholesky_factor(S) for S in Sigmas]
+    w0 = None if w_prev is None else np.asarray(w_prev, dtype=float)
+    cap = turnover_cap if "turnover_cap" in constraints else None
+    betas = [np.mean([benchmark_betas(S, b) for S in Sigmas], axis=0)] if "beta_neutral" in constraints else None
+    g = B @ s
+    tau_m = float(budget_annual) / np.sqrt(PERIODS_PER_YEAR)
+    relaxed = False
+    options = C.OPT_SOLVER_OPTIONS_ROBUST            # the budget is a cone, so the robust problem's stopping rule applies
+    if cap is not None:
+        # feasibility first, as in the first problem: the smallest one-way turnover the other constraints allow
+        w_t, prob_t = _build(Ls, b, lower, upper, w0, None, objective="turnover", betas=betas)
+        _run(prob_t, solver, options)
+        if prob_t.status not in ("optimal", "optimal_inaccurate"):
+            raise OptimiserError(f"infeasible without the turnover cap: {prob_t.status}")
+        check(_clean(w_t.value), b, lower, upper, w0, None, tol)
+        if float(prob_t.value) > cap + 10 * tol:
+            cap = float(prob_t.value) * (1.0 + 1e-6) + tol
+            relaxed = True
+    w, prob = _build_factor(Ls, b, g, tau_m, lower, upper, w0, cap, betas)
+    _run(prob, solver, options)
+    x = _clean(w.value)
+    met = prob.status in ("optimal", "optimal_inaccurate") and len(x) == N and np.isfinite(x).all()
+    if met:
+        met = feasible(x, b, lower, upper, w0, cap, tol) and max(forecast_tracking_error(x, b, S) for S in Sigmas) <= budget_annual * (1.0 + 1e-6) + 10 * tol
+    if not met:
+        # the budget cannot be met this month: the tracking-error-minimising portfolio of the first problem, under the same
+        # constraints and the same cap, is the month's portfolio; its forecast must indeed exceed the budget
+        base = _solve(Sigmas, b, constraints, w_prev, tilt_mask, exclude_mask, turnover_cap, active_bound, tilt_share, solver, tol)
+        if base.tracking_error <= budget_annual * (1.0 - 1e-6) - 10 * tol:
+            raise OptimiserError(f"the solver reported {prob.status} on a budget of {budget_annual:.4f} that the minimiser meets at {base.tracking_error:.4f}")
+        x, cap, relaxed, status = base.weights, base.turnover_cap_used, base.relaxed, base.status
+    else:
+        status = prob.status
+    check(x, b, lower, upper, w0, cap, tol)
+    a = x - b
+    for beta in betas or []:
+        if abs(beta @ a) > 10 * tol:
+            raise OptimiserError(f"the portfolio's beta differs from the benchmark's by {beta @ a:.2e}")
+    binding = {}
+    if "long_only" in constraints:
+        binding["long_only"] = int(((x <= tol) & ~exclude_mask).sum())
+    if "active_weight_bound" in constraints:
+        untilted = ~tilt_mask if "tilt" in constraints else np.ones(N, bool)
+        binding["active_weight_bound"] = int((untilted & (np.abs(np.abs(a) - active_bound) <= tol)).sum())
+    if "tilt" in constraints:
+        binding["tilt"] = int((tilt_mask & (np.abs(x - tilt_share * b) <= tol)).sum())
+    to = one_way_turnover(x, w0) if w0 is not None else float("nan")
+    if "turnover_cap" in constraints:
+        binding["turnover_cap"] = int(abs(to - cap) <= 10 * tol)
+    te = max(forecast_tracking_error(x, b, S) for S in Sigmas)
+    binding["budget"] = int(met and abs(te - budget_annual) <= C.FO_E1_BIND_TOL_ANNUAL)
+    return FactorSolution(weights=x, active=a, tracking_error=te, turnover=to, turnover_cap_used=cap, relaxed=relaxed, status=status,
+                          binding=binding, budget=float(budget_annual), budget_met=bool(met), objective=float(g @ a), exposures=B.T @ a)
