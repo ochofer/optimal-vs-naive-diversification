@@ -61,12 +61,14 @@ h4 { font-size: 14px; margin: 10px 0 2px; }
 .chart.tall { height: 480px; }
 .chart.short { height: 320px; }
 .tw { position: relative; }
+.tw.more::after { content: ""; position: absolute; top: 1px; right: 1px; bottom: 1px; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; }
 .tscroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; }
 table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
 th, td { padding: 8px 10px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
 thead th { background: var(--tint); color: var(--ink2); font-weight: 600; text-align: right; vertical-align: bottom; white-space: normal; min-width: 84px; font-size: 13px; }
 thead th:first-child, tbody th { text-align: left; position: sticky; left: 0; background: #ffffff; }
 thead th:first-child { background: var(--tint); }
+@media (max-width: 700px) { table.wrapfirst tbody th { white-space: normal; min-width: 9em; } }
 tbody th { font-weight: 500; }
 td { text-align: right; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
@@ -95,10 +97,9 @@ dl.terms dd { margin: 0 0 0 1rem; }
   .chart, .chart.tall, .chart.short { height: 340px; }
   .kp { grid-template-columns: 1fr; }
   h1 { font-size: 1.8rem; }
-  .tw.more::after { content: ""; position: absolute; top: 1px; right: 1px; bottom: 1px; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; }
 }
 @media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
-@media print { .tabs { display: none; } .view { display: block; } .fig { break-inside: avoid; } }
+@media print { .tabs, .tw::after { display: none; } .view { display: block; } .fig { break-inside: avoid; } }
 </style>
 <script src="https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js" charset="utf-8"></script>
 </head>
@@ -390,7 +391,8 @@ dl.terms dd { margin: 0 0 0 1rem; }
   function renderTable(id) {
     var t = TABLES[id], el = document.getElementById("t-" + id);
     if (!t) { return; }
-    var h = ['<div class="tscroll"><table><thead><tr>'];
+    var longest = Math.max.apply(null, t.rows.map(function (r) { return String(r[0]).replace(/<[^>]*>/g, "").length; }).concat([0]));
+    var h = ['<div class="tscroll"><table' + pick(longest > 28, ' class="wrapfirst"', "") + '><thead><tr>'];
     t.cols.forEach(function (c) { h.push("<th>" + c + "</th>"); });
     h.push("</tr></thead><tbody>");
     t.rows.forEach(function (r) { h.push("<tr>"); r.forEach(function (c, i) { h.push(pick(i === 0, '<th scope="row">', "<td>") + c + pick(i === 0, "</th>", "</td>")); }); h.push("</tr>"); });
