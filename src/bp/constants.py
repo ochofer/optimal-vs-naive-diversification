@@ -507,23 +507,60 @@ FO_PATH_COUNT = 19
 FO_GAP_DEFINITION = "s'(B_t - B_{t+1})' a_t, mean absolute value over the months"
 # The seven expectations, each a strict pass or fail; the levels from
 # version 1's results at 6835d49, with the design's reasons.
+# E1 and E2 were restated on 9 October 2026, after notebook 14's check of
+# the arithmetic and before any path ran, by the design of 9 October 2026:
+# a level changed at that point, between the pre-run check notebook 14
+# exists for and the first rolling run, is a pre-run restatement, dated and
+# disclosed here and once in the write-up; a level changed after notebook 15
+# runs is a post-run change. The original levels of 8 October stay below,
+# marked as superseded.
+FO_RESTATEMENT_DATE = "2026-10-09"
 # E1. At the main budget the budget binds (forecast tracking error within
-# FO_E1_BIND_TOL of the budget) in at least FO_E1_BIND_SHARE_MIN of the 566
-# months for each of the four daily estimators; the months where it cannot
-# be met are counted. Reason: version 1's forecast under the mandate was 55
-# to 68 bp on average and 47 to 55 for the tilt alone at the 1979 oil peak for
-# the daily estimators, so a budget of 100 should be reachable almost always;
-# the monthly estimator (108 at that peak) may fail it in the first years.
+# FO_E1_BIND_TOL of the budget) in at least FO_E1_BIND_SHARE_MIN of the
+# months in which the mandate's own minimum forecast tracking error, with
+# turnover free, is at or below the budget, for each of the four daily
+# estimators. The months the mandate alone cannot meet are reported per
+# estimator and budget from notebook 14's feasibility table; the months the
+# path misses beyond them, with the turnover cap in force, are counted and
+# reported, since that difference is what the path adds. Reason for the
+# restatement: notebook 14 found the mandate alone above 100 bp in 37
+# (sample), 43 (Ledoit-Wolf) and 39 (six-factor) of the 566 months, 22 for
+# principal components, nearly all in 1979 to 1989, so the budget cannot
+# bind in those months whatever the objective.
 FO_E1_BIND_TOL_ANNUAL = 0.0001           # one basis point a year
 FO_E1_BIND_SHARE_MIN = 0.95
+FO_E1_DENOMINATOR = "months the mandate alone can meet"
+# Superseded on 9 October 2026: the same share of all 566 months. Reason
+# given on 8 October: version 1's forecast under the mandate was 55 to 68 bp
+# on average and 47 to 55 for the tilt alone at the 1979 oil peak for the
+# daily estimators, so a budget of 100 should be reachable almost always;
+# the monthly estimator (108 at that peak) may fail it in the first years.
+FO_E1_DENOMINATOR_SUPERSEDED_2026_10_08 = "all 566 months"
 # E2. At the main budget the mean active exposure to each targeted factor is
 # positive on every main path, the average of the four is at least
 # FO_E2_MEAN_EXPOSURE_MIN for the daily sample estimator, and that average
-# rises with the budget (75, then 100, then 150) on every estimator. Reason:
-# version 1's incidental exposures were 0.004 to 0.018 in absolute value with
-# no objective; 49 industries within 2 percentage points of their weights can
+# rises with the budget (75, then 100, then 150) on every estimator; the four
+# exposures are reported per path at every budget, the average never alone.
+# Reason for the restatement: notebook 14's stationary mean of the four at
+# 100 bp is 0.030 for the daily sample estimator and a capped path holds at
+# most the stationary exposure on average; the level is four fifths of
+# 0.030, the fifth being the design's allowance for what the turnover cap,
+# the infeasible months and the rolling betas may cost against the
+# stationary solution, a judgement stated as such. Under an active weight
+# bound of 2 percentage points on 49 industries, 100 bp of budget buys about
+# 0.03 of average exposure in beta units.
+FO_E2_MEAN_EXPOSURE_MIN = 0.024
+# Superseded on 9 October 2026. Reason given on 8 October: version 1's
+# incidental exposures were 0.004 to 0.018 in absolute value with no
+# objective; 49 industries within 2 percentage points of their weights can
 # reach three to ten times that when the objective asks for it.
-FO_E2_MEAN_EXPOSURE_MIN = 0.05
+FO_E2_MEAN_EXPOSURE_MIN_SUPERSEDED_2026_10_08 = 0.05
+# One diagnostic per path, counted and reported with no expectation
+# attached (the design of 9 October 2026): the months in which any targeted
+# exposure ends below its incidental value, the value the mandate's
+# tracking-error minimiser carries. Notebook 14 found such a month in 5 of
+# its 15 month-estimator pairs at 100 bp.
+FO_DIAGNOSTIC_BELOW_INCIDENTAL = "months with a targeted exposure below its incidental value"
 # E3. Realised tracking error exceeds the budget by 20 to 60 per cent on the
 # daily estimators, and by more on the monthly sample covariance; tested at
 # every budget (the design names none), the monthly ratio against the largest
