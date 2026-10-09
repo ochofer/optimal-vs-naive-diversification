@@ -72,7 +72,8 @@ table.tbl td.num { text-align: right; }
 table.tbl tfoot td { border-top: 1px solid var(--line); border-bottom: 0; font-weight: 650; }
 .tblwrap { overflow-x: auto; position: relative; }
 table.tbl th:first-child, table.tbl td:first-child { position: sticky; left: 0; background: var(--surface); z-index: 1; }
-@media (max-width: 700px) { .tblwrap, .mapwrap { background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.9)) right / 32px 100% no-repeat; background-attachment: scroll; } }
+.tw { position: relative; }
+@media (max-width: 700px) { .tw.more::after { content: ""; position: absolute; top: 1px; right: 1px; bottom: 1px; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; } }
 caption { text-align: left; color: var(--ink2); font-size: 0.82rem; padding: 0 0 6px; }
 
 /* formula cards */
@@ -173,6 +174,7 @@ dl.terms dd { margin: 0; }
   section { margin-top: 22px; }
   .no-print, .tip { display: none !important; }
   .mapwrap, .tblwrap { overflow: visible; border: 0; }
+  .tw::after { display: none; }
   table.map { font-size: 7.5pt; }
   table.map thead th { position: static; }
   tr, .tile, .step, table.tbl { break-inside: avoid; }
@@ -205,14 +207,14 @@ dl.terms dd { margin: 0; }
 
 <section id="portfolio">
 <h2>The portfolio</h2>
-<p class="sub">The benchmark is the cap-weighted combination of the 49 industries. The portfolio tracks it under three rules; the <span class="term">optimiser</span> gives the freed weight to the industries whose returns move closest to the ones removed.</p>
-<div class="tblwrap"><table class="tbl">
+<p class="sub">The benchmark is the cap-weighted combination of the 49 industries. The portfolio tracks it under three rules. The <span class="term">optimiser</span> gives the freed weight to the industries whose returns move closest to the ones removed.</p>
+<div class="tw"><div class="tblwrap"><table class="tbl">
 <thead><tr><th>Rule</th><th>Industries</th><th>Constraint</th></tr></thead>
 <tbody>
 <tr><td><span class="term">Tilt</span></td><td>Coal, Oil, Util</td><td>At most half the benchmark weight. In July 1979 this removed 7.6 points (pts) of Oil, 4.0 pts of Util and 0.1 pts of Coal.</td></tr>
 <tr><td>Exclusions</td><td>Smoke, Guns</td><td>Zero weight. On average they are 1.0% and 0.3% of the benchmark.</td></tr>
 <tr><td>Weight bound</td><td>All others</td><td>Within 2 pts of the benchmark weight. Food, Telcm, Other, Soda and Agric are among the industries the optimiser bought at August 2026.</td></tr>
-</tbody></table></div>
+</tbody></table></div></div>
 </section>
 
 <section id="arithmetic">
@@ -220,7 +222,7 @@ dl.terms dd { margin: 0; }
 <div class="steps">
 <div class="card step"><h3><span class="n">1</span><span class="term">Active weight</span></h3>
 <div class="eq">a<sub>i</sub> = w<sub>i</sub><sup>P</sup> &minus; w<sub>i</sub><sup>B</sup></div>
-<p>P is the portfolio, B the benchmark; the 49 values sum to zero. In July 1979 Oil at 7.6% against a benchmark weight of 15.1% has a<sub>Oil</sub> = &minus;7.6 pts.</p></div>
+<p>P is the portfolio, B the benchmark. The 49 values sum to zero. In July 1979 Oil at 7.6% against a benchmark weight of 15.1% has a<sub>Oil</sub> = &minus;7.6 pts.</p></div>
 <div class="card step"><h3><span class="n">2</span><span class="term">Active exposure</span></h3>
 <div class="eq">x<sub>f</sub> = &Sigma;<sub>i</sub> a<sub>i</sub> &times; &beta;<sub>i,f</sub></div>
 <p>Round numbers for the arithmetic: 3 pts less of an industry with value <span class="term">beta</span> 0.7 and 3 pts more of one with 0.1: &minus;0.03 &times; 0.7 + 0.03 &times; 0.1 = &minus;0.018, short value.</p></div>
@@ -233,7 +235,7 @@ dl.terms dd { margin: 0; }
 
 <section id="map">
 <h2>The map: 49 industries by six factors</h2>
-<div class="tblwrap"><table class="tbl">
+<div class="tw"><div class="tblwrap"><table class="tbl">
 <thead><tr><th>Factor</th><th>Code</th><th>Long leg</th><th>Short leg</th><th>A positive beta moves like</th></tr></thead>
 <tbody>
 <tr><td>Market</td><td>Mkt-RF</td><td>All US stocks</td><td>One-month T-bill</td><td>Above 1: more than the market</td></tr>
@@ -242,8 +244,8 @@ dl.terms dd { margin: 0; }
 <tr><td>Profitability</td><td>RMW</td><td>High operating profitability</td><td>Low operating profitability</td><td>Profitable firms</td></tr>
 <tr><td>Investment</td><td>CMA</td><td>Low asset growth</td><td>High asset growth</td><td>Firms that invest little</td></tr>
 <tr><td>Momentum</td><td>Mom</td><td>Past-year winners, skipping the last month</td><td>Past-year losers</td><td>Recent winners</td></tr>
-</tbody></table></div>
-<p class="small">A negative beta moves like the short leg (below 1 for the market). Betas come from a six-factor least-squares regression of each industry's daily <span class="term">excess returns</span> over the three years before each month. The map shows the average of the 566 monthly estimates from July 1979 to August 2026, or the August 2026 estimate; benchmark weights follow the same choice.</p>
+</tbody></table></div></div>
+<p class="small">A negative beta moves like the short leg (below 1 for the market). Betas come from a six-factor least-squares regression of each industry's daily <span class="term">excess returns</span> over the three years before each month. The map shows the average of the 566 monthly estimates from July 1979 to August 2026, or the August 2026 estimate. Benchmark weights follow the same choice.</p>
 
 <div class="controls">
 <div class="seg setseg" role="group" aria-label="Betas and benchmark weights"><button type="button" data-set="m" aria-pressed="true">Average, Jul 1979 to Aug 2026</button><button type="button" data-set="a" aria-pressed="false">August 2026</button></div>
@@ -260,7 +262,7 @@ dl.terms dd { margin: 0; }
 </select>
 </div>
 <div class="legend" id="legend" aria-hidden="true"></div>
-<div class="mapwrap"><table class="map" id="maptable"></table></div>
+<div class="tw"><div class="mapwrap"><table class="map" id="maptable"></table></div></div>
 <ul class="tight">
 <li>Oil and Util behave like large, cheap firms: size betas −0.16 and −0.10, value betas +0.27 and +0.35. Oil's investment beta, +0.45, is the fourth highest of the 49.</li>
 <li>Smoke has the highest profitability beta (+0.38) and the second highest investment beta (+0.56).</li>
@@ -294,7 +296,7 @@ dl.terms dd { margin: 0; }
 <h3 style="margin:0">Exposures and contributions</h3>
 <div class="seg" id="rmode" role="group" aria-label="Factor returns"><button type="button" data-r="avg" aria-pressed="true">Average return a year</button><button type="button" data-r="month" aria-pressed="false">One month, typed in</button></div>
 </div>
-<div class="tblwrap"><table class="tbl" id="ctable"></table></div>
+<div class="tw"><div class="tblwrap"><table class="tbl" id="ctable"></table></div></div>
 <p class="reading-line" id="reading" aria-live="polite"></p>
 </div>
 </div>
@@ -302,13 +304,13 @@ dl.terms dd { margin: 0; }
 
 <section id="cases">
 <h2>Three cases</h2>
-<p class="sub">Average betas and benchmark weights; factor returns at their July 1979 to August 2026 averages: market 8.90%, size 0.80%, value 2.58%, profitability 4.03%, investment 2.66%, momentum 6.46% a year.</p>
+<p class="sub">Average betas and benchmark weights, with factor returns at their July 1979 to August 2026 averages: market 8.90%, size 0.80%, value 2.58%, profitability 4.03%, investment 2.66%, momentum 6.46% a year.</p>
 <div class="cases">
 
 <article class="card case">
 <h3>(a) The tilt in July 1979</h3>
-<p class="setup">The study's sales in its first month, Oil &minus;7.6 pts, Util &minus;4.0 pts and Coal &minus;0.1 pts; the purchases are a stylised choice, 2 pts (the bound) to each of Food, Telcm and Other, three of the industries the optimiser bought; the remaining 5.7 pts spread pro rata over the other 43 industries.</p>
-<div class="tblwrap"><table class="tbl" id="tbl-a"></table></div>
+<p class="setup">The study's sales in its first month, Oil &minus;7.6 pts, Util &minus;4.0 pts and Coal &minus;0.1 pts. The purchases are a stylised choice, 2 pts (the bound) to each of Food, Telcm and Other, three of the industries the optimiser bought, and the remaining 5.7 pts spread pro rata over the other 43 industries.</p>
+<div class="tw"><div class="tblwrap"><table class="tbl" id="tbl-a"></table></div></div>
 <p class="take">Oil and Util behave like large, cheap, low-investment firms, so selling them makes the portfolio long size and short value and investment. Oil alone accounts for −0.076 × (0.274 − 0.005) = −0.0205 of the value exposure.</p>
 <p class="small">Last column: the study's portfolio under the tilt alone, averaged over 566 months. Same signs on size, value, profitability and investment, smaller on size, value and investment: Oil fell to 3.0% of the benchmark by 2026, and the substitutes the optimiser buys (Food, Soda, Telcm, investment betas 0.20 to 0.36) offset part of the investment exposure.</p>
 <button type="button" class="act no-print loadcase" data-case="a">Open in the calculator</button>
@@ -316,16 +318,16 @@ dl.terms dd { margin: 0; }
 
 <article class="card case">
 <h3>(b) The exclusions</h3>
-<p class="setup">Smoke &minus;1.0 pts and Guns &minus;0.3 pts, their average weights; the 1.3 pts spread pro rata over the other 47 industries.</p>
-<div class="tblwrap"><table class="tbl" id="tbl-b"></table></div>
-<p class="take">Tobacco behaves like profitable firms that invest little, so excluding it leaves the portfolio short profitability (−0.0043) and investment (−0.0064), −1.7 bp a year each. The market part (+0.0022) is what the study's beta-neutrality rule removes. The five other factors sum to −3.0 bp a year; the study measured 1.3 to 2.9 bp of cost across its seven versions. Notebook 13 makes the same calculation month by month, with each month's weights and betas, and the note reports its result; this page uses the averages over the months, so its figure differs in the last digit.</p>
+<p class="setup">Smoke &minus;1.0 pts and Guns &minus;0.3 pts, their average weights, with the 1.3 pts spread pro rata over the other 47 industries.</p>
+<div class="tw"><div class="tblwrap"><table class="tbl" id="tbl-b"></table></div></div>
+<p class="take">Tobacco behaves like profitable firms that invest little, so excluding it leaves the portfolio short profitability (−0.0043) and investment (−0.0064), −1.7 bp a year each. The market part (+0.0022) is what the study's beta-neutrality rule removes. The five other factors sum to −3.0 bp a year. The study measured 1.3 to 2.9 bp of cost across its seven versions. Notebook 13 makes the same calculation month by month, with each month's weights and betas, and the note reports its result. This page uses the averages over the months, so its figure differs in the last digit.</p>
 <button type="button" class="act no-print loadcase" data-case="b">Open in the calculator</button>
 </article>
 
 <article class="card case">
 <h3>(c) A value hedge</h3>
-<p class="setup">The sales of case (a), with 2 pts (the bound) going to each of the three industries with the highest value betas: Banks (+0.86), Fin (+0.49) and Insur (+0.40); 5.7 pts spread pro rata.</p>
-<div class="tblwrap"><table class="tbl" id="tbl-c"></table></div>
+<p class="setup">The sales of case (a), with 2 pts (the bound) going to each of the three industries with the highest value betas: Banks (+0.86), Fin (+0.49) and Insur (+0.40), with 5.7 pts spread pro rata.</p>
+<div class="tw"><div class="tblwrap"><table class="tbl" id="tbl-c"></table></div></div>
 <p class="take">The value exposure falls by 70% (−0.0345 to −0.0104). Banks, trading firms and insurers behave like firms that invest much and earn little, so the investment short grows 1.7 times (−0.0337 to −0.0567), the profitability short 2.8 times (−0.0073 to −0.0202) and the market exposure turns positive (+0.0111). Each industry carries six betas: hedging one factor moves the other five, and holding all six near zero takes six exposure constraints in the optimiser, at the cost of part of the 2-pt allowance.</p>
 <button type="button" class="act no-print loadcase" data-case="c">Open in the calculator</button>
 </article>
@@ -351,12 +353,12 @@ dl.terms dd { margin: 0; }
 <dt>Active weight</dt><dd>The portfolio's weight in an industry minus the benchmark's weight in it, in percentage points.</dd>
 <dt>Attribution</dt><dd>The split of the active return into factor contributions plus a residual.</dd>
 <dt>Basis point</dt><dd>One hundredth of a percentage point (bp): 10 bp is 0.1%.</dd>
-<dt>Benchmark</dt><dd>The index the portfolio is measured against; here the cap-weighted combination of the 49 industries.</dd>
+<dt>Benchmark</dt><dd>The index the portfolio is measured against, here the cap-weighted combination of the 49 industries.</dd>
 <dt>Beta</dt><dd>How much an industry's return moves with a factor's return, with the other five factors held fixed.</dd>
 <dt>Cap-weighted</dt><dd>Weighted by market capitalisation, the number of shares times their price.</dd>
 <dt>Contribution</dt><dd>The part of the active return one factor accounts for: active exposure times the factor's return.</dd>
 <dt>Excess return</dt><dd>A return minus the risk-free rate, the one-month US Treasury bill.</dd>
-<dt>Factor</dt><dd>A return series that moves many stocks at once; five of the six here are long-short portfolios.</dd>
+<dt>Factor</dt><dd>A return series that moves many stocks at once. Five of the six here are long-short portfolios.</dd>
 <dt>Long, short</dt><dd>A positive (long) or negative (short) active exposure to a factor.</dd>
 <dt>Optimiser</dt><dd>The routine that chooses the weights closest to the benchmark, in forecast tracking error, under the rules.</dd>
 <dt>Percentage point</dt><dd>The unit of a difference between two weights in per cent (pts).</dd>
@@ -366,15 +368,15 @@ dl.terms dd { margin: 0; }
 <dt>Uncompensated</dt><dd>Said of an exposure that adds risk without an expected return that pays for it.</dd>
 <dt>Unintended</dt><dd>Said of an exposure that nobody chose and that arrives as a side effect of another rule.</dd>
 <dt>Vintage</dt><dd>The version of French's files on the download date, named by the CRSP cut French built them from.</dd>
-<dt>Variance</dt><dd>The average squared distance of a return from its mean; its square root is the standard deviation, and per year the volatility.</dd>
+<dt>Variance</dt><dd>The average squared distance of a return from its mean. Its square root is the standard deviation, and per year the volatility.</dd>
 </dl>
 </details>
 </section>
 
 <section id="data">
 <h2>Data</h2>
-<p class="small">Returns: Kenneth R. French Data Library, <a href="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html</a>, 49 industry portfolios, Fama-French five factors and momentum, daily and monthly, built from the CRSP files of August 2026 (the vintage, the version of French's files named by the CRSP cut they were built from: 202608). Betas, benchmark weights, factor returns and the study's results: notebook 13 of <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Factors: Fama and French (2015), Journal of Financial Economics 116(1), 1-22; Carhart (1997), Journal of Finance 52(1), 57-82. Industry names follow French's 49-industry definitions.</p>
-<p class="small">Built by <code>companion/build.py</code> from the output files of notebook 13 (betas, benchmark weights, factor returns, the attribution summary and the mandate's cost) and notebook 11 (the optimiser's report), vintage 202608, on 9 October 2026; the page is rebuilt whenever those notebooks are rerun.</p>
+<p class="small">Returns: Kenneth R. French Data Library, <a href="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html</a>, 49 industry portfolios, Fama-French five factors and momentum, daily and monthly, built from the CRSP files of August 2026 (the vintage, the version of French's files named by the CRSP cut they were built from: 202608). Betas, benchmark weights, factor returns and the study's results: notebook 13 of <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Factors: Fama and French (2015), Journal of Financial Economics 116(1), 1-22, and Carhart (1997), Journal of Finance 52(1), 57-82. Industry names follow French's 49-industry definitions.</p>
+<p class="small">Built by <code>companion/build.py</code> from the output files of notebook 13 (betas, benchmark weights, factor returns, the attribution summary and the mandate's cost) and notebook 11 (the optimiser's report), vintage 202608, on 9 October 2026, and the page is rebuilt whenever those notebooks are rerun.</p>
 </section>
 
 </main>
@@ -700,9 +702,9 @@ dl.terms dd { margin: 0; }
     if (Math.abs(ek) < 0.00005) {
       txt = "No " + F[k].low + " exposure.";
     } else if (Math.abs(ck) < 0.0005) {
-      txt = side.charAt(0).toUpperCase() + side.slice(1) + " " + F[k].low + " by " + num(Math.abs(ek), 4) + "; at " + num(rk, 2, true) + "%" + when + " that is less than 0.001%.";
+      txt = side.charAt(0).toUpperCase() + side.slice(1) + " " + F[k].low + " by " + num(Math.abs(ek), 4) + ". At " + num(rk, 2, true) + "%" + when + " that is less than 0.001%.";
     } else {
-      txt = side.charAt(0).toUpperCase() + side.slice(1) + " " + F[k].low + " by " + num(Math.abs(ek), 4) + "; at " + num(rk, 2, true) + "%" + when + " that " + verb + " " + num(Math.abs(ck), 3) + "% (" + num(Math.abs(ck) * 100, 1) + " bp).";
+      txt = side.charAt(0).toUpperCase() + side.slice(1) + " " + F[k].low + " by " + num(Math.abs(ek), 4) + ". At " + num(rk, 2, true) + "%" + when + " that " + verb + " " + num(Math.abs(ck), 3) + "% (" + num(Math.abs(ck) * 100, 1) + " bp).";
     }
     txt += " All six: " + num(tot * 100, 1, true) + " bp" + when + ".";
     document.getElementById("reading").textContent = txt;
@@ -783,6 +785,15 @@ dl.terms dd { margin: 0; }
 
   buildRows();
   renderSetButtons(); renderLegend(); renderMap(); renderTool(); renderCases();
+  // the fade at a table's right edge shows only while more of the table lies to the right
+  document.querySelectorAll(".tw").forEach(function (t) {
+    function upd() { var s = t.firstElementChild; t.classList.toggle("more", !!s && s.scrollWidth - s.clientWidth - s.scrollLeft > 1); }
+    if (!("ResizeObserver" in window)) { t.classList.add("more"); return; }
+    t.addEventListener("scroll", upd, true);
+    new ResizeObserver(upd).observe(t);
+    new MutationObserver(upd).observe(t, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
+    upd();
+  });
 })();
 </script>
 </body>

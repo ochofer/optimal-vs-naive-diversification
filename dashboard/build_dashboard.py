@@ -355,7 +355,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
-                     "svg.fonttype": "none", "figure.dpi": 100, "text.color": INK, "axes.labelcolor": INK2, "axes.edgecolor": FRAME,
+                     "svg.fonttype": "path", "figure.dpi": 100,   # text as outlines, so the figures look the same on every machine "text.color": INK, "axes.labelcolor": INK2, "axes.edgecolor": FRAME,
                      "xtick.color": META, "ytick.color": META, "xtick.labelcolor": META, "ytick.labelcolor": META,
                      "svg.hashsalt": "B-P"})  # fixed element ids, so a rebuild from the same files is byte-identical
 os.makedirs(FIG_DIR, exist_ok=True)
