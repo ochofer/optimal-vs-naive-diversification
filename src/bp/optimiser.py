@@ -323,6 +323,30 @@ class FactorSolution(Solution):
     exposures: np.ndarray = field(default_factory=lambda: np.full(0, np.nan))   # B' (w - b), one per factor
 
 
+def _run_factor(prob, solver: str, options: dict) -> None:
+    """As `_run`, with a third pass at the looser rule of constants.FO_SOLVER_OPTIONS_LOOSE when the solver fails
+    outright at the first two, and no exception when the third fails as well (added 18 October 2026, before notebook
+    15's first recorded run). Two cases were met while the notebook was built: a month in which the budget cone and
+    the turnover cap are both active, where the interior-point method stalls at a residual of 1e-7 and then fails at
+    the default rule, which the third pass solves; and a month in which the tracking-error minimiser exceeds the
+    budget by a hundredth of a basis point, so that the factor problem has no interior and the solver reports a
+    numerical error at every rule, which the caller resolves by the infeasibility rule (the month takes the
+    minimiser's portfolio, after the check that the minimiser does exceed the budget). Whatever the pass, a returned
+    portfolio is accepted only after the checks on the bounds, the cap and the budget, and the month keeps the
+    solver's status word."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Solution may be inaccurate")
+        try:
+            prob.solve(solver=solver, **options)
+            if prob.status == "optimal_inaccurate":
+                prob.solve(solver=solver)
+        except cp.error.SolverError:
+            try:
+                prob.solve(solver=solver, **C.FO_SOLVER_OPTIONS_LOOSE)
+            except cp.error.SolverError:
+                pass                       # the status and the weights stay as the last pass left them; the caller's checks decide
+
+
 def targeted_exposure(B: np.ndarray, s: np.ndarray, w: np.ndarray, b: np.ndarray) -> float:
     """s' B' (w - b): the sum of the active exposures to the targeted factors, each weighted by its sign in s."""
     return float(np.asarray(s, dtype=float) @ np.asarray(B, dtype=float).T @ (np.asarray(w, dtype=float) - np.asarray(b, dtype=float)))
@@ -395,7 +419,7 @@ def solve_factor_objective(Sigma, b: np.ndarray, B: np.ndarray, s: np.ndarray, b
     if cap is not None:
         # feasibility first, as in the first problem: the smallest one-way turnover the other constraints allow
         w_t, prob_t = _build(Ls, b, lower, upper, w0, None, objective="turnover", betas=betas)
-        _run(prob_t, solver, options)
+        _run_factor(prob_t, solver, options)
         if prob_t.status not in ("optimal", "optimal_inaccurate"):
             raise OptimiserError(f"infeasible without the turnover cap: {prob_t.status}")
         check(_clean(w_t.value), b, lower, upper, w0, None, tol)
@@ -403,7 +427,7 @@ def solve_factor_objective(Sigma, b: np.ndarray, B: np.ndarray, s: np.ndarray, b
             cap = float(prob_t.value) * (1.0 + 1e-6) + tol
             relaxed = True
     w, prob = _build_factor(Ls, b, g, tau_m, lower, upper, w0, cap, betas)
-    _run(prob, solver, options)
+    _run_factor(prob, solver, options)
     x = _clean(w.value)
     met = prob.status in ("optimal", "optimal_inaccurate") and len(x) == N and np.isfinite(x).all()
     if met:

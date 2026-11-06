@@ -5,10 +5,12 @@ import pathlib
 import sys
 
 import numpy as np
+import pandas as pd
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from bp import constants as C  # noqa: E402
 from bp import french_loader as fl  # noqa: E402
 
 FIXTURE = """This file was created using the 202607 CRSP database.
@@ -96,3 +98,20 @@ def test_parse_blocks_reads_daily_dates_as_days():
     assert frame.index.freqstr == "D" and len(frame) == 4          # the weekend and the holiday are simply absent
     assert frame.loc["1969-07-03", "Food"] == -1.00
     assert frame.loc["1969-07-01", "Soda"] == -99.99               # the missing code is left for the loader to mask
+
+
+def test_the_sample_end_cuts_monthly_daily_and_annual_blocks(monkeypatch):
+    # added 6 November 2026 with constants.EXT_SAMPLE_END: a later vintage's extra months are dropped at load time
+    monkeypatch.setattr(C, "EXT_SAMPLE_END", "2026-08")
+    monthly = pd.DataFrame({"a": range(5)}, index=pd.period_range("2026-05", periods=5, freq="M"))
+    daily = pd.DataFrame({"a": range(70)}, index=pd.period_range("2026-07-20", periods=70, freq="D"))
+    annual = pd.DataFrame({"a": range(3)}, index=pd.period_range("2025", periods=3, freq="Y"))
+    assert str(fl.cut_to_sample_end(monthly).index[-1]) == "2026-08" and len(fl.cut_to_sample_end(monthly)) == 4
+    assert str(fl.cut_to_sample_end(daily).index[-1]) == "2026-08-31"
+    assert str(fl.cut_to_sample_end(annual).index[-1]) == "2026"
+    # a block that ends before the sample end is untouched, and with no end set nothing is cut
+    early = pd.DataFrame({"a": range(3)}, index=pd.period_range("2026-01", periods=3, freq="M"))
+    assert fl.cut_to_sample_end(early).equals(early)
+    monkeypatch.setattr(C, "EXT_SAMPLE_END", None)
+    assert len(fl.cut_to_sample_end(monthly)) == 5
+

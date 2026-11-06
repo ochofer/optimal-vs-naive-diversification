@@ -1,0 +1,8 @@
+expectation,verdict,detail
+E1,MET,"binding share over the months the mandate alone can meet, four daily estimators at 100 bp: 0.9698, 0.9732, 0.9658, 0.9688"
+E2,MET,every targeted exposure positive on 5 of 5; average of the four for the sample covariance 0.0289; rises with the budget for 5 of 5
+E3,NOT MET,daily ratios inside the range in 9 of 12; monthly above the largest daily at 3 of 3 budgets
+E4,notebook 16,the attribution of the nineteen paths
+E5,NOT MET,gross positive for 5 of 5; net within 10 bp for 0 of 5
+E6,NOT MET,"turnover higher, cap binds more, gap not larger on the momentum path"
+E7,MET,"spread 18.41 bp; exposure per bp differs by 0.0447 of the mean; worst calibrated sample, monthly 120 | 100"

@@ -217,7 +217,19 @@ EXT_REBALANCE = "monthly"
 # a return (French codes the early gaps as -99.99): Hlth is the last industry to
 # fill and does so in 1969-07. Notebook 01 asserts it on every run.
 EXT_SAMPLE_START = "1969-07"
-EXT_SAMPLE_END = None              # the latest month the vintage carries
+# The end of the sample, fixed on 6 November 2026. Until then the end was the
+# latest month the vintage carried, and every recorded run (7 to 18 October
+# 2026) used the 202608 vintage, whose last month is 2026-08, the end the design
+# names ("1979-07 to 2026-08"). French's library moved to the 202609 vintage
+# before 6 November, which carries 2026-09 and so gave 567 evaluation months
+# and stopped every notebook at its count. From now on the loader cuts every
+# file at this month, whatever the vintage, so that each notebook sees the same
+# months on any later vintage; the vintage line and the SHA-256 in the
+# provenance record say which revision of French's history a run used, and a
+# later vintage need not reproduce every digit of the committed tables, since
+# French revises history. A run on the cached 202608 files is unchanged by the
+# cut. Not an expectation: a data rule, disclosed here and in the README.
+EXT_SAMPLE_END = "2026-08"
 
 # The benchmark (the index the portfolio tracks): the cap-weighted combination
 # of the 49 industries, weights from firm count times average firm size, must
@@ -417,6 +429,33 @@ EWMA_VARIANT = ("sample", "daily_5y_ewma")   # the seventh variant: RiskMetrics,
 EVAL_CALIBRATION_WINDOW = 60                 # months of a path's own past the calibration uses; a standard deviation from 60 observations has a standard error of about 9%
 EVAL_CALIBRATION_MIN = 24                    # the forecast is left as it is while fewer months are available
 EVAL_CALIBRATED_BIAS_RANGE = (0.85, 1.15)    # expectation 9: the calibrated bias statistic under C3, four daily estimators
+# Additions of 18 October 2026 to notebook 12, by the design of 9 October 2026,
+# fixed here before their code, after the recorded run of 7 October (commit
+# 6835d49) and labelled in the notebook. (a) Two saves, so that the dashboard
+# can draw the forecasts and the holdings from committed tables: the monthly
+# forecast tracking error of every path, beside the active returns the
+# notebook already writes, and the weights every path holds in the last
+# evaluation month, with the benchmark's. (b) Two descriptive figures per path,
+# reported beside the standard-error sentence and entering no claim: the worst
+# cumulative fall of the active return (the largest fall of the cumulative
+# active return from an earlier high, with its peak and trough months) and the
+# share of months with a positive active return. (c) A 95 per cent band on the
+# bias statistic from a circular block bootstrap of the monthly pairs (active
+# return, forecast) in blocks of EVAL_BOOTSTRAP_BLOCK_MONTHS, with
+# EVAL_BOOTSTRAP_DRAWS resamples from the seed below; a block keeps the months'
+# order, so the band allows for the clustering of the active returns, and the
+# circle lets a block run past the last month into the first. No normal band is
+# drawn. The one expectation attached, expectation 10: after the re-run every
+# table the notebook wrote on 7 October (EVAL_RERUN_IDENTICAL, the measures,
+# the by-decade table, the calibration table and the active returns) comes
+# out byte for byte equal to the committed copy in results/<vintage>/, so that
+# the additions change no number of version 1.
+EVAL_ADDITIONS_DATE = "2026-10-18"
+EVAL_BOOTSTRAP_BLOCK_MONTHS = 12
+EVAL_BOOTSTRAP_DRAWS = 2000
+EVAL_BOOTSTRAP_SEED = 20261009               # the date of the design's ruling, as a number
+EVAL_BOOTSTRAP_LEVEL = 0.95
+EVAL_RERUN_IDENTICAL = ("rolling_evaluation", "rolling_evaluation_by_decade", "rolling_evaluation_calibration", "active_returns")   # expectation 10
 
 # Notebook 13, the factor attribution, fixed 6 October 2026 before its code: each
 # path's monthly active return split into the contributions of the six factors
@@ -604,3 +643,36 @@ FO_E7_EXPOSURE_PER_BP_REL_MAX = 0.30
 # of the tracking-error-minimising solution under the mandate.
 FO_CURVE_BUDGETS_ANNUAL = (0.0050, 0.0075, 0.0100, 0.0125, 0.0150, 0.0200)
 FO_TOL_TE = 1e-9                         # a forecast tracking error within this of the budget counts as on it, in the tests
+# Solver rule for the factor problem, added 18 October 2026 while notebook 15 was
+# being built, before its first recorded run: the first path at 150 basis points
+# stopped at 1981-02, a month in which the budget cone and the turnover cap are
+# both active and the interior-point method stalls at a primal residual of 1e-7
+# (status AlmostSolved at the 1e-9 rule, and a failure outright on the second pass
+# at the default rule). The factor problem therefore gets a third pass at this
+# looser rule when the solver fails at the first two; a portfolio from any pass is
+# accepted only after the same checks as every other (the bounds, the cap, the
+# budget within 1e-6 relative), and the month keeps the solver's status word, so
+# that the notebook counts it among the inaccurate months. A second case met the
+# same day, at 2009-06 for the principal-components estimator at 100 basis
+# points: the minimiser's forecast exceeds the budget by a hundredth of a basis
+# point, the factor problem has no interior, and the solver reports a numerical
+# error at every rule; the month then follows the infeasibility rule above, as
+# any month whose minimiser exceeds the budget does, and the guard that the
+# minimiser must indeed exceed the budget stays, so that a solver failure on a
+# feasible month still stops the run.
+FO_SOLVER_OPTIONS_LOOSE = {"tol_gap_abs": 1e-7, "tol_gap_rel": 1e-7, "tol_feas": 1e-7}
+# Notebook 15 (built 18 October 2026, after notebook 14 and the restatement of
+# 9 October, before any path ran) runs the 19 paths month by month as notebook
+# 12 runs version 1's, with the betas of the month before each portfolio, and
+# judges E1, E2, E3, E5, E6 and E7 on their records; E4 needs the attribution
+# of notebook 16 and is judged there. The gap of FO_GAP_DEFINITION is recorded
+# in notebook 15, where the next month's betas are at hand, and drawn in
+# notebook 16. The incidental value of the diagnostic is the exposure the
+# mandate's tracking-error-minimising path of the same variant carries in the
+# same month, rebuilt from the modules as notebook 13 rebuilds it and checked
+# against ATTRIBUTION_REFERENCE_TE; the months the mandate alone can meet, E1's
+# denominator, are those in which its stationary minimum forecast tracking
+# error (the mandate with turnover free, as notebook 14 computes it) is at or
+# below the budget.
+FO_NOTEBOOK_15_JUDGES = ("E1", "E2", "E3", "E5", "E6", "E7")
+FO_NOTEBOOK_16_JUDGES = ("E4",)

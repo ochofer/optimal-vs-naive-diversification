@@ -179,7 +179,7 @@ def load_monthly(key: str, block: int | str = 0, cache_dir: str | Path = "data/f
         if not matches:
             raise KeyError(f"no block in {key} matches {block!r}; titles: {[b['title'] for b in blocks]}")
         chosen = matches[0]
-    frame = chosen["frame"].copy()
+    frame = cut_to_sample_end(chosen["frame"].copy())
     for code in C.FRENCH_MISSING_CODES:
         frame = frame.mask(np.isclose(frame, code))
     if as_decimal and C.FRENCH_RETURNS_ARE_PERCENT:
@@ -187,6 +187,25 @@ def load_monthly(key: str, block: int | str = 0, cache_dir: str | Path = "data/f
     frame.attrs["title"] = chosen["title"]
     frame.attrs["provenance"] = chosen["provenance"]
     return frame
+
+
+def cut_to_sample_end(frame: pd.DataFrame, end: str | None = None) -> pd.DataFrame:
+    """The frame up to the end of the sample (constants.EXT_SAMPLE_END, fixed 6 November 2026): a monthly block to that
+    month, a daily block to the last day of that month, an annual block to that year. A later vintage of French's
+    files carries months after the end, which the study does not use; the vintage in the provenance record still says
+    which revision of history the months before the end came from. With no end set, the frame is returned as it is."""
+    end = C.EXT_SAMPLE_END if end is None else end
+    if end is None or not isinstance(frame.index, pd.PeriodIndex) or len(frame) == 0:
+        return frame
+    end_m = pd.Period(end, "M")
+    freq = frame.index.freqstr or ""
+    if freq.startswith("M"):
+        limit = end_m
+    elif freq.startswith("D"):
+        limit = end_m.asfreq("D", "end")
+    else:
+        limit = end_m.asfreq(frame.index.freq, "end")
+    return frame.loc[:limit]
 
 
 def load_counts(key: str, block: int | str, cache_dir: str | Path = "data/french") -> pd.DataFrame:

@@ -1517,11 +1517,11 @@ NB07 = [
 | Tangency portfolio | the mix of risky assets with the highest Sharpe ratio when the true means and covariances are known |
 | Critical window | the window length at which sample-based mean-variance starts to beat 1/N on average |
 
-**What this notebook does.** The paper's sample ends in November 2004. French's files run to the present, so the nine rules of notebooks 02 and 03 can be run through the same rolling evaluation on every month the vintage carries, from July 1963 to its last month, and the measures reported for three periods: the paper's own out-of-sample period (1973-07 to 2004-11, which reproduces notebooks 02 and 03), the months since the paper (from 2004-12, every one of them out of sample for a window that began 120 months earlier), and the whole period. No published number exists for the new months, so four expectations were written in `constants.py` before the run, each reported as a count.
+**What this notebook does.** The paper's sample ends in November 2004. French's files run to the present, so the nine rules of notebooks 02 and 03 can be run through the same rolling evaluation on every month from July 1963 to August 2026, the end of the study's sample, and the measures reported for three periods: the paper's own out-of-sample period (1973-07 to 2004-11, which reproduces notebooks 02 and 03), the months since the paper (from 2004-12, every one of them out of sample for a window that began 120 months earlier), and the whole period. No published number exists for the new months, so four expectations were written in `constants.py` before the run, each reported as a count.
 
 **Why it comes seventh.** A replication that matches the paper's numbers on the paper's sample shows that the code is right. It does not show that the paper's conclusion holds beyond its sample, and the twenty-one years since 2004 include 2008 and 2020. Notebooks 04 to 06 say what to expect. The formula puts the critical window for the US calibration in the thousands of months, and the new period adds about 260. The simulations say the ranking does not depend on normal returns or on independent months. The expectation is therefore no change, and this notebook checks it on the data.
 
-**What I expect to see, written before the run.** First, count first: every dataset has a return for every month from 1963-07 to the vintage's last month, the four datasets end in the same month, and the number of months is printed and recorded. Second, the paper's reading of Table 3 holds on the whole period: each short-sale-constrained rule has a higher out-of-sample Sharpe ratio than its unconstrained version on every dataset, twelve comparisons. Third, sample-based mean-variance is below 1/N on every dataset in the new period and in the whole period, eight cells. Fourth, the number of cells in the new period in which a rule beats 1/N with a Jobson-Korkie p-value below 0.05 is reported; on about 260 months the standard error of a Sharpe-ratio difference is about 0.06, so few or none are expected, and none would be claimed as a finding. Running time: about four minutes.
+**What I expect to see, written before the run.** First, count first: every dataset has a return for every month from 1963-07 to 2026-08, the four datasets end in the same month, and the number of months is printed and recorded. Second, the paper's reading of Table 3 holds on the whole period: each short-sale-constrained rule has a higher out-of-sample Sharpe ratio than its unconstrained version on every dataset, twelve comparisons. Third, sample-based mean-variance is below 1/N on every dataset in the new period and in the whole period, eight cells. Fourth, the number of cells in the new period in which a rule beats 1/N with a Jobson-Korkie p-value below 0.05 is reported; on about 260 months the standard error of a Sharpe-ratio difference is about 0.06, so few or none are expected, and none would be claimed as a finding. Running time: about four minutes.
 """),
     md("""
 ## Modules
@@ -1787,7 +1787,7 @@ NB08 = [
 | SIC code | the Standard Industrial Classification, a four-digit number that names a firm's line of business; French assigns each firm to one of the 49 industries by its SIC code at the end of June |
 | Firm-level data | one row per firm per month (price, shares, return), as opposed to French's files, which carry one number per portfolio per month |
 
-**What this notebook does.** The extension (notebooks 09 to 13) asks the paper's question of an index-tracking mandate on French's 49 industry portfolios: a portfolio that must stay close to an index of those industries. That index has to be built first, because French publishes the 49 industries' returns and the market's return, and no index of the 49. French's 49-industry file carries, for every industry and month, the number of firms and the average firm size (market capitalisation in millions of dollars). Their product is the industry's total market capitalisation, and dividing by the sum over the 49 gives each industry's share of the whole: its cap weight. The cap-weighted combination of the 49 industry returns should then equal, or nearly equal, the value-weighted return of all the firms in the 49 portfolios, and that is close to French's market return. This notebook builds the weights, computes the combination, and measures its tracking error against the market, Mkt-RF plus RF, from 1969-07 (the first month in which all 49 industries exist, asserted in notebook 01) to the last month the vintage carries.
+**What this notebook does.** The extension (notebooks 09 to 13) asks the paper's question of an index-tracking mandate on French's 49 industry portfolios: a portfolio that must stay close to an index of those industries. That index has to be built first, because French publishes the 49 industries' returns and the market's return, and no index of the 49. French's 49-industry file carries, for every industry and month, the number of firms and the average firm size (market capitalisation in millions of dollars). Their product is the industry's total market capitalisation, and dividing by the sum over the 49 gives each industry's share of the whole: its cap weight. The cap-weighted combination of the 49 industry returns should then equal, or nearly equal, the value-weighted return of all the firms in the 49 portfolios, and that is close to French's market return. This notebook builds the weights, computes the combination, and measures its tracking error against the market, Mkt-RF plus RF, from 1969-07 (the first month in which all 49 industries exist, asserted in notebook 01) to 2026-08, the end of the sample.
 
 **The check, fixed in `constants.py` on 10 September 2026, before any extension code existed.** If the tracking error is at most 50 basis points a year (`CAPW_TE_MAX_ANNUAL`), the derived weights are the benchmark of the extension, both its return series and its industry weights. If not, the benchmark return is the market series, and the question of which industry weights the constraints refer to goes back to the design before notebook 09 is written.
 
@@ -2073,7 +2073,7 @@ NB09 = [
 
 **The problem, stated the way practitioners state it.** The key ingredient of every risk-based portfolio is the covariance matrix of the assets' returns. The natural estimate is the sample covariance, and it fails when the assets are many relative to the months of data: for 49 industries and 120 months it has fewer than five observations per number, and the rule that inverts it (notebooks 02 and 03) trades on its errors. The literature answers with a long list of alternative estimators, and the three ideas behind them are shrinkage (pulling the estimate part of the way towards a simpler target), time dynamics (weighting recent data more) and factor structure (Dom, Howard, Jansen and Lohre, 2024, whose introduction this paragraph follows). Factor structure is the idea this notebook prepares: describe the 1,225 numbers by five or fewer common sources of movement plus each industry's own variance, so that fewer numbers are estimated from the same data. Whether that is a good idea for the 49 industries depends on a fact about the data, whether five sources account for most of their shared movement and whether the first of them is the market, which is what this notebook measures before notebook 10 builds the estimator on it.
 
-**What this notebook does.** The paper estimates the covariance matrix from a 120-month window of monthly returns. For 49 industries that is 49 variances and 1,176 covariances, 1,225 numbers, from 49 times 120 equals 5,880 monthly returns: fewer than five observations per number. Notebooks 02 and 03 showed what estimation error does to a rule that inverts such a matrix. Practitioners meet this problem in two ways, and the extension uses both. The first is more observations: estimating from daily returns, where three years hold about 756 trading days and 49 times 756 equals 37,044 observations, 30 per number; notebook 10 builds every estimator at both frequencies, the paper's 120 monthly returns and three years of daily returns, and `constants.py` records the design (`EXT_COV_FREQUENCIES`). The second is fewer numbers: describe the matrix by the few combinations of industries that account for most of the shared movement, keep those, and treat what is left as each industry's own noise. Those combinations are the principal components, and they are this notebook's subject. The components here are taken from monthly returns, the paper's data, so that what they show about the industries' structure is the structure the paper's estimator faced. Before that estimator is built, this notebook asks three things of the 49 industries over 1969-07 to the vintage's last month: how much of the total variance the first few components explain; whether the first component is the market, measured as the correlation of its score with the benchmark's excess return; and whether the components found in one period are still the components of another, because an estimator that keeps five components assumes that the five found in the window still describe the next month.
+**What this notebook does.** The paper estimates the covariance matrix from a 120-month window of monthly returns. For 49 industries that is 49 variances and 1,176 covariances, 1,225 numbers, from 49 times 120 equals 5,880 monthly returns: fewer than five observations per number. Notebooks 02 and 03 showed what estimation error does to a rule that inverts such a matrix. Practitioners meet this problem in two ways, and the extension uses both. The first is more observations: estimating from daily returns, where three years hold about 756 trading days and 49 times 756 equals 37,044 observations, 30 per number; notebook 10 builds every estimator at both frequencies, the paper's 120 monthly returns and three years of daily returns, and `constants.py` records the design (`EXT_COV_FREQUENCIES`). The second is fewer numbers: describe the matrix by the few combinations of industries that account for most of the shared movement, keep those, and treat what is left as each industry's own noise. Those combinations are the principal components, and they are this notebook's subject. The components here are taken from monthly returns, the paper's data, so that what they show about the industries' structure is the structure the paper's estimator faced. Before that estimator is built, this notebook asks three things of the 49 industries over 1969-07 to 2026-08: how much of the total variance the first few components explain; whether the first component is the market, measured as the correlation of its score with the benchmark's excess return; and whether the components found in one period are still the components of another, because an estimator that keeps five components assumes that the five found in the window still describe the next month.
 
 **Why it comes ninth.** The benchmark exists since notebook 08, and the first component is checked against it. The question of how many numbers a covariance matrix really needs is the bridge from the paper (where the sample covariance was one of the things that made mean-variance fail) to the extension (where four ways of estimating it are compared on a portfolio that is told what to hold).
 
@@ -2348,7 +2348,7 @@ NB10 = [
 
 **The problem, stated the way practitioners state it.** The key ingredient of every risk-based portfolio is the covariance matrix of the assets' returns. The natural estimate is the sample covariance, and it fails when the assets are many relative to the observations: for 49 industries and 120 monthly returns it has fewer than five observations per number. The literature answers with a long list of alternative estimators built on three ideas, shrinkage, time dynamics and factor structure, and it tests them almost always in one way, by the realised volatility of the unconstrained minimum-variance portfolio built from each. Dom, Howard, Jansen and Lohre (2024), whose introduction this paragraph follows, point out that such a portfolio is one no practitioner holds: it is leveraged, concentrated and trades a large part of its value every month, so the test rewards an estimator for what it does in positions nobody takes. They propose to judge estimators instead on realistic portfolios, long-only, weight-constrained and charged for trading, after costs, and they find that under those constraints the differences between estimators shrink, that time dynamics (recent days weighted more, as in RiskMetrics) matter more than shrinkage or structure, and that a simple dynamic estimator does as well as a complex one. This notebook takes their perspective. It builds four estimators at two data frequencies, judges each by the calibration of its risk forecasts and by both the unconstrained and the long-only minimum-variance portfolio it produces, and, in a final section, charges the portfolios for their trading, which is where the unconstrained portfolio's lower volatility turns out to be bought at a price no investor pays.
 
-**What this notebook does.** The paper estimated the covariance matrix of its assets by the sample covariance of 120 monthly returns, and notebooks 02, 03 and 09 showed what that costs for 49 assets: 1,225 numbers from fewer than five observations each. This notebook builds four estimators and judges them on the 49 industries. The sample covariance uses every number the window offers. Ledoit-Wolf shrinkage pulls the sample covariance part of the way towards a simple target. The factor model describes the covariance by each industry's betas to six Fama-French factors plus its own variance. The principal-component model takes the market as its first factor and finds four more components in what the market leaves. Each is built at two data frequencies: the paper's 120 monthly returns, and three years of daily returns scaled to monthly, which is what practitioners use (Dom, Howard, Jansen and Lohre, 2024, estimate from daily returns over three years and rebalance monthly). Every estimate is built on the data before a month and judged on that month's realised returns, for every month from 1979-07 to the vintage's last month.
+**What this notebook does.** The paper estimated the covariance matrix of its assets by the sample covariance of 120 monthly returns, and notebooks 02, 03 and 09 showed what that costs for 49 assets: 1,225 numbers from fewer than five observations each. This notebook builds four estimators and judges them on the 49 industries. The sample covariance uses every number the window offers. Ledoit-Wolf shrinkage pulls the sample covariance part of the way towards a simple target. The factor model describes the covariance by each industry's betas to six Fama-French factors plus its own variance. The principal-component model takes the market as its first factor and finds four more components in what the market leaves. Each is built at two data frequencies: the paper's 120 monthly returns, and three years of daily returns scaled to monthly, which is what practitioners use (Dom, Howard, Jansen and Lohre, 2024, estimate from daily returns over three years and rebalance monthly). Every estimate is built on the data before a month and judged on that month's realised returns, for every month from 1979-07 to 2026-08, the end of the sample.
 
 **How a covariance estimator is judged.** A covariance matrix makes two kinds of promise. The first is a forecast of risk: for any portfolio with weights w, w' Sigma w is the variance it predicts for next month. The bias statistic tests the promise over many months: divide each month's realised return by the forecast standard deviation, and take the standard deviation of those ratios; a calibrated forecaster gets 1, one that under-forecasts risk gets more than 1. The notebook tests it on each of the 49 industries, on 1/N, on the benchmark, and on 200 random active portfolios (weights that sum to zero, largest 2 percentage points, the extension's active weight bound), which is the tracking-error forecast the extension will rely on. The second promise is in the inverse: the minimum-variance portfolio uses Sigma^-1, and errors in the small directions of Sigma blow up there. Following Dom, Howard, Jansen and Lohre (2024), the notebook builds the minimum-variance portfolio from each estimate every month, with and without the long-only constraint, holds it for a month, and reports the volatility it realised over all months; a better covariance gives a lower one. The condition number of each estimate says how much its inverse amplifies errors.
 
@@ -2923,7 +2923,7 @@ print(f"expectation 1 holds; CRSP vintage of the eight files: {vintage}")
     md("""
 ## The optimiser at three months
 
-This is the first part of the notebook: C3 is the tilt alone, the first of its two versions. The report months are the first evaluation month (1979-07, the first with both a 120-month and a three-year daily window), the paper's last month (2004-11) and the vintage's last month. At each, the five estimator variants of the rolling evaluation (the four estimators on three years of daily returns and the sample covariance of 120 monthly returns) give five covariance matrices, and the optimiser runs under each constraint set with the benchmark as the previous portfolio. The table reports, for each portfolio, the forecast tracking error in basis points a year, the one-way turnover, the cap after any relaxation, how many industries it holds, its effective number of holdings, the active weights of the three tilted industries in percentage points, and how many constraints of each kind bind.
+This is the first part of the notebook: C3 is the tilt alone, the first of its two versions. The report months are the first evaluation month (1979-07, the first with both a 120-month and a three-year daily window), the paper's last month (2004-11) and the sample's last month (2026-08). At each, the five estimator variants of the rolling evaluation (the four estimators on three years of daily returns and the sample covariance of 120 monthly returns) give five covariance matrices, and the optimiser runs under each constraint set with the benchmark as the previous portfolio. The table reports, for each portfolio, the forecast tracking error in basis points a year, the one-way turnover, the cap after any relaxation, how many industries it holds, its effective number of holdings, the active weights of the three tilted industries in percentage points, and how many constraints of each kind bind.
 """),
     code("""
 SETS = {"C0": C.CONSTRAINT_SETS["C0"], "C1": C.CONSTRAINT_SETS["C1"], "C2": C.CONSTRAINT_SETS["C2"], "C3": C.CONSTRAINT_SET_TILT_ONLY}   # the first run: C3 as designed on 10 September, the tilt alone
@@ -3387,10 +3387,14 @@ NB12 = [
 | Basis point | one hundredth of a percentage point, so 50 basis points is 0.50% |
 | Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
 | Provenance | the record of what was downloaded, when, with its checksum and vintage |
+| Block bootstrap | resampling a series in blocks of consecutive months, so that each resample keeps the clustering of the months inside a block; circular when a block may run past the last month into the first |
+| Band | the range that holds the central share of the values a statistic takes across the resamples, 95 per cent here |
+| Draw | one resample of the series, taken at random; 2,000 here |
+| Seed | the number that starts a random number generator, fixed in `constants.py` so that every run draws the same resamples |
 
 **The problem, stated the way practitioners state it.** The literature judges covariance estimators by what an unconstrained minimum-variance portfolio realised after the fact; Dom, Howard, Jansen and Lohre (2024), whose framing this notebook follows, replace that portfolio with a constrained one and read its realised volatility, turnover and costs. The counterpart for an index manager is the realised tracking error of the constrained, tilted, turnover-capped portfolio against its benchmark, month after month, with each month's weights chosen before the month began, and beside it the turnover, the costs, and the question whether the risk forecast that justified each portfolio was right. Nothing in notebooks 10 and 11 can answer that; both are forecasts. This notebook runs the portfolios and measures.
 
-**What this notebook does.** Notebooks 10 and 11 forecast. This notebook measures what happened. For every month from 1979-07 to the vintage's last month, each specification builds its portfolio on the data before the month and holds it through the month; the difference between the portfolio's return and the benchmark's is that month's active return, and the standard deviation of those active returns over 566 months is the realised tracking error, the number the forecasts of notebook 11 were about. The question the extension was built to ask is answered here, whether the choice of covariance estimator still matters, measured as realised tracking error, once the portfolio is long-only, bounded, turnover-capped and tilted. Beside it: how well the forecasts were calibrated, what the mandate's fixes of notebook 11 cost in realised terms, whether the robust portfolio did what it was built for, how often the cap had to give way, and what the tilt earned or cost in return. Two expectations (8 and 9) were added after the first run, with their expectations written before their code, and are marked as such.
+**What this notebook does.** Notebooks 10 and 11 forecast. This notebook measures what happened. For every month from 1979-07 to 2026-08, the end of the sample, each specification builds its portfolio on the data before the month and holds it through the month; the difference between the portfolio's return and the benchmark's is that month's active return, and the standard deviation of those active returns over 566 months is the realised tracking error, the number the forecasts of notebook 11 were about. The question the extension was built to ask is answered here, whether the choice of covariance estimator still matters, measured as realised tracking error, once the portfolio is long-only, bounded, turnover-capped and tilted. Beside it: how well the forecasts were calibrated, what the mandate's fixes of notebook 11 cost in realised terms, whether the robust portfolio did what it was built for, how often the cap had to give way, and what the tilt earned or cost in return. Two expectations (8 and 9) were added after the first run, with their expectations written before their code, and are marked as such.
 
 **How a path is run.**
 
@@ -3421,6 +3425,10 @@ NB12 = [
 
 8. RiskMetrics joins as a seventh variant (the exponentially weighted covariance over five years of daily returns with a one-year half-life, notebook 10's sensitivity), because Dom, Howard, Jansen and Lohre (2024) find that time dynamics matter more than shrinkage or structure and that RiskMetrics does as well as the DCC model of Engle (2002) for minimum-variance portfolios, and because notebook 10 found it gave the lowest unconstrained volatility and the best-calibrated forecast. Expectation: under C3 its realised tracking error is at or below the sample covariance's on daily data. The robust portfolio stays the minimax over the five covariances of notebook 11, so that its path is unchanged.
 9. Calibration of the forecast on its own past: in month t the forecast is multiplied by the ratio of realised to forecast tracking error over the previous 60 months of the same path, using only months before t (unchanged while fewer than 24 months are available). Expectation: under C3 the calibrated bias statistic lies between 0.85 and 1.15 for the four daily estimators. Reported: by decade, and for the robust portfolio and RiskMetrics.
+
+**Added 18 October 2026 (`constants.py`, by the design of 9 October 2026), after the recorded run of 7 October and before their code.**
+
+10. Two saves, two descriptive figures and a band, with one expectation. The saves: the monthly forecast tracking error of every path, beside the active returns the notebook already writes, and the weights every path holds in the last evaluation month, with the benchmark's, so that the dashboard can build its figures of the forecasts and the holdings from committed tables. The descriptive figures, reported beside the standard-error sentence of expectation 7 and entering no claim: the worst cumulative fall of the active return, the largest fall of the running sum of the monthly active returns from an earlier high, with the months of the high and the low; and the share of months with a positive active return. The band: a 95 per cent band on the bias statistic from a circular block bootstrap of the monthly pairs of active return and forecast, in blocks of 12 months, 2,000 resamples, the seed in `constants.py`; a block keeps the months in order, so the band allows for the clustering of the active returns, and no normal band is drawn. Expectation 10: after this run the four tables of the recorded run (the measures, the by-decade table, the calibration table and the active returns) come out byte for byte equal to the committed copies in `results/<vintage>/`, so that the additions change no number of version 1; the comparison runs where the repository's `results/` folder is present.
 
 Running time: about ten to fifteen minutes, most of it the 20,000 optimisations.
 """),
@@ -3656,9 +3664,40 @@ print()
 print(f"expectation 9: the calibrated bias statistic lies in {lo9} to {hi9} for {e9} of {len(daily)} daily estimators ({', '.join(f'{b:.2f}' for b in calib.loc[daily, 'bias, calibrated'])}): {'MET' if e9 == len(daily) else 'NOT MET'}")
 """),
     md("""
+## Added 18 October 2026: two descriptive figures of each path, and a band on the bias statistic
+
+By the design of 9 October 2026, with the figures named in `constants.py` before this code. The worst cumulative fall is the largest fall of the running sum of a path's monthly active returns from an earlier high (from zero, if no high came first), with the month of the high, the month of the low and the months between them; the share of positive months is the fraction of the 566 months in which the active return was above zero. Both are descriptive: a path with no return forecast behind it has no claim to make about either, and they are shown beside the standard error of expectation 7 so that a reader sees the shape of the active return beside its mean. The band on the bias statistic comes from a circular block bootstrap: a resample draws 48 starting months at random and takes the 12 months that follow each, running past the last month into the first, keeping each month's active return with its own forecast; the statistic is computed on each of 2,000 resamples and the band is the central 95 per cent of them. Blocks of a year keep the clustering of the active returns inside each resample, which an independent resampling of months would destroy. The band is shown for the forecast under the 21 rule and for the forecast calibrated on the path's own past (expectation 9), the same procedure on the same months.
+"""),
+    code("""
+# Added 18 October 2026, by the design of 9 October 2026: the descriptive figures and the band (constants.EVAL_ADDITIONS_DATE).
+rows = []
+for (v, cs), path in paths.items():
+    fall = E.worst_cumulative_fall(path["active_return"])
+    active_v = path["active_return"].to_numpy()
+    lo, hi = E.block_bootstrap_band(active_v, path["forecast_te"].to_numpy())
+    cal_v = E.calibrated_forecast(path).to_numpy()
+    lo_c, hi_c = E.block_bootstrap_band(active_v, cal_v)
+    rows.append({"variant": LABEL[v], "set": cs, "worst cumulative fall": fall["fall"], "fall peak": str(fall["peak"]), "fall trough": str(fall["trough"]), "fall months": fall["months"],
+                 "share of positive months": E.share_positive(active_v), "active return (gross)": 12 * float(active_v.mean()), "standard error": E.realised_tracking_error(active_v) / np.sqrt(len(path) / 12),
+                 "bias": E.bias_statistic(active_v, path["forecast_te"].to_numpy()), "bias band low": lo, "bias band high": hi,
+                 "bias, calibrated": E.bias_statistic(active_v, cal_v), "calibrated band low": lo_c, "calibrated band high": hi_c})
+descriptives = pd.DataFrame(rows).set_index(["variant", "set"])
+show_x = descriptives.xs("C3", level="set").copy()
+for c in ["worst cumulative fall", "active return (gross)", "standard error"]:
+    show_x[c] = 1e4 * show_x[c]
+show_x = show_x.rename(columns={"worst cumulative fall": "worst cumulative fall (bp)", "active return (gross)": "active return (gross, bp a year)", "standard error": "standard error (bp a year)"})
+print(f"under C3: the worst cumulative fall of the active return, the share of positive months, and the 95% band on the bias statistic from the block bootstrap ({C.EVAL_BOOTSTRAP_BLOCK_MONTHS}-month blocks, {C.EVAL_BOOTSTRAP_DRAWS:,} resamples, seed {C.EVAL_BOOTSTRAP_SEED}):")
+print(show_x[["worst cumulative fall (bp)", "fall peak", "fall trough", "fall months", "share of positive months", "active return (gross, bp a year)", "standard error (bp a year)"]].to_string(float_format=lambda x: f"{x:.2f}"))
+print()
+print(show_x[["bias", "bias band low", "bias band high", "bias, calibrated", "calibrated band low", "calibrated band high"]].to_string(float_format=lambda x: f"{x:.2f}"))
+print()
+print(f"under C3 tilt only: worst cumulative fall {1e4 * descriptives.xs('C3 tilt only', level='set')['worst cumulative fall'].min():.0f} to {1e4 * descriptives.xs('C3 tilt only', level='set')['worst cumulative fall'].max():.0f} bp, "
+      f"share of positive months {descriptives.xs('C3 tilt only', level='set')['share of positive months'].min():.3f} to {descriptives.xs('C3 tilt only', level='set')['share of positive months'].max():.3f}")
+"""),
+    md("""
 ## Save
 
-The measures table, the by-decade table and the active returns of every path are written to `outputs/`, with the vintage in the file name; notebook 13 rebuilds the paths it attributes from the modules.
+The measures table, the by-decade table, the calibration table and the active returns of every path are written to `outputs/`, with the vintage in the file name; notebook 13 rebuilds the paths it attributes from the modules. From 18 October 2026 the notebook also writes the monthly forecast tracking error of every path, the weights of every path and of the benchmark in the last evaluation month, and the descriptive figures with the bands; and, where the repository's `results/` folder is present, it compares the four tables of the recorded run with their committed copies (expectation 10).
 """),
     code("""
 os.makedirs(C.OUTPUT_DIR, exist_ok=True)
@@ -3667,7 +3706,34 @@ decades.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_by_decade_{vintage}.csv", flo
 calib.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_calibration_{vintage}.csv", float_format="%.8f")
 active = pd.DataFrame({f"{LABEL[v]} | {cs}": p["active_return"] for (v, cs), p in paths.items()})
 active.to_csv(f"{C.OUTPUT_DIR}/active_returns_{vintage}.csv", float_format="%.10f")
-print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("rolling", "active"))))
+# Added 18 October 2026: the forecasts, the last month's weights, the descriptive figures with the bands
+forecast = pd.DataFrame({f"{LABEL[v]} | {cs}": p["forecast_te"] for (v, cs), p in paths.items()})
+forecast.to_csv(f"{C.OUTPUT_DIR}/forecast_tracking_errors_{vintage}.csv", float_format="%.10f")
+last = pd.DataFrame({f"{LABEL[v]} | {cs}": p["weights"].iloc[-1] for (v, cs), p in paths.items()}, index=industries).T
+last.loc["benchmark"] = weights.loc[months[-1]].to_numpy()
+last.index.name = "path"
+last.to_csv(f"{C.OUTPUT_DIR}/rolling_weights_{months[-1]}_{vintage}.csv", float_format="%.10f")
+descriptives.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_descriptives_{vintage}.csv", float_format="%.8f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("rolling", "active", "forecast"))))
+# Expectation 10: the four tables of the recorded run against their committed copies, where the repository is present
+committed = f"results/{vintage}"
+if os.path.isdir(committed):
+    same = {name: open(f"{C.OUTPUT_DIR}/{name}_{vintage}.csv", "rb").read() == open(f"{committed}/{name}_{vintage}.csv", "rb").read() for name in C.EVAL_RERUN_IDENTICAL}
+    print(f"expectation 10: the tables of the recorded run byte for byte equal to the committed copies in {committed}/ in {sum(same.values())} of {len(same)} ({', '.join(n for n, ok in same.items() if not ok) or 'none differs'}): {'holds' if all(same.values()) else 'FAILS'}")
+else:
+    print(f"expectation 10: no {committed}/ folder beside this notebook, so the comparison with the committed tables runs where the repository is present")
+# Added after the run of 18 October 2026 (reported, no verdict): where a table differs from its committed copy, by how much and in which rows
+if os.path.isdir(committed):
+    for name in C.EVAL_RERUN_IDENTICAL:
+        if same[name]:
+            continue
+        old = pd.read_csv(f"{committed}/{name}_{vintage}.csv"); new = pd.read_csv(f"{C.OUTPUT_DIR}/{name}_{vintage}.csv")
+        num = [c for c in old.columns if old[c].dtype.kind in "fi"]
+        diff = (old[num] - new[num]).abs()
+        rows = diff.max(axis=1)
+        keys = [c for c in old.columns[:2] if old[c].dtype.kind not in "fi"]
+        where = old.loc[rows > 0, keys].astype(str).agg(" | ".join, axis=1).tolist() if name != "active_returns" else [c for c in num if diff[c].max() > 0]
+        print(f"  {name}: {int((rows > 0).sum())} of {len(old)} rows differ, the largest difference {rows.max():.2e}, in: {', '.join(where)[:300]}")
 """),
     md("""
 ## What this notebook established, and what could be wrong
@@ -3683,6 +3749,7 @@ print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("r
 | 7. Active return, costs, holdings | the tilt had no opportunity cost: +1.8 to +6.9 basis points a year gross, inside one standard error (12 to 13) of zero; the mandate -1.0 to -6.9; the mandate's two additions cost 8 to 10 against the tilt alone on the same months; turnover costs 5 to 9 at 50 basis points; net -6 to -15; information ratios -0.07 to -0.17 | reported |
 | 8. RiskMetrics (added 6 October) | 84.3 basis points against 84.7 for the sample covariance on daily data; a difference of 0.4, inside the noise | MET, direction only |
 | 9. Calibrated forecasts (added 6 October) | calibrated bias statistics 1.11, 1.11, 1.17 and 1.15 for the four daily estimators, 3 of 4 inside 0.85 to 1.15; the monthly covariance's 1.61 falls to 1.12; by decade 0.95 to 1.18 after 1989, 1.24 to 1.50 before | NOT MET |
+| 10. The re-run of 18 October leaves every version 1 table byte for byte as committed (added 18 October) | the 30 paths of the five estimators and RiskMetrics identical; the five robust paths differ at the ninth decimal (active returns within 3.2e-9 a month, the measures within 3e-8) and in the count of months with an inaccurate solver status, because the solver's version changed between the two runs | NOT MET byte for byte; the version 1 tables stay as committed |
 
 Expectation 1 holds. 566 evaluation months, 35 paths, 566 records each; under C0 and C1 every path is the benchmark to the solver's precision (the largest active return in any month is 2e-7, two hundred-thousandths of a basis point; the level of 1e-10 written first was set for exact arithmetic and was raised to 1e-6 before the recorded run, as `constants.py` says). The index's own one-way turnover, the trading an index fund cannot avoid, averages 0.39% a month, 4.7% a year, with a median of 0.16% and a largest value of 13.3% in 1988-07; it exceeds 2% in 24 months, all of them Julys, when French rebuilds the industry portfolios from the end-of-June SIC codes. Under C2 the active weight bound leaves room to absorb those months, so the cap was relaxed once and the realised tracking error of following the index at 2% a month is 6.3 to 6.5 basis points.
 
@@ -3704,7 +3771,11 @@ Expectation 8, RiskMetrics, is met in direction and says nothing in size. Under 
 
 Expectation 9, the calibrated forecasts, is not met by one estimator and 0.02. Multiplying each forecast by the ratio of realised to forecast tracking error over the previous 60 months of the same path moves every variant's bias statistic towards 1: the daily estimators from 1.22 to 1.39 to 1.11 to 1.17, the monthly covariance from 1.61 to 1.12, RiskMetrics from 1.23 to 1.08, the robust portfolio from 1.09 to 1.06. Three of the four daily estimators land inside 0.85 to 1.15 (1.11, 1.11, 1.15); the factor model lands at 1.17. The by-decade columns say what the calibration repairs and what it cannot. From 1990 on, the calibrated statistics of the daily estimators lie between 0.95 and 1.18 in every decade, and the monthly covariance's between 1.01 and 1.18: the persistent part of the bias, the optimisation bias, is a ratio that the previous five years measure well. In 1979 to 1989 the calibrated statistics are still 1.24 to 1.50, because the first 24 months run uncorrected and the shock enters the realised numbers before it enters the window; a correction built from the past arrives after the regime it is correcting for. The mean calibration factor, 1.16 to 1.30 for the daily estimators and 1.52 for the monthly covariance, is the size of the correction a manager would have applied in real time. The range 0.85 to 1.15 was written for the whole sample, which includes the 126 months no backward-looking calibration can repair; written for the months from 1990, where the calibration has a full window, the four daily estimators would have landed between 0.96 and 1.18, and the verdict on that range is not claimed, because the range was not written first.
 
-The robust portfolio's status column reports 154 and 113 months of inaccurate solver status under C0 and C1 and one under C3. Under C0 and C1 the optimum is the benchmark exactly, where the worst-case tracking error is zero and the problem's cone constraints are all at their tips; an interior-point method reaches that point only approximately and says so. The weights it returned passed every feasibility check, and the active return in those months is below 2e-7.
+Expectation 10, added on 18 October 2026 with the saves, is not met byte for byte, and the way it fails is itself a finding about the robust portfolio. The re-run reproduces the 30 paths of the five estimators and RiskMetrics to the last printed digit of every table, because their problem is a quadratic program whose solution the solver reaches exactly at the 1e-12 rule. The five robust paths differ from the committed run at the ninth decimal: the largest difference in a monthly active return is 3.2e-9, three hundred-thousandths of a basis point, and in the measures 3e-8 (the bias statistic 1.08943134 against 1.08943135); the counts of months with an inaccurate solver status under C0 and C1 moved from 154 and 113 to 170 and 111, and under C3 from one to none. The robust problem is a cone program solved by an interior-point method that stops when its residuals fall below 1e-9, and where it stops at that level depends on the solver's version, which changed between 7 October and this run; every returned portfolio passed the same feasibility checks in both. The committed version 1 tables stay as the recorded run of 7 October wrote them, and the three tables this run adds (the forecasts, the last month's weights, the descriptive figures) come from this run, consistent with the committed ones to the level stated. A run on another machine with another solver version will show the same kind of difference on the robust paths and none on the others.
+
+The descriptive figures of expectation 10, under the mandate's C3 and in no claim. The worst cumulative fall of the active return runs from 488 basis points (the factor model) to 677 (the sample covariance on daily data) over the 47 years, and for six of the seven variants the low is 2008-11, the high being 1981-05 for the sample covariance, shrinkage and RiskMetrics, 1979-08 for the robust portfolio, the start for the component model and 1989-08 for the factor model: falls of 19 to 29 years during which the cumulative active return of the mandate drifted down by 5 to 7 per cent in all, which is what an active return of minus 1 to minus 7 basis points a year on average looks like when summed; the monthly covariance's worst fall is shorter (507 basis points over 17 months from the start to 1980-11, the oil shock) and the tilt alone falls by 357 to 458. The share of months with a positive active return is 0.49 to 0.52 under the mandate and 0.52 to 0.54 for the tilt alone: the active return is a coin toss month by month, which is the shape a portfolio with no return forecast should show. The 95 per cent band on the bias statistic from the block bootstrap puts the under-forecast of expectation 3 beyond chance for every single estimator: 1.12 to 1.41 for the sample covariance on daily data (point 1.26), 1.08 to 1.36 for shrinkage, 1.20 to 1.54 and 1.21 to 1.57 for the two structured models, 1.43 to 1.79 for the monthly covariance, 1.10 to 1.36 for RiskMetrics, none of which contains 1; the robust portfolio's band, 0.98 to 1.19, does. The calibrated forecasts of expectation 9 bring every band back over 1 (0.96 to 1.26 for the sample covariance, 0.98 to 1.25 for the monthly covariance, 0.94 to 1.21 for RiskMetrics), so the bias that the calibration leaves cannot be told from a calibrated forecast on these 566 months, and the verdict of expectation 9 on its point estimates stands as written. The band's width, about 0.3 for the daily estimators, is the uncertainty a manager should attach to a bias statistic measured on 47 years of a single path.
+
+The robust portfolio's status column reports 154 and 113 months of inaccurate solver status under C0 and C1 and one under C3 in the recorded run of 7 October. Under C0 and C1 the optimum is the benchmark exactly, where the worst-case tracking error is zero and the problem's cone constraints are all at their tips; an interior-point method reaches that point only approximately and says so. The weights it returned passed every feasibility check, and the active return in those months is below 2e-7.
 
 **What this notebook does not settle.**
 
@@ -4474,7 +4545,539 @@ The feasibility count is the notebook's main result for the design, and it bears
 ]
 
 
+# ---------------------------------------------------------------------------
+# 15: the rolling evaluation of the factor objective (version 2, module A)
+# ---------------------------------------------------------------------------
+
+NB15 = [
+    md("""
+# 15. The rolling evaluation of the factor objective: nineteen paths, month by month
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves; volatility is the standard deviation of returns, stated per year here by multiplying the monthly figure by the square root of 12 |
+| Standard error | the uncertainty of a number estimated from a sample: the standard deviation that the estimate would show across repeated samples of the same size; for a mean it is the standard deviation of the observations divided by the square root of their number |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four, and notebook 12 ran them with the robust portfolio and RiskMetrics as seven variants |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
+| RiskMetrics | the covariance estimator of J.P. Morgan's 1996 RiskMetrics document: a weighted sample covariance in which each day's weight falls by half every half-life, one year of trading days here, so that recent days count most (notebook 10's sensitivity) |
+| Factor | a return series that moves many assets at once; the six here are the market factor Mkt-RF and five long-short portfolios: SMB (small firms over large, size), HML (cheap firms over expensive, value), RMW (profitable firms over unprofitable, profitability), CMA (firms that invest little over firms that invest much, investment) and Mom (recent winners over recent losers, momentum) |
+| Premium | the average return of a factor over long samples, as the literature reports it; the four factors value, profitability, investment and momentum have a documented positive premium, and this study estimates none of them |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09); the estimator named after it builds the covariance from five of them (notebook 10) |
+| Beta | how much an asset moves with a factor on average, estimated by regressing the asset's excess returns on the factors' returns over the estimation window; one beta per factor; the beta to the benchmark is how much it moves with the benchmark, one for the benchmark itself |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Active exposure | the portfolio's beta to a factor minus the benchmark's: the sum over industries of the active weight times the industry's beta to that factor (notebook 13) |
+| Attribution | splitting a portfolio's active return into the contributions of named factors plus a residual, so that the parts add up to the whole (notebook 13); notebook 16's task for the nineteen paths |
+| Verdict | the strict pass or fail of an expectation, MET or NOT MET, as the design requires |
+| Tracking error | the standard deviation of the difference between two return series, stated per year; forecast (ex-ante) when computed from a covariance matrix before the month, realised (ex-post) when measured on the active returns afterwards |
+| Bias statistic | the standard deviation of the monthly active return divided by the same month's forecast (the forecast tracking error over the square root of twelve); 1 for a calibrated forecast, above 1 an under-forecast |
+| Long-only | said of a portfolio in which no weight is negative |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought when the portfolio stays fully invested |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance; 2% a month here |
+| Drifted weights | the previous month's weights after that month's returns have moved them, so that they still sum to one |
+| Tilt | a constraint that holds named industries below their benchmark weight; here Coal, Oil and Utilities at no more than half of it. The word keeps this one meaning in version 2 |
+| Exclusion | a constraint that holds named industries at zero weight; Smoke (tobacco) and Guns (weapons) here |
+| Beta-neutral | a constraint that holds the portfolio's beta to the benchmark equal to one |
+| Mandate | the whole set of rules the fund obeys: the tilt, the exclusions and beta neutrality, with the active weight bound and the turnover cap, the constraint set C3 of version 1 |
+| Optimiser | the extension's routine that solves a constrained portfolio problem; version 1's minimises the forecast tracking error (notebook 11), version 2's maximises the factor objective (notebook 14) |
+| Factor objective | the quantity version 2's optimiser maximises: the sum of the portfolio's active exposures to the targeted factors, each counted in the direction of its premium |
+| Targeted factors | the four of the six factors with a documented premium, value, profitability, investment and momentum, each targeted in the direction of its premium and weighted equally in beta units; the two single-factor paths target one of them alone |
+| Budget | the limit on the forecast tracking error of the factor objective's portfolio: 75, 100 or 150 basis points a year. A month in which the mandate's tracking-error-minimising portfolio already exceeds the budget takes that portfolio and is counted |
+| Budget binds | said of a month in which the forecast tracking error lies within one basis point of the budget: the budget was spent in full |
+| Stationary | said of the portfolio the budget allows when turnover is free, the destination the capped rebalances move towards; the stationary minimum is the mandate's lowest forecast tracking error with turnover free (notebook 14) |
+| Incidental exposure | the active exposure a portfolio built without the factor objective carries, version 1's tracking-error-minimising portfolio of the same month; what the mandate's tilt leaves behind |
+| Gap | for a month, the factor objective the optimiser chose with the betas estimated before the month, minus the value the same active weights carry with the betas estimated after it, s'(B_t minus B_t+1)' a_t; its mean absolute value over the months is the path's gap |
+| Robust portfolio | the weights whose largest forecast tracking error across the five covariance estimates is smallest (notebook 11); under the factor objective, the weights whose budget holds under all five at once |
+| Path | the month-by-month sequence of portfolios of one specification, each built on the data before its month; here one variant at one budget with one target vector |
+| In-sample | measured on the same data that were used to form the weights; the forecast tracking error is in-sample in this sense |
+| Out-of-sample | measured on months the portfolio had not seen when its weights were formed; the realised tracking error is out of sample |
+| Information ratio | the active return per year divided by the realised tracking error; the reward earned per unit of tracking error |
+| Calibration | the forecast of month t multiplied by the ratio of realised to forecast tracking error over the previous 60 months of the same path, using only months before t (notebook 12's expectation 9) |
+| Basis point | one hundredth of a percentage point, so 100 basis points is 1.00% |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** An enhanced index manager who has agreed a budget on the forecast tracking error, and who spends it on exposures to the factors with a documented premium, is judged afterwards on five numbers: whether the budget was spent in full month after month, how much exposure it bought, what the realised tracking error was against the budget, what the exposure earned gross and net of trading costs, and whether the covariance estimator that priced the budget still matters once the budget is spent on purpose. Notebook 14 posed the problem and solved it at three months with turnover free. This notebook runs it: nineteen paths over the 566 months from 1979-07, each portfolio built on the data before its month, each month's rebalance held to the mandate's turnover cap, and measures what the paths realised.
+
+**What this notebook does.** It is the second of three (14 the problem, 15 the rolling evaluation, 16 the attribution). For every path and month it estimates the variant's covariance and the industries' betas to the six factors on the data before the month, solves the factor objective under the mandate and the budget with the drifted previous weights as the turnover reference, holds the portfolio through the month, and records the forecast tracking error, the active return, the turnover, whether the budget was met and whether it binds, the six active exposures, and the gap once the next month's betas are known. Beside the nineteen paths it rebuilds the seven mandate paths of version 1 from the modules, as notebook 13 does, because the diagnostic of the design of 9 October 2026 compares each targeted exposure with the incidental one the mandate carries in the same month; and it computes the mandate's stationary minimum forecast tracking error in every month, as notebook 14 did, because expectation E1 counts only the months the mandate alone can meet. The seven expectations of the design were written into `constants.py` on 8 October 2026 and E1 and E2 restated on 9 October, before any path ran; this notebook judges E1, E2, E3, E5, E6 and E7 on its records, and E4, which needs the attribution of the active returns, is notebook 16's.
+
+**How a path is run.**
+
+- The path starts as the index: in the first evaluation month the previous portfolio is the benchmark of that month.
+- In month t the variant's covariance and the betas are estimated on the data before t (notebook 10's estimators, notebook 13's regression; the robust portfolio uses all five covariances), and the optimiser maximises the factor objective under the mandate and the budget, with the drifted previous weights as the turnover reference. Nothing from month t enters the weights.
+- If the budget cannot be met in month t, because the mandate's tracking-error-minimising portfolio under the same cap already exceeds it, the path takes that portfolio, the month is marked and counted, and nothing else is relaxed.
+- The portfolio earns its weights times the industries' returns of month t, the benchmark earns its weights times the same returns, and the difference is recorded with the forecast tracking error, the one-way turnover, the state of the cap and of the budget, the objective, the six active exposures and the holdings; the gap of month t is recorded once the betas of month t+1 are estimated.
+- 19 paths, the count fixed in the design: the five estimator variants at each of the three budgets (15); the robust portfolio and RiskMetrics at 100 basis points (2); and two single-factor sensitivities at 100 basis points with the sample covariance on daily data, the target on value alone and on momentum alone (2).
+
+**Measures of a path.**
+
+- Realised tracking error: the standard deviation of the 566 active returns, times the square root of 12; and realised over budget, the measure new to module A.
+- Forecast tracking error: the mean of the monthly forecasts and the bias statistic; the months in which the budget was not met and the months in which it binds.
+- The exposure bought: the mean active exposure to each of the four targeted factors, their sum (the mean factor objective), and the mean objective per basis point of realised tracking error; the mean absolute gap.
+- Active return: the mean times 12, gross; the cost of the turnover at 50 and 100 basis points per unit of one-way turnover; the net active return; the information ratio; the standard error of the mean over 47 years.
+- Turnover: the mean one-way turnover, the months in which the cap binds and the months in which it was relaxed. Holdings: the mean effective number and the mean number of industries held.
+
+**The expectations, written before the code (`constants.py`, 8 October 2026; E1 and E2 restated 9 October 2026, before any path ran, with the levels of 8 October kept there as superseded).**
+
+- E1. At 100 basis points the budget binds (forecast tracking error within 1 basis point of the budget) in at least 95% of the months in which the mandate's own stationary minimum forecast tracking error is at or below the budget, for each of the four daily estimators; the months the mandate alone cannot meet are reported per estimator and budget, and the months the path misses beyond them, with the cap in force, are counted.
+- E2. At 100 basis points the mean active exposure to each targeted factor is positive on every main path (the five estimators at a budget), the average of the four is at least 0.024 for the sample covariance on daily data, and that average rises with the budget (75, then 100, then 150) on every estimator; the four exposures are reported per path at every budget.
+- E3. Realised tracking error exceeds the budget by 20% to 60% on the daily estimators, at every budget, and the monthly sample covariance's ratio exceeds the largest daily ratio at the same budget.
+- E4. Notebook 16's: the four targeted factors' contributions sum to a positive amount on every main path, and at 100 and 150 basis points the six factors explain at least 30% of the active return's variance.
+- E5. At 100 basis points the gross active return is positive for at least four of the five estimators, and the net return at 50 basis points per unit of turnover lies within 10 basis points a year of the gross. Whether the active return is more than two standard errors from zero is reported, not expected.
+- E6. Of the two single-factor paths, momentum alone has the higher turnover and the larger gap, and the turnover cap binds in more months on the momentum path than on the value path.
+- E7. At 100 basis points the spread across the four daily estimators in realised tracking error is at most 20 basis points, the exposure bought per basis point of realised tracking error differs across them by less than 30% of their mean (largest minus smallest over the mean), and the monthly sample covariance remains the worst calibrated of the five (the largest bias statistic).
+- The diagnostic of 9 October 2026, counted per path with no expectation attached: the months in which any targeted exposure ends below its incidental value, the value the mandate's tracking-error-minimising path of the same variant carries in the same month.
+
+Running time: about ten minutes, most of it the 10,754 cone programs of the nineteen paths, the 3,962 quadratic programs of the seven rebuilt mandate paths and the 3,962 of the stationary minimum.
+"""),
+    md("""
+## Modules
+
+`constants` carries section 7, the design of module A with the seven expectations, their reasons and the restatement of 9 October, and the note on what this notebook judges; `evaluation` gains `run_factor_path` and `summarise_factor` beside version 1's `run_path` and `summarise`, tested on a made-up market in `tests/test_evaluation.py`; `optimiser`'s `solve_factor_objective` is notebook 14's; the others are those of earlier notebooks.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    writefile("attribution.py"),
+    md("""
+## Count first: the months, the variants, the nineteen paths
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import evaluation as E
+from bp import attribution as A
+
+pd.set_option("display.width", 250)
+pd.set_option("display.max_rows", 200)
+pd.set_option("display.max_columns", 40)
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+industries = [c.strip() for c in weights.columns]
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+FACTORS = list(C.ATTRIBUTION_FACTORS)
+TARGETED = list(C.FO_TARGET_FACTORS)
+FACTOR_WORD = {"HML": "value", "RMW": "profitability", "CMA": "investment", "Mom": "momentum"}
+S_ALL = np.array([C.FO_TARGET_SIGN[f] for f in FACTORS])
+MANDATE = C.CONSTRAINT_SETS[C.FO_CONSTRAINT_SET]
+STATIONARY = tuple(c for c in MANDATE if c != "turnover_cap")      # the mandate with turnover free, for the stationary minimum
+VARIANTS = list(CV.ALL_VARIANTS)
+LABEL = {v: ("robust, all five" if v == C.ROBUST_VARIANT else ("RiskMetrics, daily 5y" if v == C.EWMA_VARIANT else f"{v[0]}, {v[1].replace('_', ' ')}")) for v in VARIANTS}
+DAILY = [v for v in CV.EVALUATION_VARIANTS if v[1] == "daily_3y"]
+MONTHLY = ("sample", "monthly_120")
+SAMPLE = ("sample", "daily_3y")
+BP = {tau: f"{1e4 * tau:.0f}" for tau in C.FO_BUDGETS_ANNUAL}
+
+# the nineteen paths: (label, variant, budget, target vector, the targeted factors of the path)
+PATHS = []
+for v in CV.EVALUATION_VARIANTS:
+    for tau in C.FO_BUDGETS_ANNUAL:
+        PATHS.append((f"{LABEL[v]} | {BP[tau]}", v, tau, S_ALL, TARGETED))
+for v in (C.ROBUST_VARIANT, C.EWMA_VARIANT):
+    PATHS.append((f"{LABEL[v]} | {BP[C.FO_BUDGET_MAIN]}", v, C.FO_BUDGET_MAIN, S_ALL, TARGETED))
+for single in C.FO_SINGLE_FACTOR_PATHS:
+    s_one = np.array([1.0 if f in single else 0.0 for f in FACTORS])
+    PATHS.append((f"{LABEL[SAMPLE]}, {FACTOR_WORD[single[0]]} alone | {BP[C.FO_BUDGET_MAIN]}", SAMPLE, C.FO_BUDGET_MAIN, s_one, list(single)))
+MAIN = [p[0] for p in PATHS[:15]]                                  # the main paths: the five estimators at the three budgets
+AT_MAIN = {p[0]: p for p in PATHS if p[2] == C.FO_BUDGET_MAIN}
+
+def betas_at(month):
+    X = CV.daily_window(P.excess_d, month, C.FO_BETA_WINDOW_YEARS)
+    _, B = CV.factor_cov(X.to_numpy(), P.factors_d.loc[X.index, FACTORS].to_numpy())
+    return B
+
+# Count first
+assert len(months) == 566, len(months)
+assert len(PATHS) == C.FO_PATH_COUNT == 19 and len(set(p[0] for p in PATHS)) == 19
+assert tuple(S_ALL) == (0.0, 0.0, 1.0, 1.0, 1.0, 1.0) and len(TARGETED) == 4 and len(VARIANTS) == 7 and len(DAILY) == 4
+assert C.FO_NOTEBOOK_15_JUDGES == ("E1", "E2", "E3", "E5", "E6", "E7") and C.FO_NOTEBOOK_16_JUDGES == ("E4",)
+provenance = [fl.download(key) for key in P.files]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+print(f"{len(months)} evaluation months, {months[0]} to {months[-1]}; {len(PATHS)} paths:")
+for label, v, tau, s_vec, targeted in PATHS:
+    print(f"  {label:<40} target on {', '.join(FACTOR_WORD[f] for f in targeted)}")
+print(f"budgets {', '.join(BP.values())} basis points a year (main {BP[C.FO_BUDGET_MAIN]}); the mandate: {', '.join(MANDATE)}")
+print(f"E1's share {C.FO_E1_BIND_SHARE_MIN:.0%} of {C.FO_E1_DENOMINATOR}, binding within {1e4 * C.FO_E1_BIND_TOL_ANNUAL:.0f} bp; E2's level {C.FO_E2_MEAN_EXPOSURE_MIN}; E3's range {C.FO_E3_REALISED_OVER_BUDGET_RANGE}; "
+      f"E5 positive for {C.FO_E5_POSITIVE_MIN} of 5 and net within {1e4 * C.FO_E5_NET_GAP_MAX:.0f} bp; E7's spread {1e4 * C.FO_E7_TE_RANGE_MAX:.0f} bp and {C.FO_E7_EXPOSURE_PER_BP_REL_MAX:.0%}; restated {C.FO_RESTATEMENT_DATE}")
+print(f"CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## The covariances and the betas, once per month
+
+Each of the five estimator variants and RiskMetrics is built once per month and shared by every path that uses it; the robust paths use the five estimator covariances at once. The betas are the same for every path, because they describe the industries and not the portfolio.
+"""),
+    code("""
+t0 = time.time()
+Sigmas = {v: {} for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,)}
+betas = {}
+for i, month in enumerate(months):
+    for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,):
+        Sigmas[v][month], _, _ = CV.estimate(*v, month, P)
+    betas[month] = betas_at(month)
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}
+print(f"{len(months)} months of covariances and betas in {time.time() - t0:.0f}s")
+"""),
+    md("""
+## The comparison: version 1's mandate paths rebuilt, and the stationary minimum
+
+The seven mandate paths of notebook 12 (C3, the tracking error minimised, no objective) are rebuilt from the modules, as notebook 13 rebuilds them, and checked against notebook 12's realised tracking errors within 0.1 basis point a year; their monthly active exposures are the incidental values the diagnostic needs. Beside them, for every variant, the mandate's stationary minimum forecast tracking error in every month, the number notebook 14 computed for the five estimators: a budget below it cannot be met in that month by any portfolio, so those months are outside E1's denominator.
+"""),
+    code("""
+t0 = time.time()
+base_paths = {}
+for v in VARIANTS:
+    t1 = time.time()
+    base_paths[v] = E.run_path(months, Sigmas[v], weights, returns_m, MANDATE, tilt_mask, mandate_mask, robust=(v == C.ROBUST_VARIANT), keep_weights=True)
+    print(f"{LABEL[v]:>24}  C3 {time.time() - t1:5.0f}s")
+repro = pd.DataFrame({"realised TE (bp)": {LABEL[v]: 1e4 * E.realised_tracking_error(p["active_return"]) for v, p in base_paths.items()},
+                      "notebook 12 (bp)": {LABEL[v]: 1e4 * C.ATTRIBUTION_REFERENCE_TE[(LABEL[v], "C3")] for v in VARIANTS}})
+repro["difference (bp)"] = repro["realised TE (bp)"] - repro["notebook 12 (bp)"]
+ok_repro = int((repro["difference (bp)"].abs() <= 1e4 * C.ATTRIBUTION_REPRODUCTION_TOL).sum())
+print(repro.to_string(float_format=lambda x: f"{x:.3f}"))
+print(f"the rebuilt mandate paths reproduce notebook 12's realised tracking errors within {1e4 * C.ATTRIBUTION_REPRODUCTION_TOL:.1f} bp in {ok_repro} of {len(repro)}: {'holds' if ok_repro == len(repro) else 'FAILS'}")
+# the incidental exposures: the six active exposures of the mandate's path, month by month
+incidental = {v: pd.DataFrame([A.active_exposures(betas[m], p.loc[m, "weights"], weights.loc[m].to_numpy()) for m in months], index=months, columns=FACTORS) for v, p in base_paths.items()}
+# the stationary minimum of the mandate's forecast tracking error, per estimator and month (notebook 14's feasibility)
+t1 = time.time()
+def stationary_minimum(v, m):
+    b_m = weights.loc[m].to_numpy()
+    if v == C.ROBUST_VARIANT:
+        return O.solve_robust(Sigmas[v][m], b_m, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask).tracking_error
+    return O.solve(Sigmas[v][m], b_m, STATIONARY, tilt_mask=tilt_mask, exclude_mask=mandate_mask).tracking_error
+stationary = pd.DataFrame({LABEL[v]: {m: stationary_minimum(v, m) for m in months} for v in VARIANTS})
+print(f"the stationary minimum in {len(months)} months for the seven variants in {time.time() - t1:.0f}s")
+above = pd.DataFrame({f"months above {BP[tau]}": (stationary > tau).sum() for tau in C.FO_BUDGETS_ANNUAL})
+above.insert(0, "mean (bp)", 1e4 * stationary.mean())
+print("the stationary minimum of the forecast tracking error under the mandate, by estimator, and the months in which it exceeds each budget (of 566):")
+print(above.to_string(float_format=lambda x: f"{x:.1f}"))
+committed = f"results/{vintage}/factor_objective_feasibility_{vintage}.csv"
+if os.path.exists(committed):
+    feas14 = pd.read_csv(committed, index_col=0)
+    diff14 = max(float(np.abs(feas14[f"minimum TE {LABEL[v]}"].to_numpy() - stationary[LABEL[v]].to_numpy()).max()) for v in CV.EVALUATION_VARIANTS)
+    print(f"against notebook 14's committed table: the largest difference in the stationary minimum is {1e4 * diff14:.4f} bp")
+print(f"{time.time() - t0:.0f}s in all")
+"""),
+    md("""
+## The nineteen paths
+
+One path per specification, each month's optimisation using the drifted previous weights of its own path. The robust paths hold the budget under all five covariances at once, which makes each month's problem five cones.
+"""),
+    code("""
+paths = {}
+t0 = time.time()
+for label, v, tau, s_vec, targeted in PATHS:
+    t1 = time.time()
+    paths[label] = E.run_factor_path(months, Sigmas[v], betas, weights, returns_m, MANDATE, s_vec, tau, tilt_mask, mandate_mask, keep_weights=True)
+    p = paths[label]
+    print(f"{label:<40} {time.time() - t1:5.0f}s  budget not met {int((~p['budget_met']).sum()):3d}  binds {int(p['budget_binds'].sum()):3d}  relaxed {int(p['relaxed'].sum()):2d}  inaccurate {int((p['status'] != 'optimal').sum()):3d}")
+print(f"{len(paths)} paths in {time.time() - t0:.0f}s")
+assert all(len(p) == len(months) for p in paths.values())
+"""),
+    md("""
+## The measures
+
+One row per path. Tracking errors and active returns in basis points a year; turnover as a fraction of the portfolio per month; the exposures in beta units; the exposure bought per basis point is the mean factor objective divided by the realised tracking error in basis points.
+"""),
+    code("""
+rows = []
+for label, v, tau, s_vec, targeted in PATHS:
+    rows.append({"path": label, "variant": LABEL[v], "budget (bp)": int(BP[tau]), "target": ", ".join(FACTOR_WORD[f] for f in targeted), **E.summarise_factor(paths[label], tau)})
+table = pd.DataFrame(rows).set_index("path")
+bp_cols = ["realised TE", "forecast TE (mean)", "active return (gross)", "standard error of the gross active return"] + [c for c in table.columns if c.startswith(("cost at", "net active return"))]
+show = table.copy()
+show[bp_cols] = 1e4 * show[bp_cols]
+show = show.rename(columns={c: f"{c} (bp)" for c in bp_cols})
+print(show[["budget (bp)", "realised TE (bp)", "realised over budget", "forecast TE (mean) (bp)", "bias", "budget not met months", "budget binds months", "turnover (one-way)", "cap binds months", "relaxed months", "inaccurate months"]].to_string(float_format=lambda x: f"{x:.3f}"))
+print()
+print(show[[f"mean exposure {f}" for f in TARGETED] + ["mean objective", "exposure per bp of realised TE", "mean absolute gap"]].rename(columns={f"mean exposure {f}": FACTOR_WORD[f] for f in TARGETED}).to_string(float_format=lambda x: f"{x:+.4f}"))
+print()
+print(show[["active return (gross) (bp)", "standard error of the gross active return (bp)", "cost at 50 bp (bp)", "net active return at 50 bp (bp)", "information ratio at 50 bp", "net active return at 100 bp (bp)", "effective number", "industries held"]].to_string(float_format=lambda x: f"{x:.2f}"))
+"""),
+    md("""
+## E1: does the budget bind
+
+For each path, the months the mandate alone cannot meet (the stationary minimum above the budget), the months the path did not meet beyond them (the cap in force), the months met and the months binding within one basis point; E1's share is the binding months over the months the mandate alone can meet, judged for the four daily estimators at 100 basis points; the other paths are reported on the same footing, the robust path against the stationary minimum of its own worst case across the five covariances.
+"""),
+    code("""
+rows = []
+for label, v, tau, s_vec, targeted in PATHS:
+    p = paths[label]
+    can = stationary[LABEL[v]] <= tau
+    further = (~p["budget_met"]) & can
+    rows.append({"path": label, "mandate alone cannot meet": int((~can).sum()), "path further misses": int(further.sum()), "budget not met": int((~p["budget_met"]).sum()),
+                 "met, not binding": int((p["budget_met"] & ~p["budget_binds"]).sum()), "binding": int(p["budget_binds"].sum()),
+                 "E1 share": float(p.loc[can, "budget_binds"].mean()), "share of all months": float(p["budget_binds"].mean())})
+e1 = pd.DataFrame(rows).set_index("path")
+print(e1.to_string(float_format=lambda x: f"{x:.3f}"))
+e1_daily = e1.loc[[f"{LABEL[v]} | {BP[C.FO_BUDGET_MAIN]}" for v in DAILY], "E1 share"]
+ok1 = int((e1_daily >= C.FO_E1_BIND_SHARE_MIN).sum())
+print()
+print(f"E1: at {BP[C.FO_BUDGET_MAIN]} bp the budget binds in {', '.join(f'{s:.1%}' for s in e1_daily)} of the months the mandate alone can meet for the four daily estimators (level {C.FO_E1_BIND_SHARE_MIN:.0%}); "
+      f"{ok1} of 4 at or above the level: {'MET' if ok1 == 4 else 'NOT MET'}")
+print(f"the design's superseded form of E1 (the share of all 566 months): {', '.join(f'{s:.1%}' for s in e1.loc[e1_daily.index, 'share of all months'])}")
+# where the misses fall: by decade, for the sample covariance at the main budget
+first_label, last_label = f"{months[0]} to 1989-12", f"2020-01 to {months[-1]}"
+decade = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in months], index=months)
+p = paths[f"{LABEL[SAMPLE]} | {BP[C.FO_BUDGET_MAIN]}"]
+by_dec = pd.DataFrame({"budget not met": (~p["budget_met"]).groupby(decade).sum(), "met, not binding": (p["budget_met"] & ~p["budget_binds"]).groupby(decade).sum(), "binding": p["budget_binds"].groupby(decade).sum(), "months": decade.value_counts()})
+print()
+print(f"{LABEL[SAMPLE]} at {BP[C.FO_BUDGET_MAIN]} bp, by decade:")
+print(by_dec.to_string())
+"""),
+    md("""
+## E2: what the budget bought, factor by factor
+
+The mean active exposure to each targeted factor, per path and budget, with the incidental exposure of the mandate's own path beside it; the average of the four is shown with them and never alone.
+"""),
+    code("""
+expo = pd.DataFrame({label: {**{FACTOR_WORD[f]: table.loc[label, f"mean exposure {f}"] for f in TARGETED}, "average of the four": table.loc[label, "mean objective"] / 4} for label in MAIN}).T
+expo.insert(0, "budget (bp)", [int(BP[tau]) for label, v, tau, s_vec, targeted in PATHS[:15]])
+inc_mean = pd.DataFrame({LABEL[v]: incidental[v][TARGETED].mean().rename(index=FACTOR_WORD) for v in CV.EVALUATION_VARIANTS}).T
+inc_mean["average of the four"] = inc_mean.mean(axis=1)
+print("mean active exposure to each targeted factor, the main paths:")
+print(expo.to_string(float_format=lambda x: f"{x:+.4f}"))
+print()
+print("the incidental exposures, the mandate's own path of each estimator:")
+print(inc_mean.to_string(float_format=lambda x: f"{x:+.4f}"))
+print()
+print("the robust, RiskMetrics and single-factor paths at the main budget:")
+others = pd.DataFrame({label: {**{FACTOR_WORD[f]: table.loc[label, f"mean exposure {f}"] for f in TARGETED}, "objective": table.loc[label, "mean objective"]} for label in table.index if label not in MAIN}).T
+print(others.to_string(float_format=lambda x: f"{x:+.4f}"))
+main100 = [f"{LABEL[v]} | {BP[C.FO_BUDGET_MAIN]}" for v in CV.EVALUATION_VARIANTS]
+positive = int(sum(all(table.loc[label, f"mean exposure {f}"] > 0 for f in TARGETED) for label in main100))
+avg_sample = table.loc[f"{LABEL[SAMPLE]} | {BP[C.FO_BUDGET_MAIN]}", "mean objective"] / 4
+rises = {LABEL[v]: bool(np.all(np.diff([table.loc[f"{LABEL[v]} | {BP[tau]}", "mean objective"] for tau in C.FO_BUDGETS_ANNUAL]) > 0)) for v in CV.EVALUATION_VARIANTS}
+ok2 = positive == 5 and avg_sample >= C.FO_E2_MEAN_EXPOSURE_MIN and all(rises.values())
+print()
+print(f"E2: at {BP[C.FO_BUDGET_MAIN]} bp every targeted exposure is positive on {positive} of 5 main paths; the average of the four for {LABEL[SAMPLE]} is {avg_sample:+.4f} (level {C.FO_E2_MEAN_EXPOSURE_MIN}); "
+      f"the average rises with the budget for {sum(rises.values())} of 5 estimators: {'MET' if ok2 else 'NOT MET'}")
+print(f"the superseded level of 8 October, {C.FO_E2_MEAN_EXPOSURE_MIN_SUPERSEDED_2026_10_08}, {'is' if avg_sample >= C.FO_E2_MEAN_EXPOSURE_MIN_SUPERSEDED_2026_10_08 else 'is not'} reached")
+"""),
+    md("""
+## E3: realised against the budget
+"""),
+    code("""
+ratio = pd.DataFrame({BP[tau]: {LABEL[v]: table.loc[f"{LABEL[v]} | {BP[tau]}", "realised over budget"] for v in CV.EVALUATION_VARIANTS} for tau in C.FO_BUDGETS_ANNUAL})
+print("realised tracking error over the budget, by estimator (rows) and budget (columns):")
+print(ratio.to_string(float_format=lambda x: f"{x:.3f}"))
+lo3, hi3 = C.FO_E3_REALISED_OVER_BUDGET_RANGE
+daily_ratio = ratio.loc[[LABEL[v] for v in DAILY]]
+inside = int(((daily_ratio >= lo3) & (daily_ratio <= hi3)).sum().sum())
+monthly_above = {BP[tau]: bool(ratio.loc[LABEL[MONTHLY], BP[tau]] > daily_ratio[BP[tau]].max()) for tau in C.FO_BUDGETS_ANNUAL}
+ok3 = inside == daily_ratio.size and all(monthly_above.values())
+print()
+print(f"E3: the daily estimators' ratio lies in {lo3} to {hi3} in {inside} of {daily_ratio.size} cells ({daily_ratio.min().min():.2f} to {daily_ratio.max().max():.2f}); "
+      f"the monthly covariance's ratio exceeds the largest daily ratio at {sum(monthly_above.values())} of 3 budgets: {'MET' if ok3 else 'NOT MET'}")
+print(f"the bias statistic, the same comparison month by month: " + ", ".join(f"{label} {table.loc[label, 'bias']:.2f}" for label in main100 + [f"{LABEL[v]} | {BP[C.FO_BUDGET_MAIN]}" for v in (C.ROBUST_VARIANT, C.EWMA_VARIANT)]))
+"""),
+    md("""
+## E5: the active return, gross and net
+
+The mean active return over 47 years has a standard error of the realised tracking error over the square root of 47; the number of standard errors from zero is reported, not expected. The cost is arithmetic on the turnover and carries no noise.
+"""),
+    code("""
+years = len(months) / 12
+ar = pd.DataFrame({"gross (bp)": 1e4 * table["active return (gross)"], "standard error (bp)": 1e4 * table["standard error of the gross active return"],
+                   "standard errors from zero": table["active return (gross)"] / table["standard error of the gross active return"],
+                   "cost at 50 (bp)": 1e4 * table["cost at 50 bp"], "net at 50 (bp)": 1e4 * table["net active return at 50 bp"], "net at 100 (bp)": 1e4 * table["net active return at 100 bp"],
+                   "information ratio at 50": table["information ratio at 50 bp"]})
+print(ar.to_string(float_format=lambda x: f"{x:+.2f}"))
+g100 = table.loc[main100, "active return (gross)"]
+positive5 = int((g100 > 0).sum())
+within = int((table.loc[main100, "cost at 50 bp"] <= C.FO_E5_NET_GAP_MAX + 1e-12).sum())
+ok5 = positive5 >= C.FO_E5_POSITIVE_MIN and within == 5
+print()
+print(f"E5: at {BP[C.FO_BUDGET_MAIN]} bp the gross active return is positive for {positive5} of 5 estimators (level {C.FO_E5_POSITIVE_MIN}), "
+      f"and the net return at 50 bp per unit of turnover lies within {1e4 * C.FO_E5_NET_GAP_MAX:.0f} bp of the gross for {within} of 5: {'MET' if ok5 else 'NOT MET'}")
+far = [label for label in table.index if abs(table.loc[label, "active return (gross)"]) > 2 * table.loc[label, "standard error of the gross active return"]]
+print(f"reported, not expected: the gross active return is more than two standard errors from zero on {len(far)} of {len(table)} paths" + (f" ({', '.join(far)})" if far else ""))
+"""),
+    md("""
+## E6: the two single-factor paths
+"""),
+    code("""
+val, mom = f"{LABEL[SAMPLE]}, value alone | {BP[C.FO_BUDGET_MAIN]}", f"{LABEL[SAMPLE]}, momentum alone | {BP[C.FO_BUDGET_MAIN]}"
+single = table.loc[[val, mom], ["turnover (one-way)", "cap binds months", "relaxed months", "mean absolute gap", "realised TE", "mean objective", "budget not met months", "budget binds months"]].copy()
+single["realised TE"] = 1e4 * single["realised TE"]
+print(single.rename(columns={"realised TE": "realised TE (bp)"}).to_string(float_format=lambda x: f"{x:.4f}"))
+ok6_turn = table.loc[mom, "turnover (one-way)"] > table.loc[val, "turnover (one-way)"]
+ok6_cap = table.loc[mom, "cap binds months"] > table.loc[val, "cap binds months"]
+ok6_gap = table.loc[mom, "mean absolute gap"] > table.loc[val, "mean absolute gap"]
+print()
+print(f"E6: momentum alone against value alone, turnover {table.loc[mom, 'turnover (one-way)']:.4f} against {table.loc[val, 'turnover (one-way)']:.4f} ({'higher' if ok6_turn else 'not higher'}); "
+      f"the cap binds in {int(table.loc[mom, 'cap binds months'])} against {int(table.loc[val, 'cap binds months'])} months ({'more' if ok6_cap else 'not more'}); "
+      f"the gap {table.loc[mom, 'mean absolute gap']:.4f} against {table.loc[val, 'mean absolute gap']:.4f} ({'larger' if ok6_gap else 'not larger'}): {'MET' if ok6_turn and ok6_cap and ok6_gap else 'NOT MET'}")
+print("the gap is recorded here month by month, where the next month's betas are at hand; notebook 16 shows it for every path")
+"""),
+    md("""
+## E7: does the estimator still matter once the budget is spent
+"""),
+    code("""
+te100 = table.loc[main100, "realised TE"]
+daily100 = [f"{LABEL[v]} | {BP[C.FO_BUDGET_MAIN]}" for v in DAILY]
+spread = te100[daily100].max() - te100[daily100].min()
+per_bp = table.loc[daily100, "exposure per bp of realised TE"]
+rel = (per_bp.max() - per_bp.min()) / per_bp.mean()
+bias100 = table.loc[main100, "bias"]
+worst = bias100.idxmax() == f"{LABEL[MONTHLY]} | {BP[C.FO_BUDGET_MAIN]}"
+ok7 = spread <= C.FO_E7_TE_RANGE_MAX and rel < C.FO_E7_EXPOSURE_PER_BP_REL_MAX and worst
+print(f"at {BP[C.FO_BUDGET_MAIN]} bp: realised tracking error " + ", ".join(f"{label.split(' | ')[0]} {1e4 * te:.1f}" for label, te in te100.items()) + " bp")
+print(f"exposure bought per basis point of realised tracking error: " + ", ".join(f"{label.split(' | ')[0]} {x:.5f}" for label, x in table.loc[main100, 'exposure per bp of realised TE'].items()))
+print(f"bias statistic: " + ", ".join(f"{label.split(' | ')[0]} {x:.2f}" for label, x in bias100.items()))
+print()
+print(f"E7: the spread across the four daily estimators is {1e4 * spread:.1f} bp (level {1e4 * C.FO_E7_TE_RANGE_MAX:.0f}); the exposure per basis point differs by {rel:.1%} of the mean (level {C.FO_E7_EXPOSURE_PER_BP_REL_MAX:.0%}); "
+      f"the worst calibrated of the five is {bias100.idxmax().split(' | ')[0]} ({'the monthly covariance' if worst else 'not the monthly covariance'}): {'MET' if ok7 else 'NOT MET'}")
+"""),
+    md("""
+## The diagnostic of 9 October 2026: months below the incidental exposure
+
+For each path, the months in which any of its targeted exposures ends below the incidental value of the same month, the exposure the mandate's own path of the same variant carries; and the same count for each factor. Reported, no expectation.
+"""),
+    code("""
+rows = []
+for label, v, tau, s_vec, targeted in PATHS:
+    p = paths[label]
+    inc = incidental[v]
+    below = pd.DataFrame({f: p[f"exposure {f}"] < inc[f] - 1e-9 for f in targeted})
+    rows.append({"path": label, "any targeted factor": int(below.any(axis=1).sum()), **{FACTOR_WORD[f]: int(below[f].sum()) for f in targeted},
+                 "while the budget was met": int((below.any(axis=1) & p["budget_met"]).sum())})
+diag = pd.DataFrame(rows).set_index("path")
+print(f"{C.FO_DIAGNOSTIC_BELOW_INCIDENTAL}, of 566, per path:")
+print(diag.to_string())
+"""),
+    md("""
+## By decade: the budget, the forecast and the realised tracking error
+
+For the five estimators at the main budget, the realised tracking error of each decade beside the mean forecast of the same months and the mean factor objective, with the months in which the budget was not met.
+"""),
+    code("""
+blocks = []
+for label in main100:
+    p = paths[label]
+    grp = decade.loc[p.index]
+    d = pd.DataFrame({"realised TE": p.groupby(grp)["active_return"].apply(E.realised_tracking_error), "forecast TE": p.groupby(grp)["forecast_te"].mean(),
+                      "objective": p.groupby(grp)["objective"].mean(), "budget not met": (~p["budget_met"]).groupby(grp).sum(), "binding": p["budget_binds"].groupby(grp).sum()})
+    d["realised / budget"] = d["realised TE"] / C.FO_BUDGET_MAIN
+    d.insert(0, "path", label)
+    blocks.append(d)
+decades = pd.concat(blocks).set_index("path", append=True).swaplevel()
+show_d = decades.copy()
+for c in ["realised TE", "forecast TE"]:
+    show_d[c] = 1e4 * show_d[c]
+print(f"at {BP[C.FO_BUDGET_MAIN]} bp, by decade (tracking errors in bp a year):")
+print(show_d.to_string(float_format=lambda x: f"{x:.3f}"))
+"""),
+    md("""
+## Save
+
+The measures table, the E1 table with the diagnostic, the by-decade table, the monthly records of every path (the forecast, the active return, the turnover, the state of the cap and of the budget, the objective, the six exposures and the gap), the weights of every path and the benchmark in the last month, and the mean incidental exposures of the mandate's own paths are written to `outputs/` with the vintage in the file name, with one table of the verdicts. Notebook 16 rebuilds the paths it attributes from the modules, as notebook 13 does.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+table.to_csv(f"{C.OUTPUT_DIR}/factor_objective_evaluation_{vintage}.csv", float_format="%.8f")
+e1.join(diag, rsuffix=" below incidental").to_csv(f"{C.OUTPUT_DIR}/factor_objective_budget_months_{vintage}.csv", float_format="%.8f")
+decades.to_csv(f"{C.OUTPUT_DIR}/factor_objective_by_decade_{vintage}.csv", float_format="%.8f")
+monthly = pd.concat({label: p.drop(columns=["weights", "status"]) for label, p in paths.items()}, names=["path", "month"])
+monthly.to_csv(f"{C.OUTPUT_DIR}/factor_objective_monthly_{vintage}.csv", float_format="%.8f")
+last = pd.DataFrame({label: p["weights"].iloc[-1] for label, p in paths.items()}, index=industries).T
+last.loc["benchmark"] = weights.loc[months[-1]].to_numpy()
+for v in VARIANTS:
+    last.loc[f"{LABEL[v]} | mandate"] = base_paths[v]["weights"].iloc[-1]
+last.index.name = "path"
+last.to_csv(f"{C.OUTPUT_DIR}/factor_objective_weights_{months[-1]}_{vintage}.csv", float_format="%.10f")
+verdicts = pd.DataFrame([
+    {"expectation": "E1", "verdict": "MET" if ok1 == 4 else "NOT MET", "detail": f"binding share over the months the mandate alone can meet, four daily estimators at {BP[C.FO_BUDGET_MAIN]} bp: " + ", ".join(f"{s:.4f}" for s in e1_daily)},
+    {"expectation": "E2", "verdict": "MET" if ok2 else "NOT MET", "detail": f"every targeted exposure positive on {positive} of 5; average of the four for the sample covariance {avg_sample:.4f}; rises with the budget for {sum(rises.values())} of 5"},
+    {"expectation": "E3", "verdict": "MET" if ok3 else "NOT MET", "detail": f"daily ratios inside the range in {inside} of {daily_ratio.size}; monthly above the largest daily at {sum(monthly_above.values())} of 3 budgets"},
+    {"expectation": "E4", "verdict": "notebook 16", "detail": "the attribution of the nineteen paths"},
+    {"expectation": "E5", "verdict": "MET" if ok5 else "NOT MET", "detail": f"gross positive for {positive5} of 5; net within {1e4 * C.FO_E5_NET_GAP_MAX:.0f} bp for {within} of 5"},
+    {"expectation": "E6", "verdict": "MET" if ok6_turn and ok6_cap and ok6_gap else "NOT MET", "detail": f"turnover {'higher' if ok6_turn else 'not higher'}, cap binds {'more' if ok6_cap else 'not more'}, gap {'larger' if ok6_gap else 'not larger'} on the momentum path"},
+    {"expectation": "E7", "verdict": "MET" if ok7 else "NOT MET", "detail": f"spread {1e4 * spread:.2f} bp; exposure per bp differs by {rel:.4f} of the mean; worst calibrated {bias100.idxmax()}"},
+]).set_index("expectation")
+verdicts.to_csv(f"{C.OUTPUT_DIR}/factor_objective_verdicts_{vintage}.csv")
+inc_mean.to_csv(f"{C.OUTPUT_DIR}/factor_objective_incidental_{vintage}.csv", float_format="%.8f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("factor_objective_")))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| Count first | 566 months; 19 paths with 566 records each; the seven rebuilt mandate paths reproduce notebook 12's realised tracking errors within 0.001 basis point; the stationary minimum reproduces notebook 14's table to the last digit | holds |
+| E1. At 100 basis points the budget binds in at least 95% of the months the mandate alone can meet, four daily estimators | 97.0%, 97.3%, 96.6% and 96.9%; the mandate alone cannot meet the budget in 37, 43, 39 and 22 months, the paths miss 10, 7, 11 and 11 more with the cap in force, and the bounds stop the move short of the budget in 6 or 7 | MET |
+| E2. At 100 basis points every targeted exposure positive on every main path; the average of the four at least 0.024 for the sample covariance; rising with the budget on every estimator | positive in 20 of 20; the average 0.0289 (value +0.021, profitability +0.048, investment +0.039, momentum +0.008); 0.0143, 0.0289 and 0.0464 at 75, 100 and 150 for the sample covariance, rising for 5 of 5 | MET |
+| E3. Realised over budget in 1.2 to 1.6 for the daily estimators at every budget; the monthly covariance above the largest daily ratio at the same budget | 1.14 to 1.50 in the twelve daily cells, 9 of 12 inside, the three outside below 1.2 (shrinkage at 100, the sample covariance and shrinkage at 150); the monthly covariance 1.71, 1.50 and 1.28, above the largest daily at 3 of 3 budgets | NOT MET, on the low side |
+| E4. The attribution | notebook 16 | notebook 16 |
+| E5. At 100 basis points the gross active return positive for at least four of five estimators; the net return at 50 basis points per unit of turnover within 10 basis points of the gross | positive for 5 of 5 (+6.0 to +15.5 basis points a year, 0.3 to 0.8 standard errors from zero); the cost of turnover 10.7 to 12.0 basis points a year, so within 10 for 0 of 5 | NOT MET in the second clause |
+| E6. Momentum alone has the higher turnover and the larger gap than value alone, and its cap binds in more months | turnover 1.94% against 1.87% a month, the cap binding in 478 against 408 months; the gap 0.0019 against 0.0024, the smaller | NOT MET in the gap clause |
+| E7. At 100 basis points the realised tracking errors of the four daily estimators within 20 basis points; the exposure bought per basis point within 30% of the mean; the monthly covariance the worst calibrated | 118.6 to 137.0 basis points, a spread of 18.4; 0.00092 to 0.00096 per basis point, a difference of 4.5% of the mean; bias statistics 1.16 to 1.35 against the monthly covariance's 1.45 | MET |
+| The diagnostic: months with a targeted exposure below its incidental value | 97 to 263 of 566 per main path, momentum in 56 to 207 of them, value in 34 to 85, investment in 0 to 28, profitability in 0 to 9; 5 and 2 on the single-factor paths | reported |
+
+The count holds, and the two comparison objects are the ones earlier notebooks built: the seven mandate paths rebuilt here give notebook 12's realised tracking errors to the third decimal of a basis point, and the stationary minimum of the forecast tracking error reproduces notebook 14's feasibility table to the eighth decimal, so the incidental exposures and E1's denominator come from the same portfolios the earlier notebooks reported.
+
+E1 is met as restated. At 100 basis points the budget binds within one basis point in 97.0%, 97.3%, 96.6% and 96.9% of the months in which the mandate alone can meet it, for the sample covariance, shrinkage, the factor model and the component model. The months outside that denominator are the 37, 43, 39 and 22 that notebook 14 counted, 32, 35, 22 and 22 of them in 1979 to 1989, when Oil's volatility put the mandate's own minimum above 100 basis points, and the rest in 2008 to 2011; the paths miss a further 10, 7, 11 and 11 months with the cap in force, in 1980 to 1984 and in 2000, 2008 and 2009 (a portfolio that may trade 2% a month cannot always reach a budget-feasible portfolio from where last month's returns left it), and the active weight bound stops the move short of the budget in 6 or 7 months, where every industry the objective wants is already at its bound. Under the superseded form of E1, the share of all 566 months, the four estimators would have scored 90.6%, 89.9%, 89.9% and 93.1% against the same 95%, so the restatement of 9 October is what separates MET from NOT MET, and the restatement was made on the arithmetic of notebook 14 before any path ran. At 75 basis points the budget binds in 98.1% to 98.9% of the months the mandate can meet, and the mandate cannot meet it in 100 to 132 months; at 150 basis points the picture turns over: the mandate can meet the budget in every month for the daily estimators and in all but 2 for the monthly covariance, and the budget binds in only 62.9% to 80.7% of them, because in 104 to 201 months the active weight bound of 2 percentage points on every industry is exhausted before the budget is spent. A budget of 150 basis points on 49 industries within 2 percentage points of their weights is more than the bounds let the portfolio use in a quarter to a third of the months, which is a fact about the mandate and not about the estimator.
+
+E2 is met. At 100 basis points every one of the four targeted exposures is positive on average on all five main paths, and the average of the four is 0.0289 for the sample covariance on daily data against the restated level of 0.024 and the stationary 0.030 of notebook 14, so the cap, the infeasible months and the rolling betas cost the path 0.001 of the stationary exposure on average, less than the fifth the restatement allowed. The four exposures have the shape notebook 14 foresaw and the design chose: profitability +0.045 to +0.056 and investment +0.038 to +0.063 take most of the budget, value +0.018 to +0.024 follows, and momentum +0.002 to +0.009 is almost untouched, because equal weighting in beta units buys the exposures that cost least forecast tracking error, and industry momentum betas rotate within a year while a capped portfolio cannot follow them. Against the incidental exposures of the mandate's own paths, which are negative to all four factors on average (value -0.0097 to -0.0152, profitability -0.0076 to -0.0116, investment -0.0047 to -0.0076, momentum -0.0035 to -0.0052), the budget turns a portfolio that leans slightly away from every documented premium into one that leans towards three of them. The average rises with the budget on every estimator, 0.012 to 0.020 at 75, 0.027 to 0.035 at 100, 0.046 to 0.051 at 150, by less than in proportion: the first 25 basis points above the mandate's own cost buy little, because the mandate cannot meet 75 in 93 to 132 months and the first month of every path spends its relaxed cap putting on the tilt; the next 50 buy about 0.03 per targeted factor, which is the arithmetic of the design; and the last 50 buy about 0.02, because the bounds start to bind. The level of 8 October, 0.05, is not reached by any main path at 100 basis points, and at 150 only the monthly covariance reaches it (0.0507), the daily estimators ending at 0.046 to 0.048.
+
+E3 is not met, and the miss is on the side of a better forecast than the design expected. Realised tracking error exceeds the budget by 14% to 50% on the daily estimators across the twelve cells, 9 of them inside 1.2 to 1.6; the three outside are shrinkage at 100 basis points (1.186) and the sample covariance and shrinkage at 150 (1.154 and 1.142), the three best-calibrated cells, below the floor the design set. The reason the design gave for a floor of 1.2 was version 1's bias of 1.22 to 1.39 under the mandate; the paths of the factor objective have bias statistics of 1.16 to 1.35 at 100 basis points and 1.18 to 1.31 at 150, lower than version 1's for the sample covariance and shrinkage, which is the opposite of what the reason foresaw. Two things changed. The budget is a constraint on the forecast that the optimiser pushes against from below, where version 1's minimiser sat at the forecast's own minimum, the point at which Michaud's optimisation bias is largest; a portfolio held at a fixed forecast level by a cone is less of an in-sample minimum than one that found the minimum, so its forecast is less optimistic. And the paths with a larger budget carry a larger forecast tracking error through the decades in which the under-forecast was worst: by decade, the sample covariance at 100 basis points realises 1.63 times the budget in 1979 to 1989, 1.16 in the 1990s, 1.02 in the 2000s, 0.87 in the 2010s and 1.21 from 2020, the same shape as notebook 12 found for the mandate, so the whole-sample ratio is an average of an oil decade at 1.6 and three decades near 1. The monthly covariance remains the worst, at 1.71, 1.50 and 1.28, above the largest daily ratio at every budget, and its bias statistic is 1.45 at 100 basis points against 1.16 to 1.35 for the daily estimators; its ratio falls fastest with the budget because its noise is a fixed cost that a larger budget dilutes. Realised over budget is the number the client sees; the bias statistic is the number the risk model is judged on; they differ here by 0.01 to 0.06 because the forecast sits on the budget in 91% of the months for the sample covariance at 100 basis points.
+
+E5 is not met in its second clause, by arithmetic the design should have done. The gross active return at 100 basis points is positive for all five estimators, +8.9, +6.5, +15.5, +9.9 and +6.0 basis points a year, 0.3 to 0.8 standard errors from zero on standard errors of 17 to 22, which is what the design said it would be: the sign of the documented premia over the sample, and no claim of skill. The cost of turnover at 50 basis points per unit is 10.7 to 12.0 basis points a year on these paths, so the net return lies 10.7 to 12.0 below the gross for every estimator and the clause "within 10 basis points" fails by 0.7 to 2.0, because the turnover cap binds in 378 to 518 of the 566 months on the main paths at 100 basis points: a portfolio chasing betas that move every month trades the full 2% it may, and 12 months of 2% at 50 basis points is 12.0 basis points a year, the ceiling, which the sample covariance's path reaches at 1.92% a month. The level of 10 was written from version 1's turnover of 0.9% to 1.5% a month, without asking whether the objective would push the portfolio to the cap; it did, in nine months of ten. Net of costs at 50 basis points the main paths at 100 basis points earn -6.0 to +4.8 basis points a year, inside half a standard error of zero; at 150 the gross is +20.5 to +34.0 (0.7 to 1.4 standard errors) and the net +8.4 to +22.3, because the cost is the same 12 basis points whatever the budget once the cap binds, so a larger budget buys exposure at no extra trading cost. At 75 the gross is -3.9 to +3.7 and the net -14.1 to -5.3. None of the nineteen paths has a gross active return more than two standard errors from zero, and the study makes no claim on any of them; what the budget bought, in beta units per basis point of tracking error, is the result, and what the premia paid over these 47 years is the data's.
+
+E6 is met in turnover and in the cap and not met in the gap. Momentum alone trades 1.94% a month against value alone's 1.87%, with the cap binding in 478 against 408 months, as the design expected from the rotation of industry momentum betas. The gap, the targeted exposure chosen with the betas before the month minus what the same weights carry with the betas estimated after it, is 0.0019 for momentum alone against 0.0024 for value alone, so the expectation's third clause fails. The gap is the product of two things, how much the betas move from one estimate to the next and how large the active weights on the industries whose betas move are, and the second dominates: value alone buys an exposure of +0.074 with active weights concentrated in the industries with the highest value betas, so a small change in those betas moves the objective by more, while momentum alone buys +0.039, half as much, because the momentum betas of the industries are smaller and the cap holds the portfolio back, so its month-to-month beta changes act on smaller positions. Per unit of exposure bought the gap is 0.032 for value and 0.047 for momentum, the ordering the design expected; the expectation was written on the gap itself, and the verdict follows the expectation as written. Notebook 16 shows the gap for every path.
+
+E7 is met, and it is the extension's question answered a second time. At 100 basis points the four daily estimators realise 118.6 (shrinkage), 120.6 (sample), 133.6 (factor model) and 137.0 (component model) basis points, a spread of 18.4 against the level of 20, twice version 1's 8.8 on a level about 35 basis points higher; the exposure bought per basis point of realised tracking error is 0.00092 to 0.00096 across the four, 4.5% of the mean apart, so the estimators differ in what the portfolio realised and not in what the budget bought per unit of it. The ranking is version 1's: the sample covariance and shrinkage are the same estimate on three years of daily data and the best, the two structured models realise 13 to 18 basis points more than those two for assuming that industries share nothing beyond their factors, the robust portfolio sits at 115.6, below every single estimator, with the best-calibrated forecast (bias 1.08), and RiskMetrics at 118.6 matches shrinkage. The monthly covariance realises 150.1, 30 basis points above the worst daily estimator, and remains the worst calibrated. Once the budget is spent on purpose the estimator matters by about a seventh of the tracking error, against a tenth under version 1's mandate, and it matters in the same order.
+
+The diagnostic, reported with no expectation. On the main paths 97 to 263 of the 566 months end with at least one targeted exposure below the mandate's own incidental value of that month, and 89 to 259 of those while the budget was met: in those months the objective bought more of one factor by giving up some of another. The factor given up is momentum in 56 to 207 months per path and value in 34 to 85; profitability falls below its incidental value in at most 9 months and investment in at most 28. Equal weighting in beta units has no floor, so when a unit of momentum exposure costs more tracking error than a unit of profitability the optimiser sells the first to buy the second, and the sum rises while one part falls below where the mandate alone had left it. The count rises with the budget (130, 172 and 221 months for the sample covariance at 75, 100 and 150), because a larger budget reaches further into the trades that pay for one factor with another. On the two single-factor paths the count is 5 and 2, which is the check that the diagnostic measures the objective's choices and not noise. The design of 9 October 2026 kept the objective as designed and named a weighting per unit of tracking error as what the study does not run; the diagnostic says how often the question arises.
+
+The solver. The factor problem gets a third pass at a looser stopping rule when the solver fails at the first two, added on 18 October 2026 before this recorded run after two months stopped the first build: 1981-02 for the sample covariance at 150 basis points, where the budget cone and the turnover cap are both active and the interior-point method stalls at a residual of 1e-7, and 2009-06 for the component model at 100, where the mandate's minimiser exceeds the budget by a hundredth of a basis point, the factor problem has no interior and the solver reports a numerical error at every rule; the second case takes the minimiser's portfolio by the infeasibility rule. The months with an inaccurate status are 0 to 11 per path, and every portfolio of every month passed the independent checks on the bounds, the cap and the budget. The recorded tables are two runs from a blank runtime on 18 October 2026 that agreed byte for byte; a third run on 6 November, on the same files and code under a different load, left the solver's status word in one month of the RiskMetrics path (1982-08) as optimal where the recorded run had it as inaccurate, and moved that path's numbers by at most 5e-7 afterwards, which is the scale at which a cone program's answer depends on the machine's floating-point arithmetic.
+
+**What this notebook does not settle.**
+
+- The sign of the active return is the sign the premia had over 1979 to 2026, and the design holds no view on whether they persist; nothing here is a forecast of the next 47 years.
+- Where the active return came from, factor by factor, and whether the six factors explain more of the active variance than version 1's 14% to 28% (E4), is notebook 16's question, with the attribution identity as its check.
+- The gap is measured on the betas of consecutive three-year windows, which share 35 of their 36 months, so it understates the change a manager would see between two independent estimates; the design chose the window and the gap is reported on it.
+- The costs are one proportional rate per unit of one-way turnover, and the paths trade at the cap in nine months of ten; a manager with a lower cap or a higher cost would see the net return fall by the same arithmetic, which the tables let a reader redo.
+- The bounds stop the move at 150 basis points in a quarter to a third of the months; a wider active weight bound would let a larger budget be spent, and the study keeps version 1's bound so that module A is comparable with the mandate it extends.
+- E3 and E5 failed on the side the design did not foresee, a better-calibrated forecast and a cost at the cap's ceiling, and E6 on a measure whose scale the design did not fix per unit of exposure; the three levels stand as written, and a later level is a post-run change.
+"""),
+]
+
+
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))
