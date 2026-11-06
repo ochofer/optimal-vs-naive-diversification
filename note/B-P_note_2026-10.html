@@ -52,6 +52,17 @@ dl.terms dd { display: inline; margin: 0; }
 dl.terms dd::after { content: " "; }
 .refs p { font-size: 9.3pt; text-indent: -6mm; padding-left: 6mm; text-align: left; margin-bottom: 3pt; }
 sup { font-size: 70%; }
+@media screen {
+  table.num { font-size: 12px; }
+  table.num caption { font-size: 13px; position: sticky; left: 0; z-index: 1; background: #ffffff; }
+  p.tn { font-size: 12px; }
+  .refs p { overflow-wrap: anywhere; }
+  .tw { position: relative; }
+  .tscroll { overflow-x: auto; }
+  .tw.more::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; }
+  table.num thead tr:first-child th:first-child, table.num tbody td.l { position: sticky; left: 0; background: #ffffff; }
+}
+@media screen and (max-width: 674px) { table.num caption { width: calc(100vw - 32px); box-sizing: border-box; } table.num td.l { min-width: 11em; } }
 </style>
 </head>
 <body>
@@ -154,7 +165,7 @@ sup { font-size: 70%; }
 
 <p>The paper's analytical result and its simulation reproduce. Proposition 1's critical window, the estimation window at which sample-based mean-variance starts to beat 1/N on average, matches all 13 values the paper states, and 77 of the 81 cells of its Table 6 are within 0.03, with the sign pattern of mean-variance against 1/N reproduced on every market. In the fat-tailed markets the estimated rules lose 0.002 in Sharpe ratio at 5 degrees of freedom and nothing detectable at 10, which is consistent with the cost of estimation sitting in the means, since the sampling error of a mean does not depend on the tails. In the market with clustered volatility the comparison does not change, and an oracle that knows each month's true covariance gains 0.003 to 0.005 in Sharpe ratio over a rule that holds the long-run optimal weights, about 0.2 per cent of return a year on a 15 per cent volatility, which bounds what any estimate of changing risk can add to a rule that only decides how to split wealth between assets.</p>
 
-<div class="tblock"><table class="num"><caption>Table 1. Out-of-sample Sharpe ratios, 1973-07 to 2004-11 (377 months), this study beside DeMiguel, Garlappi and Uppal (2009, Table 3)</caption>
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 1. Out-of-sample Sharpe ratios, 1973-07 to 2004-11 (377 months), this study beside DeMiguel, Garlappi and Uppal (2009, Table 3)</caption>
 <thead><tr><th rowspan=2>Rule</th><th colspan=2>Industry</th><th colspan=2>MKT/SMB/HML</th><th colspan=2>FF-1-factor</th><th colspan=2>FF-4-factor</th></tr>
 <tr><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th></tr></thead><tbody>
 <tr><td class=l>mean-variance, in sample</td><td>0.2034<sup>b</sup></td><td>0.2124</td><td>0.2608<sup>b</sup></td><td>0.2851</td><td>0.4509<sup>b</sup></td><td>0.5098</td><td>0.4999<sup>b</sup></td><td>0.5364</td></tr>
@@ -167,9 +178,9 @@ sup { font-size: 70%; }
 <tr><td class=l>Bayes-Stein, constrained</td><td>0.0831</td><td>0.0819</td><td>0.1480</td><td>0.1514</td><td>0.1974</td><td>0.1955</td><td>0.2064</td><td>0.2062</td></tr>
 <tr><td class=l>minimum variance, constrained</td><td>0.1445</td><td>0.1425</td><td>0.2574</td><td>0.2493</td><td>0.1554</td><td>0.1546</td><td>0.3649</td><td>0.3580</td></tr>
 <tr><td class=l>minimum variance, generalised constraint</td><td>0.1454</td><td>0.1451</td><td>0.2552</td><td>0.2467</td><td>0.1625</td><td>0.1615</td><td>0.3080</td><td>0.3028</td></tr>
-</tbody></table>
+</tbody></table></div></div>
 <p class="tn">Each cell is the Sharpe ratio of the rule's monthly out-of-sample excess returns with a 120-month estimation window, as in the paper. Thirty cells carry a band of 0.03 fixed before the code ran; 29 are within it. <sup>a</sup> The one miss: 0.0326 against -0.0183. <sup>b</sup> No verdict, by a decision recorded with its evidence in the constants file: the in-sample row, and the unconstrained mean-variance and Bayes-Stein rules on the datasets where the paper's own turnover figure for the rule exceeds 100 times that of 1/N, because ten basis points of noise added to every return move those cells by 0.12 to 0.25 with the published figure inside the range.</p></div>
-<div class="tblock"><table class="num"><caption>Table 2. Turnover, 1973-07 to 2004-11: 1/N in absolute terms (the fraction of the portfolio traded per month, counting purchases and sales), every other rule as a multiple of 1/N, this study beside DeMiguel, Garlappi and Uppal (2009, Table 5)</caption>
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 2. Turnover, 1973-07 to 2004-11: 1/N in absolute terms (the fraction of the portfolio traded per month, counting purchases and sales), every other rule as a multiple of 1/N, this study beside DeMiguel, Garlappi and Uppal (2009, Table 5)</caption>
 <thead><tr><th rowspan=2>Rule</th><th colspan=2>Industry</th><th colspan=2>MKT/SMB/HML</th><th colspan=2>FF-1-factor</th><th colspan=2>FF-4-factor</th></tr>
 <tr><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th></tr></thead><tbody>
 <tr><td class=l>1/N</td><td>0.0221</td><td>0.0216</td><td>0.0237</td><td>0.0237</td><td>0.0164</td><td>0.0162</td><td>0.0200</td><td>0.0198</td></tr>
@@ -181,13 +192,13 @@ sup { font-size: 70%; }
 <tr><td class=l>Bayes-Stein, constrained</td><td>6.63</td><td>7.22</td><td>3.45</td><td>3.65</td><td>16.11</td><td>17.32</td><td>13.65</td><td>13.07</td></tr>
 <tr><td class=l>minimum variance, constrained</td><td>2.34</td><td>2.58</td><td>1.02</td><td>1.11</td><td>4.20</td><td>3.93</td><td>1.63</td><td>1.76</td></tr>
 <tr><td class=l>minimum variance, generalised constraint</td><td>1.49</td><td>1.52</td><td>1.00</td><td>1.09</td><td>1.95</td><td>1.78</td><td>1.66</td><td>1.70</td></tr>
-</tbody></table>
+</tbody></table></div></div>
 <p class="tn">Thirty cells carry a band of 25 per cent, relative, fixed before the code ran; all 30 are within it. <sup>b</sup> No verdict: the paper's figure exceeds 100 times that of 1/N, and the cell moves by orders of magnitude when a single month's covariance is near-singular. The value-weighted market trades nothing by construction.</p></div>
 <h3>3.2 The months since the paper</h3>
 
 <p>Table 3 reports the Sharpe ratios on the paper's period and on the 261 months from 2004-12 to 2026-08. In the new period one of the 32 rule-dataset cells beats 1/N at the 5 per cent level, the value-weighted market on MKT/SMB/HML, and five cells fall below 1/N at that level, all five of them minimum-variance rules on the two factor datasets. Minimum variance, the best optimising rule of the paper's period, falls to -0.015 on MKT/SMB/HML and -0.034 on FF-4-factor against 0.113 and 0.148 for 1/N; its weights load on the size and value factors, whose premia were small or negative over these years, so the fall is consistent with the premia it loaded on and with no change in the rule. On the whole period from 1973-07 the constrained rules beat their unconstrained versions in 11 of 12 comparisons and 1/N beats sample-based mean-variance on every dataset. These estimates do not distinguish most rules from 1/N: a monthly Sharpe ratio measured on 261 months has a standard error of about 0.06, so a difference between two rules has to reach about 0.12 before it is distinguishable from chance, and most differences in the new period are smaller.</p>
 
-<div class="tblock"><table class="num"><caption>Table 3. Out-of-sample Sharpe ratios on the paper's period and on the months since, on the 202608 vintage of French's files</caption>
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 3. Out-of-sample Sharpe ratios on the paper's period and on the months since, on the 202608 vintage of French's files</caption>
 <thead><tr><th rowspan=2>Rule</th><th colspan=4>1973-07 to 2004-11 (377 months)</th><th colspan=4>2004-12 to 2026-08 (261 months)</th></tr>
 <tr><th>Industry</th><th>MKT/SMB/HML</th><th>FF-1-factor</th><th>FF-4-factor</th><th>Industry</th><th>MKT/SMB/HML</th><th>FF-1-factor</th><th>FF-4-factor</th></tr></thead><tbody>
 <tr><td class=l>1/N</td><td>0.135</td><td>0.235</td><td>0.161</td><td>0.174</td><td>0.191</td><td>0.113</td><td>0.148</td><td>0.148</td></tr>
@@ -199,7 +210,7 @@ sup { font-size: 70%; }
 <tr><td class=l>Bayes-Stein, constrained</td><td>0.083</td><td>0.148</td><td>0.197</td><td>0.206</td><td>0.190</td><td>0.188</td><td>0.159</td><td>0.146</td></tr>
 <tr><td class=l>minimum variance, constrained</td><td>0.144</td><td>0.257</td><td>0.155</td><td>0.365</td><td>0.210</td><td>-0.009</td><td>0.181</td><td>0.038</td></tr>
 <tr><td class=l>minimum variance, generalised constraint</td><td>0.145</td><td>0.255</td><td>0.163</td><td>0.308</td><td>0.210</td><td>0.042</td><td>0.165</td><td>0.149</td></tr>
-</tbody></table>
+</tbody></table></div></div>
 <p class="tn">The paper's period on this vintage reproduces Table 1 (29 of 30 gated Sharpe cells, 30 of 30 turnover cells). In the new period one of the 32 rule-dataset cells differs from 1/N in its favour at the 5 per cent level (the value-weighted market on MKT/SMB/HML, p = 0.04); five differ against 1/N at that level, all of them minimum-variance rules on the two factor datasets. A monthly Sharpe ratio measured on 261 months has a standard error of about 0.06, so a difference between two rules has to reach about 0.12 before it is distinguishable from chance.</p></div>
 <h3>3.3 The estimators under the mandate</h3>
 
@@ -211,7 +222,7 @@ sup { font-size: 70%; }
 
 <p>The mandate's return is in the last columns of Table 4. The tilt alone is associated with an active return of +1.8 to +6.9 basis points a year across the seven estimates, against a standard error of 11.6 to 13.2, so the tilt's cost in return is indistinguishable from zero and the estimates exclude a cost beyond about 25 basis points a year. The full mandate is associated with -1.0 to -6.9 against a standard error of 12.3 to 13.9. The difference between the two, the cost of beta neutrality and the two exclusions on the same months, is -7.9 to -10.4 basis points a year with a standard error of 3.4 to 4.9 and the same sign under all seven estimates, so this part of the mandate has a cost the data can see. The mandate's portfolios turn over 0.86 to 1.54 per cent a month one way against the benchmark's 0.39, hold 41 to 45 of the 49 industries and an effective number of about 19 against the benchmark's 18.9, and at 50 basis points per unit of turnover pay 5.1 to 9.2 basis points a year in trading against the index fund's 2.3. The three design changes cost the daily estimators 2 to 7 basis points of forecast tracking error at the three months checked and 4 to 5 basis points realised over the full period, and the robust portfolio sits 0.1 to 1.1 basis points above each estimator's own best forecast at those months.</p>
 
-<div class="tblock"><table class="num"><caption>Table 4. The seven covariance estimates under the mandate, 1979-07 to 2026-08 (566 months): realised tracking error, forecast calibration, active return and trading</caption>
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 4. The seven covariance estimates under the mandate, 1979-07 to 2026-08 (566 months): realised tracking error, forecast calibration, active return and trading</caption>
 <thead><tr><th>Covariance estimate</th><th>Realised tracking error, bp a year</th><th>Mean forecast, bp a year</th><th>Bias statistic</th><th>Bias, calibrated</th><th>Active return, mandate, bp a year (s.e.)</th><th>Active return, tilt alone, bp a year (s.e.)</th><th>Mandate minus tilt alone, bp a year (s.e.)</th><th>One-way turnover, % a month</th><th>Trading cost at 50 bp, bp a year</th></tr></thead><tbody>
 <tr><td class=l>Sample covariance, 3 years daily</td><td>84.7</td><td>59.8</td><td>1.26</td><td>1.11</td><td>-6.9 (12.3)</td><td>+1.8 (11.7)</td><td>-8.7 (3.7)</td><td>1.31</td><td>7.8</td></tr>
 <tr><td class=l>Ledoit-Wolf shrinkage, 3 years daily</td><td>84.8</td><td>61.9</td><td>1.22</td><td>1.11</td><td>-6.4 (12.4)</td><td>+2.8 (11.7)</td><td>-9.1 (3.7)</td><td>1.23</td><td>7.4</td></tr>
@@ -220,7 +231,7 @@ sup { font-size: 70%; }
 <tr><td class=l>Sample covariance, 120 months</td><td>95.8</td><td>55.0</td><td>1.61</td><td>1.12</td><td>-2.4 (13.9)</td><td>+6.6 (13.2)</td><td>-9.0 (4.9)</td><td>1.54</td><td>9.2</td></tr>
 <tr><td class=l>Robust (worst case of the five)</td><td>87.4</td><td>67.8</td><td>1.09</td><td>1.06</td><td>-4.8 (12.7)</td><td>+5.6 (12.0)</td><td>-10.4 (4.3)</td><td>1.06</td><td>6.4</td></tr>
 <tr><td class=l>RiskMetrics (exponentially weighted), 5 years daily</td><td>84.3</td><td>60.4</td><td>1.23</td><td>1.08</td><td>-5.3 (12.3)</td><td>+2.7 (11.6)</td><td>-7.9 (3.8)</td><td>1.44</td><td>8.6</td></tr>
-</tbody></table>
+</tbody></table></div></div>
 <p class="tn">Tracking error is the standard deviation of the monthly active return times the square root of 12; the bias statistic is the standard deviation of the monthly active return divided by the same month's forecast (the forecast tracking error over the square root of twelve), 1 for a calibrated forecast, so it weights each month by its own forecast and differs from the ratio of the realised column to the forecast column; the calibrated column rescales each month's forecast by the bias of the same path over the previous 60 months, with nothing from the future. The standard error of an active return is its realised tracking error over the square root of 47 years; the standard error of the difference is computed on the paired monthly differences. One-way turnover is half the sum of absolute weight changes at a rebalance; the benchmark itself turns over 0.39 per cent a month, which at 50 basis points per unit of turnover costs an index fund 2.3 basis points a year.</p></div>
 <h3>3.4 Where the active return came from</h3>
 
@@ -230,7 +241,7 @@ sup { font-size: 70%; }
 
 <p>The six factors explain 14 to 28 per cent of the active return's variance across the fourteen paths, so most of the tracking error is the industries' own returns, the risk the factor models of Section 2 assume away between industries. The attribution also splits the tilt's zero return into two parts of opposite sign: under the tilt alone the factor contributions sum to -9.3 to -13.1 basis points a year, about two standard errors from zero, and the residual to +12.2 to +19.7, one to two standard errors. The exposures the tilt created cost what their signs and the factors' mean returns over these years imply, since value, profitability, investment and momentum all earned positive premia on average and the portfolio was short of each, and the industries the optimiser bought in place of Oil and Utilities earned more than Oil and Utilities did over the 47 years; the first part follows from the exposures and the factors' returns and appears under every estimator, the second is the history of three industries. Of the mandate's cost against the tilt alone, 20 to 40 per cent comes through the factors and 60 to 80 per cent through the industries' own returns, and the exclusions' factor part, the five factors other than the market, is -1.3 to -2.9 basis points a year against the -2.9 that their mean weight of 1.3 per cent and their betas imply, within the 2 basis points fixed in advance. By decade, for the sample covariance's path under the mandate, the factor part was -61 basis points a year in 1979 to 1989 and within 13 of zero in every decade since, so the exposures' cost is concentrated in the years when the tilt was largest.</p>
 
-<div class="tblock"><table class="num"><caption>Table 5. Factor attribution of the active return, 1979-07 to 2026-08: mean active exposures, contributions and residual</caption>
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 5. Factor attribution of the active return, 1979-07 to 2026-08: mean active exposures, contributions and residual</caption>
 <thead><tr><th>Covariance estimate</th><th>Mkt-RF</th><th>SMB</th><th>HML</th><th>RMW</th><th>CMA</th><th>Mom</th><th>Factor contributions, bp a year (s.e.)</th><th>Residual, bp a year (s.e.)</th><th>Factor share</th></tr></thead><tbody>
 <tr><td class="l sub" colspan=10>Under the mandate</td></tr>
 <tr><td class=l>Sample covariance, 3 years daily</td><td>-0.001</td><td>+0.013</td><td>-0.014</td><td>-0.011</td><td>-0.005</td><td>-0.004</td><td>-13.8 (5.5)</td><td>+6.9 (10.9)</td><td>0.22</td></tr>
@@ -248,7 +259,7 @@ sup { font-size: 70%; }
 <tr><td class=l>Sample covariance, 120 months</td><td>-0.004</td><td>+0.017</td><td>-0.016</td><td>-0.004</td><td>-0.005</td><td>-0.004</td><td>-13.1 (6.3)</td><td>+19.7 (11.2)</td><td>0.28</td></tr>
 <tr><td class=l>Robust (worst case of the five)</td><td>-0.001</td><td>+0.012</td><td>-0.013</td><td>-0.007</td><td>-0.004</td><td>-0.004</td><td>-11.1 (5.6)</td><td>+16.8 (10.2)</td><td>0.27</td></tr>
 <tr><td class=l>RiskMetrics (exponentially weighted), 5 years daily</td><td>0.000</td><td>+0.012</td><td>-0.014</td><td>-0.008</td><td>-0.003</td><td>-0.003</td><td>-10.7 (5.1)</td><td>+13.4 (10.3)</td><td>0.22</td></tr>
-</tbody></table>
+</tbody></table></div></div>
 <p class="tn">The active exposure to a factor is the sum over industries of the active weight times the industry's beta to the factor, the betas from a regression of each industry's daily excess returns on the six factors over the three years before the month; its mean over the 566 months is shown. A contribution is the exposure times the factor's return in the month; the residual is the active return minus the six contributions, and the identity holds to 2e-18. The factor share is one minus the variance of the residual over the variance of the active return. Mkt-RF is the market factor, SMB size, HML value, RMW profitability, CMA investment and Mom momentum (Fama and French, 2015; Carhart, 1997).</p></div>
 <h2>4. Discussion</h2>
 
@@ -277,5 +288,18 @@ sup { font-size: 70%; }
 </div>
 </div>
 <footer class="ch-foot"><div>Carlo Hofer &middot; Data: Kenneth R. French Data Library &middot; <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a> &middot; The PDF of this note is beside it in the repository</div></footer>
+<script>
+(function () {
+  "use strict";
+  // on screen, a table wider than the page scrolls inside its box; the fade at the right edge shows only while more of the table lies to the right
+  document.querySelectorAll(".tw").forEach(function (t) {
+    function upd() { var s = t.firstElementChild; t.classList.toggle("more", !!s && s.scrollWidth - s.clientWidth - s.scrollLeft > 1); }
+    if (!("ResizeObserver" in window)) { t.classList.add("more"); return; }
+    t.addEventListener("scroll", upd, true);
+    new ResizeObserver(upd).observe(t);
+    upd();
+  });
+})();
+</script>
 </body>
 </html>
