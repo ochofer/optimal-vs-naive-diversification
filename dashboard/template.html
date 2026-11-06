@@ -85,6 +85,8 @@ code { overflow-wrap: anywhere; }
 .tbl { margin: 10px 0 0; }
 .tbl[hidden] { display: none; }
 .method p { max-width: 75ch; }
+.other { margin-top: 36px; padding-top: 4px; border-top: 1px solid var(--rule); }
+.other p { max-width: 75ch; margin: 0 0 10px; }
 dl.terms { font-size: 14px; max-width: 75ch; }
 dl.terms dt { font-weight: 600; margin-top: 8px; }
 dl.terms dd { margin: 0 0 0 1rem; }
@@ -99,6 +101,8 @@ dl.terms dd { margin: 0 0 0 1rem; }
   h1 { font-size: 1.8rem; }
 }
 @media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
+.ch-word, .ch-nav a { white-space: nowrap; }
+@media (max-width: 359px) { .ch-word { font-size: 15px; letter-spacing: .12em; } .ch-nav a { font-size: 13px; margin-left: 12px; } }
 @media print { .tabs, .tw::after { display: none; } .view { display: block; } .fig { break-inside: avoid; } }
 </style>
 <script src="https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js" charset="utf-8"></script>
@@ -106,10 +110,10 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <body>
 <header class="ch-band"><div class="ch-band__in">
   <a class="ch-word" href="https://www.carlohofer.com/">Carlo Hofer</a>
-  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Projects</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">CV</a></nav>
+  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Investment research</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">Academic CV</a></nav>
 </div></header>
 <div class="wrap">
-<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">All projects</a></p>
+<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">Investment research</a></p>
 <h1>Optimal versus naive diversification: the results</h1>
 <p class="stamp">Simulated on Kenneth R. French's data, {{first_w}} to {{last_w}} (vintage {{vintage}}). Built {{build_date}}. <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a></p>
 </div>
@@ -121,7 +125,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <section id="summary" class="view on">
 <ul class="kp">
 <li>Under the mandate the four covariance estimators built from daily returns realise {{te_lo}} to {{te_hi}} basis points a year of tracking error and the monthly sample covariance {{te_monthly}}, so the estimator still matters, by about a tenth.</li>
-<li>Every estimator under-forecasts its own tracking error, by {{bias_pct_lo}} to {{bias_pct_hi}} per cent (bias statistics {{bias_lo}} to {{bias_monthly}}). Calibrating each forecast on the path's own previous 60 months brings the daily estimators to {{cal_lo}} to {{cal_hi}}.</li>
+<li>Every estimator under-forecasts its own tracking error, by {{bias_pct_lo}} to {{bias_pct_hi}} per cent (bias statistics {{bias_lo}} to {{bias_monthly}}). Calibrating each forecast on the path's own previous 60 months brings the daily estimators to {{cal_lo}} to {{cal_hi}}. The finding is applied in a real-money book: the <a href="https://www.carlohofer.com/rules-based-portfolio/">rules-based portfolio</a> reports the calibration of its own risk forecast by the same measure, and its <a href="https://www.carlohofer.com/rules-based-portfolio/#method-not-done">Method view</a> explains why its split is set by a risk limit and not by an optimiser.</li>
 <li>The tilt alone is associated with an active return of {{tilt_lo}} to {{tilt_hi}} basis points a year against a standard error of {{tilt_se_lo}} to {{tilt_se_hi}}. Under the mandate the active return is {{gross_lo}} to {{gross_hi}} basis points a year before costs, within one standard error of zero on every path.</li>
 <li>The replication of DeMiguel, Garlappi and Uppal (2009) reproduces {{gated_pass}} of the {{gated_n}} Sharpe ratios that carry a band of 0.03 and {{turn_pass}} of {{turn_n}} turnover figures within 25 per cent. In the {{new_months}} months since the paper, {{beats}} of {{cells}} rule-dataset cells beats 1/N at the 5 per cent level.</li>
 </ul>
@@ -336,6 +340,12 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <dt>estimation window</dt><dd>the months of returns a rule sees when it forms its weights, 120 in the paper.</dd>
 <dt>path</dt><dd>one covariance estimator run under one constraint set month by month over the {{months}} months.</dd>
 </dl>
+</section>
+
+<section id="other-projects" class="other">
+<h2>Other projects</h2>
+<p><strong>Rules-based portfolio.</strong> Runs a small real-money portfolio under rules published before the first order: two UCITS ETFs at 70/30, a monthly cycle with pre-trade checks, look-through exposure and ex-ante risk on a public dashboard. <a href="https://www.carlohofer.com/projects/rules-based-portfolio/">Page</a>, <a href="https://www.carlohofer.com/rules-based-portfolio/">dashboard</a>, <a href="https://github.com/ochofer/rules-based-portfolio">code</a></p>
+<p><strong>Climate risk as an equity signal.</strong> An ownership graph linking 328 listed companies to the 5,115 tracked assets they own. Of 19 apparent ownership changes checked by hand, 12 had no transaction behind them. <a href="https://www.carlohofer.com/projects/climate-risk-equity-signal/">Page</a>, <a href="https://github.com/ochofer/paper1-hazard-exposure-data/releases/download/note-v1.2/what-a-vintage-difference-measures.pdf">note</a>, <a href="https://github.com/ochofer/paper1-hazard-exposure-data">code</a></p>
 </section>
 </main>
 
