@@ -40,6 +40,8 @@ h3, h4 { color: var(--navy); }
 .ch-foot { background: var(--tint); border-top: 1px solid var(--rule, #dddddd); color: var(--ink2); font-size: 14px; margin-top: 40px; }
 .ch-foot > div { max-width: 1040px; margin: 0 auto; padding: 20px 16px 32px; }
 @media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
+.ch-word, .ch-nav a { white-space: nowrap; }
+@media (max-width: 359px) { .ch-word { font-size: 15px; letter-spacing: .12em; } .ch-nav a { font-size: 13px; margin-left: 12px; } }
 .page { max-width: 1040px; margin: 0 auto; padding: 8px 16px 24px; }
 h1 { font-size: 2.2rem; line-height: 1.15; margin: 4px 0 12px; }
 h2 { font-size: 1.35rem; line-height: 1.3; margin: 0 0 6px; }
@@ -187,9 +189,9 @@ dl.terms dd { margin: 0; }
 <body>
 <header class="ch-band"><div class="ch-band__in">
   <a class="ch-word" href="https://www.carlohofer.com/">Carlo Hofer</a>
-  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Projects</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">CV</a></nav>
+  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Investment research</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">Academic CV</a></nav>
 </div></header>
-<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">All projects</a></p>
+<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">Investment research</a></p>
 <main class="page">
 
 <header>
@@ -376,11 +378,11 @@ dl.terms dd { margin: 0; }
 <section id="data">
 <h2>Data</h2>
 <p class="small">Returns: Kenneth R. French Data Library, <a href="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html</a>, 49 industry portfolios, Fama-French five factors and momentum, daily and monthly, built from the CRSP files of August 2026 (the vintage, the version of French's files named by the CRSP cut they were built from: 202608). Betas, benchmark weights, factor returns and the study's results: notebook 13 of <a href="https://github.com/ochofer/optimal-vs-naive-diversification">github.com/ochofer/optimal-vs-naive-diversification</a>. Factors: Fama and French (2015), Journal of Financial Economics 116(1), 1-22, and Carhart (1997), Journal of Finance 52(1), 57-82. Industry names follow French's 49-industry definitions.</p>
-<p class="small">Built by <code>companion/build.py</code> from the output files of notebook 13 (betas, benchmark weights, factor returns, the attribution summary and the mandate's cost) and notebook 11 (the optimiser's report), vintage 202608, on 9 October 2026, and the page is rebuilt whenever those notebooks are rerun.</p>
+<p class="small">Built by <code>companion/build.py</code> from the output files of notebook 13 (betas, benchmark weights, factor returns, the attribution summary and the mandate's cost) and notebook 11 (the optimiser's report), vintage 202608, on 6 November 2026, and the page is rebuilt whenever those notebooks are rerun.</p>
 </section>
 
 </main>
-<footer class="ch-foot"><div>Carlo Hofer &middot; Data: Kenneth R. French Data Library &middot; <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a> &middot; Built 9 October 2026</div></footer>
+<footer class="ch-foot"><div>Carlo Hofer &middot; Data: Kenneth R. French Data Library &middot; <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a> &middot; Built 6 November 2026</div></footer>
 <div class="tip" id="tip" role="tooltip"></div>
 
 <script>

@@ -22,6 +22,8 @@ body { font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-hei
 .ch-foot > div { max-width: 1180px; margin: 0 auto; padding: 20px 16px 32px; }
 .ch-foot a { color: #1f3a60; }
 @media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
+.ch-word, .ch-nav a { white-space: nowrap; }
+@media (max-width: 359px) { .ch-word { font-size: 15px; letter-spacing: .12em; } .ch-nav a { font-size: 13px; margin-left: 12px; } }
 @media screen { .paper { font-size: 11.5pt; } }
 @media print { .ch-band, .ch-back, .ch-foot { display: none; } .paper { max-width: 170mm; padding: 0; } }
 h1 { font-size: 15.5pt; font-weight: normal; margin: 0 0 4pt 0; line-height: 1.25; }
@@ -55,9 +57,9 @@ sup { font-size: 70%; }
 <body>
 <header class="ch-band"><div class="ch-band__in">
   <a class="ch-word" href="https://www.carlohofer.com/">Carlo Hofer</a>
-  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Projects</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">CV</a></nav>
+  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Investment research</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">Academic CV</a></nav>
 </div></header>
-<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">All projects</a></p>
+<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">Investment research</a></p>
 <div class="paper">
 <h1>Optimal versus naive diversification: a replication, and what a tracking-error mandate changes</h1>
 <p class="byline">Carlo Hofer. October 2026. Code and notebooks: github.com/ochofer/optimal-vs-naive-diversification.</p>
