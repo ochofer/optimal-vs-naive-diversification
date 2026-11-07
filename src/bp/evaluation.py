@@ -142,6 +142,15 @@ def worst_cumulative_fall(active: pd.Series) -> dict:
     return {"fall": float(fall.max()), "peak": peak if before.max() > 0 else "start", "trough": trough, "months": months}
 
 
+def rolling_tracking_error(active: pd.DataFrame, window: int = C.EVAL_ROLLING_TE_MONTHS) -> pd.DataFrame:
+    """The rolling realised tracking error of every column: the standard deviation (n minus 1) of the monthly
+    active return over the `window` months ending in and including each month, times the square root of 12,
+    from the first month with a full window. Added 6 November 2026 (constants.EVAL_ROLLING_ADDITIONS_DATE)."""
+    if window < 2 or window > len(active):
+        raise ValueError(f"the window must be between 2 and the number of months, {len(active)}; got {window}")
+    return active.rolling(window).std(ddof=1).iloc[window - 1:] * np.sqrt(PERIODS_PER_YEAR)
+
+
 def share_positive(active: pd.Series | np.ndarray) -> float:
     """The share of months in which the active return is above zero."""
     a = np.asarray(active, dtype=float)

@@ -116,6 +116,20 @@ def test_worst_cumulative_fall_on_a_series_whose_answer_is_known_by_hand():
     assert abs(E.share_positive(a) - 0.5) < 1e-12 and E.share_positive(np.array([-1.0, 0.0, 2.0])) == 1 / 3
 
 
+def test_rolling_tracking_error_matches_the_realised_tracking_error_of_each_window():
+    months = pd.period_range("2000-01", periods=6, freq="M")
+    a = pd.DataFrame({"x": [0.01, -0.02, 0.03, 0.00, -0.01, 0.02], "y": [0.0, 0.0, 0.01, 0.01, 0.01, 0.0]}, index=months)
+    r = E.rolling_tracking_error(a, window=3)
+    assert list(r.index) == list(months[2:]) and list(r.columns) == ["x", "y"]
+    for end in range(2, 6):
+        for col in a.columns:
+            assert abs(r.loc[months[end], col] - E.realised_tracking_error(a[col].iloc[end - 2:end + 1])) < 1e-15
+    # three equal values have no spread; a window longer than the series is refused
+    assert r.loc[months[4], "y"] == 0.0
+    with pytest.raises(ValueError):
+        E.rolling_tracking_error(a, window=7)
+
+
 def test_block_bootstrap_band_is_deterministic_covers_a_calibrated_forecast_and_keeps_the_blocks_together():
     rng = np.random.default_rng(11)
     f = np.full(566, 0.02 * np.sqrt(12))                      # a forecast of 2% a month, stated per year
