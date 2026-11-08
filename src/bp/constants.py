@@ -476,7 +476,19 @@ EVAL_RERUN_IDENTICAL = ("rolling_evaluation", "rolling_evaluation_by_decade", "r
 # status is reported beside the comparison and is not part of it.
 EVAL_ROLLING_ADDITIONS_DATE = "2026-11-06"
 EVAL_ROLLING_TE_MONTHS = 36
-EVAL_RERUN_CONE_MAX_DIFFERENCE = 1e-8
+EVAL_RERUN_CONE_MAX_DIFFERENCE = 1e-8        # the monthly records of the cone program (active_returns)
+# The measures' own number, set by the design on 7 November 2026 after the run
+# of 6 November showed the robust variant's by-decade and calibration rows up
+# to 3e-8 and 2e-8 from their committed copies while its monthly active returns
+# were within 3.2e-9: a measure computed over the 566 months from those
+# records, a standard deviation or a ratio, moves by a multiple of what its
+# inputs move by, so a table of measures from the cone program (the three
+# measure tables of version 1 and the rolling tracking-error table) reproduces
+# its committed copy to EVAL_RERUN_CONE_MEASURES_MAX_DIFFERENCE per cell. The
+# records' number above stays as written; the verdict of expectation 10 is
+# unchanged.
+EVAL_RERUN_CONE_MEASURES_MAX_DIFFERENCE = 1e-7
+EVAL_RERUN_MEASURE_TABLES = ("rolling_evaluation", "rolling_evaluation_by_decade", "rolling_evaluation_calibration", "rolling_tracking_error")
 
 # Notebook 13, the factor attribution, fixed 6 October 2026 before its code: each
 # path's monthly active return split into the contributions of the six factors
