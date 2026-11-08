@@ -3434,7 +3434,7 @@ NB12 = [
 
 **Added 6 November 2026 (`constants.py`), after the recorded runs of 7 and 18 October and before its code.**
 
-11. One save, with no expectation: the rolling tracking error of every path, the standard deviation of the monthly active return over the 36 months ending in and including each month (36 being the length of the daily covariance windows), times the square root of 12, from the first full window, 1982-06, to the last month; with it the median across the seven variants under the mandate's C3 and under the tilt alone. A reported measure in no claim, written as a table so that a figure drawn from the series is traced to a committed table like every other figure. And one rule for every rerun from this one on, set by the design beside expectation 10 and not part of its verdict, which stays as written: a table from the quadratic programs reproduces the committed copy to the last digit; a table from the cone program, the robust variant's rows, reproduces it to 1e-8 per cell for the monthly records and, from 7 November 2026, to 1e-7 per cell for a table of measures, since a measure over 566 months moves by a multiple of what its inputs move by; the solver's name and version are written to the run's provenance record; the count of months with an inaccurate solver status is reported beside the comparison and is not part of it.
+11. Two saves, with no expectation. The first, 6 November: the rolling tracking error of every path, the standard deviation of the monthly active return over the 36 months ending in and including each month (36 being the length of the daily covariance windows), times the square root of 12, from the first full window, 1982-06, to the last month; with it the median across the seven variants under the mandate's C3 and under the tilt alone. A reported measure in no claim, written as a table so that a figure drawn from the series is traced to a committed table like every other figure. The second, 8 November: the bias statistic by decade in both of its states, under the 21 rule and after calibration, for every path under C3 and the tilt alone, so that the dashboard's figure of the forecasts' miss by decade can show both states in one measure from a committed table. And one rule for every rerun from this one on, set by the design beside expectation 10 and not part of its verdict, which stays as written: a table from the quadratic programs reproduces the committed copy to the last digit; a table from the cone program, the robust variant's rows, reproduces it to 1e-8 per cell for the monthly records and, from 7 November 2026, to 1e-7 per cell for a table of measures, since a measure over 566 months moves by a multiple of what its inputs move by; the solver's name and version are written to the run's provenance record; the count of months with an inaccurate solver status is reported beside the comparison and is not part of it.
 
 Running time: about ten to fifteen minutes, most of it the 20,000 optimisations.
 """),
@@ -3703,7 +3703,7 @@ print(f"under C3 tilt only: worst cumulative fall {1e4 * descriptives.xs('C3 til
     md("""
 ## Save
 
-The measures table, the by-decade table, the calibration table and the active returns of every path are written to `outputs/`, with the vintage in the file name; notebook 13 rebuilds the paths it attributes from the modules. From 18 October 2026 the notebook also writes the monthly forecast tracking error of every path, the weights of every path and of the benchmark in the last evaluation month, and the descriptive figures with the bands; and, where the repository's `results/` folder is present, it compares the four tables of the recorded run with their committed copies (expectation 10). From 6 November 2026 it also writes the rolling tracking error of every path with the two medians, and the solver's name and version as the run's provenance record, and it reports the rerun rule of 6 November beside expectation 10: the quadratic-program cells to the last digit, the cone-program cells to 1e-8 for the monthly records and 1e-7 for the measures (the number of 7 November 2026), the inaccurate months counted beside.
+The measures table, the by-decade table, the calibration table and the active returns of every path are written to `outputs/`, with the vintage in the file name; notebook 13 rebuilds the paths it attributes from the modules. From 18 October 2026 the notebook also writes the monthly forecast tracking error of every path, the weights of every path and of the benchmark in the last evaluation month, and the descriptive figures with the bands; and, where the repository's `results/` folder is present, it compares the four tables of the recorded run with their committed copies (expectation 10). From 6 November 2026 it also writes the rolling tracking error of every path with the two medians, from 8 November the bias statistic by decade in both states, and the solver's name and version as the run's provenance record, and it reports the rerun rule of 6 November beside expectation 10: the quadratic-program cells to the last digit, the cone-program cells to 1e-8 for the monthly records and 1e-7 for the measures (the number of 7 November 2026), the inaccurate months counted beside.
 """),
     code("""
 os.makedirs(C.OUTPUT_DIR, exist_ok=True)
@@ -3725,6 +3725,23 @@ rolling = E.rolling_tracking_error(active, C.EVAL_ROLLING_TE_MONTHS)
 for cs in ("C3", "C3 tilt only"):
     rolling[f"median of seven | {cs}"] = rolling[[c for c in active.columns if c.endswith(f"| {cs}")]].median(axis=1)
 rolling.to_csv(f"{C.OUTPUT_DIR}/rolling_tracking_error_{vintage}.csv", float_format="%.10f")
+# Added 8 November 2026 (constants.EVAL_BIAS_BY_DECADE_DATE): the bias statistic by decade in both states, under the 21 rule and calibrated, for every path; in no claim, for the dashboard
+rows = []
+for (v, cs), path in paths.items():
+    if cs not in ("C3", "C3 tilt only"):
+        continue   # under C0, C1 and C2 the portfolio holds the benchmark in months where the forecast is zero, so the statistic has no meaning there
+    active_v = path["active_return"].to_numpy(); fc_v = path["forecast_te"].to_numpy(); cal_v = E.calibrated_forecast(path).to_numpy()
+    grp = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in path.index], index=path.index)
+    row = {"variant": LABEL[v], "set": cs, "bias, 21 rule": E.bias_statistic(active_v, fc_v), "bias, calibrated": E.bias_statistic(active_v, cal_v)}
+    for g in grp.unique():
+        m = (grp == g).to_numpy()
+        row[f"bias, 21 rule, {g}"] = E.bias_statistic(active_v[m], fc_v[m]) if fc_v[m].min() > 0 else float("nan")
+        row[f"bias, calibrated, {g}"] = E.bias_statistic(active_v[m], cal_v[m]) if cal_v[m].min() > 0 else float("nan")
+    rows.append(row)
+bias_decade = pd.DataFrame(rows).set_index(["variant", "set"])
+bias_decade.to_csv(f"{C.OUTPUT_DIR}/rolling_evaluation_bias_by_decade_{vintage}.csv", float_format="%.8f")
+print("the bias statistic by decade under C3, the 21 rule beside the calibrated forecast:")
+print(bias_decade.xs("C3", level="set").to_string(float_format=lambda x: f"{x:.2f}"))
 med = rolling["median of seven | C3 tilt only"]
 print(f"rolling tracking error over {C.EVAL_ROLLING_TE_MONTHS} months: {len(rolling)} months, {rolling.index[0]} to {rolling.index[-1]}; the median of the seven tilt-only paths runs from {med.min() * 1e4:.2f} bp ({med.idxmin()}) to {med.max() * 1e4:.2f} bp ({med.idxmax()}), last {med.iloc[-1] * 1e4:.2f} bp ({med.index[-1]})")
 # Added 6 November 2026: the solver's name and version, the run's provenance record beside French's
@@ -5122,8 +5139,414 @@ The solver. The factor problem gets a third pass at a looser stopping rule when 
 """),
 ]
 
+NB16 = [
+    md("""
+# 16. The attribution of the factor objective's paths: what the budget bought, factor by factor
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Risk-free rate | the return on a one-month US Treasury bill, the closest thing to a return with no risk |
+| Excess return | a return minus the risk-free rate over the same period |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08 |
+| Variance | the average squared distance of a series from its own average; its square root is the standard deviation, the usual measure of how much a return moves; volatility is the standard deviation of returns, stated per year here by multiplying the monthly figure by the square root of 12 |
+| Standard error | the uncertainty of a number estimated from a sample: the standard deviation that the estimate would show across repeated samples of the same size; for a mean it is the standard deviation of the observations divided by the square root of their number |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four, and notebook 12 ran them with the robust portfolio and RiskMetrics as seven variants |
+| Estimation window | the past returns an estimator sees, 120 months or three years of trading days here |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
+| RiskMetrics | the covariance estimator of J.P. Morgan's 1996 RiskMetrics document: a weighted sample covariance in which each day's weight falls by half every half-life, one year of trading days here, so that recent days count most (notebook 10's sensitivity) |
+| Factor | a return series that moves many assets at once; the six here are the market factor Mkt-RF and five long-short portfolios: SMB (small firms over large, size), HML (cheap firms over expensive, value), RMW (profitable firms over unprofitable, profitability), CMA (firms that invest little over firms that invest much, investment) and Mom (recent winners over recent losers, momentum) |
+| Premium | the average return of a factor over long samples, as the literature reports it; the four factors value, profitability, investment and momentum have a documented positive premium, and this study estimates none of them |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09); the estimator named after it builds the covariance from five of them (notebook 10) |
+| Beta | how much an asset moves with a factor on average, estimated by regressing the asset's excess returns on the factors' returns over the estimation window; one beta per factor; the beta to the benchmark is how much it moves with the benchmark, one for the benchmark itself |
+| Active weight | the portfolio's weight in an asset minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Active exposure | the portfolio's beta to a factor minus the benchmark's: the sum over industries of the active weight times the industry's beta to that factor (notebook 13) |
+| Contribution | the part of a month's active return that one factor accounts for: the active exposure to it, with the betas estimated before the month, times the factor's return in the month |
+| Residual | the active return minus the six contributions, the part the industries' own returns account for |
+| Identity | the check that the six contributions plus the residual equal the active return in every month, to the arithmetic's precision |
+| Factor share | the share of the variance of a path's active return that the six contributions explain: one minus the variance of the residual over the variance of the active return |
+| Variance decomposition | the active return's variance split into three shares that sum to one: the factor total's own variance, the residual's own variance and twice the covariance of the two, each over the active return's variance; the factor share is one minus the residual's share, and the covariance share is negative when the two parts move against each other |
+| Attribution | splitting a portfolio's active return into the contributions of named factors plus a residual, so that the parts add up to the whole (notebook 13) |
+| Verdict | the strict pass or fail of an expectation, MET or NOT MET, as the design requires |
+| Tracking error | the standard deviation of the difference between two return series, stated per year; forecast (ex-ante) when computed from a covariance matrix before the month, realised (ex-post) when measured on the active returns afterwards |
+| Long-only | said of a portfolio in which no weight is negative |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought when the portfolio stays fully invested |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance; 2% a month here |
+| Drifted weights | the previous month's weights after that month's returns have moved them, so that they still sum to one |
+| Tilt | a constraint that holds named industries below their benchmark weight; here Coal, Oil and Utilities at no more than half of it. The word keeps this one meaning in version 2 |
+| Exclusion | a constraint that holds named industries at zero weight; Smoke (tobacco) and Guns (weapons) here |
+| Beta-neutral | a constraint that holds the portfolio's beta to the benchmark equal to one |
+| Mandate | the whole set of rules the fund obeys: the tilt, the exclusions and beta neutrality, with the active weight bound and the turnover cap, the constraint set C3 of version 1 |
+| Optimiser | the extension's routine that solves a constrained portfolio problem; version 1's minimises the forecast tracking error (notebook 11), version 2's maximises the factor objective (notebook 14) |
+| Factor objective | the quantity version 2's optimiser maximises: the sum of the portfolio's active exposures to the targeted factors, each counted in the direction of its premium |
+| Targeted factors | the four of the six factors with a documented premium, value, profitability, investment and momentum, each targeted in the direction of its premium and weighted equally in beta units; the two single-factor paths target one of them alone |
+| Budget | the limit on the forecast tracking error of the factor objective's portfolio: 75, 100 or 150 basis points a year. A month in which the mandate's tracking-error-minimising portfolio already exceeds the budget takes that portfolio and is counted |
+| Main path | one of the fifteen paths of the five covariance estimators at the three budgets; the robust, RiskMetrics and single-factor paths are sensitivities |
+| Exposure bought | the mean active exposure a path carries per basis point of the tracking error it realised; per factor, the mean active exposure to that factor over the realised tracking error in basis points a year |
+| Gap | for a month, the factor objective the optimiser chose with the betas estimated before the month, minus the value the same active weights carry with the betas estimated after it, s'(B_t minus B_t+1)' a_t; its mean absolute value over the months is the path's gap |
+| Gap per unit | the path's gap divided by its mean factor objective: the part of the exposure bought that the next month's betas take back, as a fraction |
+| Robust portfolio | the weights whose largest forecast tracking error across the five covariance estimates is smallest (notebook 11); under the factor objective, the weights whose budget holds under all five at once |
+| Path | the month-by-month sequence of portfolios of one specification, each built on the data before its month; here one variant at one budget with one target vector |
+| Quadratic program | an optimisation whose objective is quadratic and whose constraints are linear, which the solver reaches exactly; a cone program adds constraints written as cones, which an interior-point method reaches to a set precision. The factor objective's problem is a cone program because of the budget |
+| Basis point | one hundredth of a percentage point, so 100 basis points is 1.00% |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage; and, for a run, the solver's name and version |
+
+**The problem, stated the way practitioners state it.** A manager who spent a budget on the forecast tracking error on exposures to four factors owes the client an account of where the active return came from: how much each factor contributed, how much came from the industries' own returns beside the factors, and how much of the month-to-month movement of the active return the factors explain. The same account tells the manager what the budget bought, factor by factor, per basis point of the risk it cost, and how much of the exposure chosen on the betas of the past the betas of the following month take back. This notebook gives that account for the nineteen paths of notebook 15.
+
+**What this notebook does.** It is the third of three (14 the problem, 15 the rolling evaluation, 16 the attribution). It rebuilds the nineteen paths from the modules with their weights kept, as notebook 13 rebuilds version 1's, checks their realised tracking errors against notebook 15's within 0.1 basis point a year and, where the repository is present, their monthly records against the committed table under the rule for reruns; it attributes each path's active return exactly as notebook 13 does, into the six factors' contributions and a residual, with the identity checked in every month; it judges E4, the one expectation left to it, and reports the variance decomposition behind the factor share; and it reports two measures in no claim, the exposure bought per factor and the gap per unit of exposure bought, both named in `constants.py` on 8 November 2026 before this code.
+
+**The expectation (`constants.py`, 8 October 2026, before any path ran).**
+
+- E4. The four targeted factors' contributions sum to a positive amount a year on every main path, and at 100 and 150 basis points the six factors explain at least 30% of the active return's variance on every main path. Reason: version 1's factors explained 14% to 28% of incidental exposures; deliberate exposures raise the share.
+
+**The two measures, reported with no expectation attached.**
+
+- The exposure bought per factor: the mean active exposure to each targeted factor divided by the path's realised tracking error in basis points a year; the four sum to notebook 15's exposure per basis point.
+- The gap per unit: the path's mean absolute gap divided by its mean factor objective. Notebook 15 recorded the gap month by month; this notebook tabulates it for every path and states it per unit of what was bought.
+
+**The checks that are not expectations.** The rebuilt paths reproduce notebook 15's realised tracking errors within 0.1 basis point (holds or fails); where the committed monthly table is present, the rule for reruns is reported: the records of a cone program within 1e-8 per cell, the inaccurate months counted beside and not part of it; the identity holds within 1e-9 in every month (holds or fails).
+
+Running time: about ten minutes, most of it the 10,754 cone programs of the nineteen paths.
+"""),
+    md("""
+## Modules
+
+`constants` carries section 7 with E4 and the two measures of this notebook; `attribution` is notebook 13's, unchanged; `evaluation`'s `run_factor_path` is notebook 15's; the others are those of earlier notebooks.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    writefile("attribution.py"),
+    md("""
+## Count first: the months, the factors, the nineteen paths
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import json, time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import evaluation as E
+from bp import attribution as A
+
+pd.set_option("display.width", 250)
+pd.set_option("display.max_rows", 200)
+pd.set_option("display.max_columns", 40)
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+industries = [c.strip() for c in weights.columns]
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+FACTORS = list(C.ATTRIBUTION_FACTORS)
+TARGETED = list(C.FO_TARGET_FACTORS)
+FACTOR_WORD = {"HML": "value", "RMW": "profitability", "CMA": "investment", "Mom": "momentum"}
+S_ALL = np.array([C.FO_TARGET_SIGN[f] for f in FACTORS])
+MANDATE = C.CONSTRAINT_SETS[C.FO_CONSTRAINT_SET]
+VARIANTS = list(CV.ALL_VARIANTS)
+LABEL = {v: ("robust, all five" if v == C.ROBUST_VARIANT else ("RiskMetrics, daily 5y" if v == C.EWMA_VARIANT else f"{v[0]}, {v[1].replace('_', ' ')}")) for v in VARIANTS}
+SAMPLE = ("sample", "daily_3y")
+BP = {tau: f"{1e4 * tau:.0f}" for tau in C.FO_BUDGETS_ANNUAL}
+factors_m = P.factors_m.loc[months, FACTORS]
+assert factors_m.notna().all().all() and len(factors_m) == len(months), "a factor is missing in an evaluation month"
+
+# the nineteen paths, as notebook 15 names them: (label, variant, budget, target vector, the targeted factors of the path)
+PATHS = []
+for v in CV.EVALUATION_VARIANTS:
+    for tau in C.FO_BUDGETS_ANNUAL:
+        PATHS.append((f"{LABEL[v]} | {BP[tau]}", v, tau, S_ALL, TARGETED))
+for v in (C.ROBUST_VARIANT, C.EWMA_VARIANT):
+    PATHS.append((f"{LABEL[v]} | {BP[C.FO_BUDGET_MAIN]}", v, C.FO_BUDGET_MAIN, S_ALL, TARGETED))
+for single in C.FO_SINGLE_FACTOR_PATHS:
+    s_one = np.array([1.0 if f in single else 0.0 for f in FACTORS])
+    PATHS.append((f"{LABEL[SAMPLE]}, {FACTOR_WORD[single[0]]} alone | {BP[C.FO_BUDGET_MAIN]}", SAMPLE, C.FO_BUDGET_MAIN, s_one, list(single)))
+MAIN = [p[0] for p in PATHS[:15]]                                  # the main paths: the five estimators at the three budgets
+MAIN_100_150 = [p[0] for p in PATHS[:15] if p[2] >= C.FO_BUDGET_MAIN]
+main100 = [p[0] for p in PATHS if p[2] == C.FO_BUDGET_MAIN and p[0] in MAIN]
+TARGET_OF = {p[0]: p[4] for p in PATHS}
+
+def betas_at(month):
+    X = CV.daily_window(P.excess_d, month, C.FO_BETA_WINDOW_YEARS)
+    _, B = CV.factor_cov(X.to_numpy(), P.factors_d.loc[X.index, FACTORS].to_numpy())
+    return B
+
+# Count first
+assert len(months) == 566, len(months)
+assert len(PATHS) == C.FO_PATH_COUNT == 19 and len(set(p[0] for p in PATHS)) == 19 and len(MAIN) == 15 and len(MAIN_100_150) == 10
+assert set(C.FO_ATTRIBUTION_REFERENCE_TE) == set(p[0] for p in PATHS), "the reference tracking errors name the nineteen paths"
+assert C.FO_NOTEBOOK_16_JUDGES == ("E4",) and C.FO_E4_FACTOR_SHARE_MIN == 0.30
+provenance = [fl.download(key) for key in P.files]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+print(f"{len(months)} evaluation months, {months[0]} to {months[-1]}; {len(FACTORS)} factors with returns in every month; {len(PATHS)} paths, {len(MAIN)} of them main, {len(MAIN_100_150)} at {BP[C.FO_BUDGET_MAIN]} bp and above")
+print(f"E4: the four targeted contributions sum to a positive amount on every main path, and the factor share is at least {C.FO_E4_FACTOR_SHARE_MIN:.0%} on every main path at {BP[C.FO_BUDGET_MAIN]} and {BP[max(C.FO_BUDGETS_ANNUAL)]} bp")
+print(f"the exposure bought per factor: {C.FO_EXPOSURE_BOUGHT_PER_FACTOR}; the gap per unit: {C.FO_GAP_PER_UNIT} (both dated {C.FO_ATTRIBUTION_DATE}, no expectation)")
+print(f"CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## The covariances and the betas, once per month
+
+As in notebook 15: each estimator variant once per month, shared by the paths that use it; the betas are the same for every path.
+"""),
+    code("""
+t0 = time.time()
+Sigmas = {v: {} for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,)}
+betas = {}
+for i, month in enumerate(months):
+    for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,):
+        Sigmas[v][month], _, _ = CV.estimate(*v, month, P)
+    betas[month] = betas_at(month)
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}
+print(f"{len(months)} months of covariances and betas in {time.time() - t0:.0f}s")
+"""),
+    md("""
+## The nineteen paths, rebuilt with their weights
+
+The paths are rebuilt from the modules with the weights of every month kept, which notebook 15 did not save; each path's realised tracking error is checked against notebook 15's, fixed in `constants.py`, within 0.1 basis point a year. Where the repository's `results/` folder is present, the monthly records are compared with the committed table under the rule for reruns: the problem is a cone program, so every record cell reproduces within 1e-8, and the count of months with an inaccurate solver status is reported beside the comparison and is not part of it.
+"""),
+    code("""
+paths = {}
+t0 = time.time()
+for label, v, tau, s_vec, targeted in PATHS:
+    t1 = time.time()
+    paths[label] = E.run_factor_path(months, Sigmas[v], betas, weights, returns_m, MANDATE, s_vec, tau, tilt_mask, mandate_mask, keep_weights=True)
+    p = paths[label]
+    print(f"{label:<40} {time.time() - t1:5.0f}s  budget not met {int((~p['budget_met']).sum()):3d}  binds {int(p['budget_binds'].sum()):3d}  inaccurate {int((p['status'] != 'optimal').sum()):3d}")
+print(f"{len(paths)} paths in {time.time() - t0:.0f}s")
+assert all(len(p) == len(months) for p in paths.values())
+repro = pd.DataFrame({"realised TE (bp)": {label: 1e4 * E.realised_tracking_error(p["active_return"]) for label, p in paths.items()},
+                      "notebook 15 (bp)": {label: 1e4 * C.FO_ATTRIBUTION_REFERENCE_TE[label] for label in paths}})
+repro["difference (bp)"] = repro["realised TE (bp)"] - repro["notebook 15 (bp)"]
+ok_repro = int((repro["difference (bp)"].abs() <= 1e4 * C.ATTRIBUTION_REPRODUCTION_TOL).sum())
+print(repro.to_string(float_format=lambda x: f"{x:.4f}"))
+print(f"the rebuilt paths reproduce notebook 15's realised tracking errors within {1e4 * C.ATTRIBUTION_REPRODUCTION_TOL:.1f} bp in {ok_repro} of {len(repro)}: {'holds' if ok_repro == len(repro) else 'FAILS'}")
+# the rule for reruns, against notebook 15's committed monthly records where the repository is present
+monthly = pd.concat({label: p.drop(columns=["weights", "status"]) for label, p in paths.items()}, names=["path", "month"])
+committed = f"results/{vintage}"
+committed_monthly = f"{committed}/factor_objective_monthly_{vintage}.csv"
+if os.path.exists(committed_monthly):
+    old = pd.read_csv(committed_monthly, index_col=[0, 1])
+    old.index = pd.MultiIndex.from_arrays([old.index.get_level_values(0), pd.PeriodIndex(old.index.get_level_values(1), freq="M")], names=["path", "month"])
+    num = [c for c in old.columns if old[c].dtype.kind in "fi" and c in monthly.columns]
+    new_num = monthly[num].astype(float).round(8)
+    gaps = (old[num].astype(float) - new_num).abs().groupby(level="path").max().max(axis=1)
+    flags = [c for c in old.columns if old[c].dtype.kind == "b" and c in monthly.columns]
+    flag_same = (old[flags] == monthly[flags]).all(axis=1).groupby(level="path").all() if flags else pd.Series(True, index=gaps.index)
+    rule_ok = int(((gaps <= C.EVAL_RERUN_CONE_MAX_DIFFERENCE + 1e-14) & flag_same).sum())
+    print(f"rerun rule, the monthly records against the committed table (records of a cone program, within {C.EVAL_RERUN_CONE_MAX_DIFFERENCE:.0e} per cell): {rule_ok} of {len(gaps)} paths; the largest difference {gaps.max():.1e} ({gaps.idxmax()})")
+    for label in gaps.index:
+        if gaps[label] > C.EVAL_RERUN_CONE_MAX_DIFFERENCE + 1e-14 or not flag_same[label]:
+            print(f"  {label}: largest difference {gaps[label]:.1e}, state columns {'equal' if flag_same[label] else 'DIFFER'}")
+    print("inaccurate solver status per path, this run (reported beside the comparison, not part of it): " + ", ".join(f"{label.split(' | ')[0]} at {label.split(' | ')[1]}: {int((p['status'] != 'optimal').sum())}" for label, p in paths.items()))
+else:
+    print(f"rerun rule: no {committed}/ folder beside this notebook, so the comparison with the committed records runs where the repository is present")
+"""),
+    md("""
+## The attribution, path by path
+
+One row per path, exactly as notebook 13 computes it: the mean active exposure to each factor over the 566 months; each factor's contribution, the factor total, the residual and the active return in basis points a year with their standard errors; the factor share. The targeted total is the sum of the four targeted factors' contributions, the quantity E4 asks about.
+"""),
+    code("""
+atts, rows = {}, []
+bench_w = weights.loc[months]
+for label, v, tau, s_vec, targeted in PATHS:
+    path = paths[label]
+    W = pd.DataFrame(np.vstack(path["weights"].to_list()), index=path.index, columns=weights.columns)
+    att = A.attribute(W, bench_w, betas, factors_m, path["active_return"])
+    att["targeted total"] = att[[f"contribution {f}" for f in TARGETED]].sum(axis=1)
+    atts[label] = att
+    s = A.summarise(att)
+    tt = att["targeted total"].to_numpy(dtype=float)
+    s["targeted total (per year)"] = 12 * float(tt.mean())
+    s["targeted total (standard error)"] = 12 * float(tt.std(ddof=1)) / np.sqrt(len(tt))
+    # the decomposition behind the factor share: the factor total's own variance, the residual's and twice their
+    # covariance, each over the active return's variance; the three sum to one and the factor share is one minus the second
+    a_var = float(att["active return"].var(ddof=1))
+    s["factor total variance share"] = float(att["factor total"].var(ddof=1)) / a_var
+    s["residual variance share"] = float(att["residual"].var(ddof=1)) / a_var
+    s["covariance share"] = 1.0 - s["factor total variance share"] - s["residual variance share"]
+    rows.append({"path": label, "variant": LABEL[v], "budget (bp)": int(BP[tau]), "target": ", ".join(FACTOR_WORD[f] for f in targeted), **s})
+summary = pd.DataFrame(rows).set_index("path")
+largest_identity = summary["largest identity error"].max()
+print(f"the identity: contributions plus residual equal the active return within {largest_identity:.1e} in every month of every path (level {C.ATTRIBUTION_IDENTITY_MAX_ABS_ERROR:g}): {'holds' if largest_identity <= C.ATTRIBUTION_IDENTITY_MAX_ABS_ERROR else 'FAILS'}")
+print()
+exp_cols = [f"exposure {f}" for f in FACTORS]
+print("mean active exposures:")
+print(summary[exp_cols].rename(columns=lambda c: c.replace("exposure ", "")).to_string(float_format=lambda x: f"{x:+.4f}"))
+print()
+con_cols = [f"contribution {f} (per year)" for f in FACTORS] + ["targeted total (per year)", "factor total (per year)", "residual (per year)", "active return (per year)"]
+se_cols = [c.replace("(per year)", "(standard error)") for c in con_cols]
+shown = (1e4 * summary[con_cols]).rename(columns=lambda c: c.replace("contribution ", "").replace(" (per year)", ""))
+shown["factor share"] = summary["factor share"]
+print("contributions, the targeted total, the factor total, the residual and the active return, basis points a year, and the factor share:")
+print(shown.to_string(float_format=lambda x: f"{x:+.2f}"))
+print()
+print("standard errors of the same, basis points a year:")
+print((1e4 * summary[se_cols]).rename(columns=lambda c: c.replace("contribution ", "").replace(" (standard error)", "")).to_string(float_format=lambda x: f"{x:.2f}"))
+"""),
+    md("""
+## E4: the targeted contributions and the factor share
+"""),
+    code("""
+tt = summary.loc[MAIN, "targeted total (per year)"]
+positive4 = int((tt > 0).sum())
+share = summary.loc[MAIN_100_150, "factor share"]
+above4 = int((share >= C.FO_E4_FACTOR_SHARE_MIN).sum())
+ok4 = positive4 == len(MAIN) and above4 == len(MAIN_100_150)
+print("the targeted total, basis points a year, with its standard error, and the factor share, main paths:")
+e4 = pd.DataFrame({"targeted total (bp a year)": 1e4 * summary.loc[MAIN, "targeted total (per year)"], "standard error (bp)": 1e4 * summary.loc[MAIN, "targeted total (standard error)"],
+                   "factor share": summary.loc[MAIN, "factor share"], "active return (bp a year)": 1e4 * summary.loc[MAIN, "active return (per year)"], "standard error of the active return (bp)": 1e4 * summary.loc[MAIN, "active return (standard error)"]})
+print(e4.to_string(float_format=lambda x: f"{x:+.2f}"))
+print()
+print(f"E4: the targeted total is positive on {positive4} of {len(MAIN)} main paths ({1e4 * tt.min():+.1f} to {1e4 * tt.max():+.1f} bp a year); the factor share at {BP[C.FO_BUDGET_MAIN]} and {BP[max(C.FO_BUDGETS_ANNUAL)]} bp is at least {C.FO_E4_FACTOR_SHARE_MIN:.0%} on {above4} of {len(MAIN_100_150)} ({share.min():.2f} to {share.max():.2f}): {'MET' if ok4 else 'NOT MET'}")
+share75 = summary.loc[[p for p in MAIN if p not in MAIN_100_150], "factor share"]
+print(f"reported, outside E4: the factor share at 75 bp runs from {share75.min():.2f} to {share75.max():.2f}; on the four sensitivity paths " + ", ".join(f"{label.split(' | ')[0]} {summary.loc[label, 'factor share']:.2f}" for label in summary.index if label not in MAIN))
+print()
+dec = summary.loc[MAIN_100_150, ["factor total variance share", "residual variance share", "covariance share", "factor share"]]
+print("the decomposition of the active return's variance, main paths at 100 and 150 bp: the factor total's own variance, the residual's and twice their covariance, each over the active return's variance (the three sum to one; the factor share is one minus the residual's):")
+print(dec.to_string(float_format=lambda x: f"{x:+.4f}"))
+print(f"the factor total's own variance is {dec['factor total variance share'].min():.0%} to {dec['factor total variance share'].max():.0%} of the active return's, the residual's {dec['residual variance share'].min():.0%} to {dec['residual variance share'].max():.0%}, and the covariance term takes {-dec['covariance share'].max():.0%} to {-dec['covariance share'].min():.0%} off their sum")
+ratio = (summary["active return (per year)"] / summary["active return (standard error)"]).abs()
+print(f"the active return against its standard error, all nineteen paths: the largest ratio is {ratio.max():.2f} ({ratio.idxmax()}); {int((ratio > 2).sum())} of {len(ratio)} beyond two standard errors")
+"""),
+    md("""
+## The exposure bought, factor by factor
+
+The mean active exposure to each targeted factor divided by the path's realised tracking error in basis points a year; the four sum to notebook 15's exposure per basis point. Reported, no expectation.
+"""),
+    code("""
+te_bp = pd.Series({label: 1e4 * E.realised_tracking_error(p["active_return"]) for label, p in paths.items()})
+bought = pd.DataFrame({FACTOR_WORD[f]: summary[f"exposure {f}"] / te_bp for f in TARGETED})
+bought["total"] = bought.sum(axis=1)
+bought.insert(0, "realised TE (bp)", te_bp)
+for f in TARGETED:
+    bought[f"mean exposure {FACTOR_WORD[f]}"] = summary[f"exposure {f}"]
+print("the exposure bought per basis point of realised tracking error, by factor (beta units per bp a year), and the mean exposures behind it:")
+print(bought.to_string(float_format=lambda x: f"{x:.5f}"))
+b100 = bought.loc[main100]
+print()
+print(f"at {BP[C.FO_BUDGET_MAIN]} bp on the five estimators the total runs from {b100['total'].min():.5f} to {b100['total'].max():.5f}; by factor, the largest share of the total goes to " + ", ".join(f"{FACTOR_WORD[f]} on {int((b100[[FACTOR_WORD[g] for g in TARGETED]].idxmax(axis=1) == FACTOR_WORD[f]).sum())}" for f in TARGETED) + " of 5 paths")
+"""),
+    md("""
+## The gap, and the gap per unit of exposure bought
+
+Notebook 15 recorded, for every month, the factor objective chosen with the betas estimated before the month minus the value the same active weights carry with the betas estimated after it. Here, for every path: the mean absolute gap, the mean signed gap, the largest absolute gap with its month, and the gap per unit, the mean absolute gap divided by the mean factor objective. Reported, no expectation.
+"""),
+    code("""
+rows = []
+for label, p in paths.items():
+    g = p["gap"].dropna()
+    obj = float(p["objective"].mean())
+    rows.append({"path": label, "mean absolute gap": float(g.abs().mean()), "mean gap": float(g.mean()), "largest absolute gap": float(g.abs().max()), "month of the largest": str(g.abs().idxmax()),
+                 "mean objective": obj, "gap per unit": float(g.abs().mean()) / obj, "months": int(len(g))})
+gap_table = pd.DataFrame(rows).set_index("path")
+print("the gap, in beta units, and per unit of the mean factor objective:")
+print(gap_table.to_string(float_format=lambda x: f"{x:.5f}"))
+val, mom = f"{LABEL[SAMPLE]}, value alone | {BP[C.FO_BUDGET_MAIN]}", f"{LABEL[SAMPLE]}, momentum alone | {BP[C.FO_BUDGET_MAIN]}"
+print()
+print(f"the two single-factor paths: value alone gap {gap_table.loc[val, 'mean absolute gap']:.5f} on an objective of {gap_table.loc[val, 'mean objective']:.5f} ({gap_table.loc[val, 'gap per unit']:.3f} per unit); momentum alone {gap_table.loc[mom, 'mean absolute gap']:.5f} on {gap_table.loc[mom, 'mean objective']:.5f} ({gap_table.loc[mom, 'gap per unit']:.3f} per unit)")
+print(f"on the five estimators at {BP[C.FO_BUDGET_MAIN]} bp the gap per unit runs from {gap_table.loc[main100, 'gap per unit'].min():.3f} to {gap_table.loc[main100, 'gap per unit'].max():.3f}; across the nineteen paths {gap_table['gap per unit'].min():.3f} to {gap_table['gap per unit'].max():.3f}")
+"""),
+    md("""
+## By decade: the five estimators at the main budget
+
+Contributions, the targeted total, the residual and the active return per year for each decade of the evaluation months, for the five estimator paths at 100 basis points; the standard error of a mean over about 120 months is about 2.2 times the one over 566.
+"""),
+    code("""
+first_label, last_label = f"{months[0]} to 1989-12", f"2020-01 to {months[-1]}"
+decade = pd.Series([first_label if m.year < 1990 else (last_label if m.year >= 2020 else f"{(m.year // 10) * 10}s") for m in months], index=months)
+blocks = []
+for label in main100:
+    att = atts[label]
+    d = A.by_period(att, decade)
+    d["targeted total"] = 12 * att["targeted total"].groupby(decade.loc[att.index]).mean()
+    d.insert(0, "path", label)
+    blocks.append(d)
+decades = pd.concat(blocks).set_index("path", append=True).swaplevel()
+print(f"at {BP[C.FO_BUDGET_MAIN]} bp, basis points a year by decade:")
+print((1e4 * decades).rename(columns=lambda c: c.replace("contribution ", "")).to_string(float_format=lambda x: f"{x:+.1f}"))
+"""),
+    md("""
+## Save
+
+The attribution table (one row per path, the variance decomposition in its last three columns), the by-decade table, the exposure bought per factor, the gap table and E4's verdict are written to `outputs/` with the vintage in the file name; the solver's name and version join the run's provenance record.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+summary.to_csv(f"{C.OUTPUT_DIR}/factor_objective_attribution_{vintage}.csv", float_format="%.8f")
+decades.to_csv(f"{C.OUTPUT_DIR}/factor_objective_attribution_by_decade_{vintage}.csv", float_format="%.8f")
+bought.to_csv(f"{C.OUTPUT_DIR}/factor_objective_exposure_bought_{vintage}.csv", float_format="%.8f")
+gap_table.to_csv(f"{C.OUTPUT_DIR}/factor_objective_gap_{vintage}.csv", float_format="%.8f")
+pd.DataFrame([{"expectation": "E4", "verdict": "MET" if ok4 else "NOT MET",
+               "detail": f"targeted total positive on {positive4} of {len(MAIN)} main paths; factor share at least {C.FO_E4_FACTOR_SHARE_MIN:.2f} on {above4} of {len(MAIN_100_150)} main paths at {BP[C.FO_BUDGET_MAIN]} and {BP[max(C.FO_BUDGETS_ANNUAL)]} bp ({share.min():.4f} to {share.max():.4f})"}]).set_index("expectation").to_csv(f"{C.OUTPUT_DIR}/factor_objective_attribution_verdict_{vintage}.csv")
+# the run's provenance record: the solver's name and version, shared with notebook 12's record when both ran here
+import importlib, platform, cvxpy
+solver_module = importlib.import_module(C.OPT_SOLVER.lower())
+record_path = f"{C.OUTPUT_DIR}/provenance_solver.json"
+record = json.load(open(record_path)) if os.path.exists(record_path) else {}
+written_by = sorted(set(str(record.get("written_by", "")).replace("notebook ", "").split(", ")) - {""} | {"16"}, key=int)
+record.update({"solver": C.OPT_SOLVER, "solver_version": getattr(solver_module, "__version__", "unknown"), "cvxpy": cvxpy.__version__, "numpy": np.__version__, "pandas": pd.__version__, "python": platform.python_version(), "written_by": "notebook " + ", ".join(written_by)})
+json.dump(record, open(record_path, "w"), indent=1)
+print("solver:", record)
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith(("factor_objective_attribution", "factor_objective_exposure", "factor_objective_gap", "provenance_solver"))))
+"""),
+    md("""
+## What this notebook established, and what could be wrong
+
+| Check or expectation | Result | Verdict |
+|---|---|---|
+| The rebuilt paths reproduce notebook 15 | realised tracking error within 0.1 basis point a year in 19 of 19 paths; the monthly records within 1e-8 per cell in 19 of 19 under the rule for reruns, with two BLAS threads | holds |
+| The identity | contributions plus residual equal the active return within 1.7e-18 in every month of every path | holds |
+| E4. The targeted total and the factor share | the four targeted factors' contributions sum to +5.7 to +58.9 basis points a year, positive on 15 of 15 main paths; the factor share at 100 and 150 basis points is 0.14 to 0.28, at or above 0.30 on 0 of 10 | NOT MET |
+
+The rebuilt paths are notebook 15's. Every path's realised tracking error matches the committed one to the fourth decimal of a basis point, and under the rule for reruns every record of the committed monthly table comes back within 1e-8, for all nineteen paths. One month decides whether that last statement holds exactly: in 1982-08 the RiskMetrics path at 100 basis points is at the solver's precision, and the status word it returns depends on the number of threads the linear algebra uses, which notebook 15's closing records from the confirmation run of 6 November; with two threads, as in the recorded run of notebook 15, the month comes out inaccurate and every record reproduces, and with one it comes out optimal and the path's records move by up to 4.6e-7 in 33 months, a difference that reaches no printed digit of this notebook's tables. The identity holds to 1.7e-18, which is floating-point arithmetic.
+
+E4 is met in its first clause and not met in its second, and the way the second fails is the notebook's main finding about what a factor objective buys on industries. The four targeted factors' contributions sum to a positive amount on every main path: +5.7 to +16.6 basis points a year at 75, +26.7 to +35.5 at 100, +49.9 to +58.9 at 150, each with a standard error of 8 to 21 basis points, so the sum is beyond two standard errors on 10 of the 15 paths, the five at 100 (the monthly covariance's at 2.08 standard errors) and the five at 150, and on none at 75. The sum is the factors' realised returns over these 566 months times the exposures the budget bought, which is what the targets were chosen to collect; it estimates no premium and says nothing about the next 566 months. The factor share, defined in notebook 13 as one minus the variance of the residual over the variance of the active return, lies between 0.14 and 0.28 on the ten main paths at 100 and 150 basis points, where the design expected at least 0.30, and between 0.14 and 0.21 at 75: no path reaches the level, and the range is version 1's (0.14 to 0.25 under the mandate), unchanged by exposures three to seven times the size of version 1's incidental ones (the mean factor objective at 100 and 150 basis points against the sum of the four incidental exposures' absolute values, by estimator). The arithmetic says why. The six contributions' own variance is 34% to 52% of the active return's, above the level on every path at 100 and 150; the residual's variance is 72% to 86% of it; and the two move against each other, their covariance taking 18% to 26% off the sum, so that one minus the residual's part is 14% to 28%. The industries' own returns, the part the six factors do not describe, are the larger part of a factor objective's active return on 49 industries, and they move against the factor part: when the factors pay, the industries that carry the exposures give some of it back. The level of 0.30 was written from version 1's shares and the sentence that deliberate exposures raise the share; they raised the factor part's variance and the residual's with it, because the same active weights carry both.
+
+The active return itself, the number a client is paid, is +6.0 to +15.5 basis points a year gross at 100 basis points on the five estimators, on standard errors of 17 to 22, and +20.5 to +34.0 at 150 on standard errors of 25 to 28; the largest ratio of an active return to its standard error across the nineteen paths is 1.36 (shrinkage at 150), so no path's active return is beyond two standard errors of zero. The residual is negative on every one of the nineteen paths, minus 10 to minus 47 basis points a year: the factor part earned +37 to +47 at 100 basis points and the industries' own returns took back 31 to 37 of it. Notebook 13 found the mirror image under version 1's mandate, a factor part of minus 11 to minus 17 and a residual of +7 to +14 on an active return near zero; the objective turned both parts round and left the sum inside its standard error. The two factors outside the objective are not at zero either. The active exposure to the market factor is 0.012 to 0.015 at 100 basis points on the four daily estimators and 0.003 on the monthly covariance, where version 1's mandate held it within 0.0015 of zero on the daily estimators, and it contributed +9.8 to +11.7 basis points a year on standard errors of 3.5 to 4.2 (the monthly covariance minus 0.5): beta neutrality is to the benchmark, the cap-weighted 49, and the industries the objective buys move more with French's market factor than the ones it sells. Size contributed +1.2 to +2.8 at 100. The targeted total, the quantity E4 asks about, excludes both.
+
+The exposure bought, factor by factor, is what the budget was spent on. At 100 basis points on the five estimators the total is 0.00092 to 0.00096 of beta per basis point of realised tracking error, and it splits unevenly: profitability takes 0.00038 to 0.00040 and investment 0.00030 to 0.00042, the two of them 74% to 85% of the total, value 0.00012 to 0.00018 and momentum 0.00001 to 0.00007. The four were weighted equally in the objective; the optimiser bought most of the two whose industry betas it could raise cheaply within the mandate's bounds and least of momentum, whose betas are smallest and rotate fastest, so an equal-weighted target in beta units is not an equal-weighted purchase. The monthly covariance's path buys the most investment and the least momentum (0.00001), and the two single-factor paths show the cost of a single target: value alone buys 0.00060 of value and gives up 0.00030 of investment, momentum alone buys 0.00032 of momentum and gives up value and investment, so that its total exposure to the four is 0.00002 per basis point, a twentieth of the four-factor paths'.
+
+The gap per unit of exposure bought is 0.039 to 0.044 at 100 basis points on the five estimators, 0.034 to 0.037 at 150 and 0.054 to 0.076 at 75: the betas estimated after the month take back 4% of the exposure chosen before it at the main budget, and a larger fraction at the small budget, where the exposure bought is small and the gap, which comes from the betas' movement and not from the budget, is not. Momentum alone has a smaller gap than value alone in beta units, 0.00185 against 0.00235, which is why E6's gap clause was not met in notebook 15, and a larger one per unit, 0.047 against 0.032, because it bought half the exposure; the design's sentence about momentum betas rotating faster holds per unit of what was bought and not in beta units. The largest single-month gaps fall in 1990-10 on eleven of the nineteen paths, in 2005-07 on five, and in 1981-09 and 1987-10 on the others, months in which the three-year beta windows turned over a shock.
+
+By decade, at 100 basis points, the targeted total was negative in 1979 to 1989 on four of the five estimators (minus 6 to minus 18 basis points a year) and largest in the 1990s (+70 to +93), when the residual was also at its most negative (minus 104 to minus 143): the decade in which the factors paid most is the decade in which the industries carrying the exposures gave most of it back, and the active return of the decade is between minus 17 and +14. In the 2010s the factor part lies within 7 basis points of zero on the five estimators and the residual between minus 3 and minus 17. The by-decade table is reported as a description of where the contributions came from, with no claim attached to any decade.
+
+**What this notebook does not settle.**
+
+- The factor share has more than one definition. Defined as the six contributions' own variance over the active return's, it would be 0.34 to 0.52 and above the level; defined as notebook 13 defined it, one minus the residual's part, it is 0.14 to 0.28. The definition was written first and the verdict follows it; the decomposition into the two variances and their covariance is reported so that a reader can judge either.
+- The attribution uses the betas estimated before each month, as the optimiser did, so a contribution is the exposure the manager chose times the factor's return. An attribution on the betas estimated after the month would move each contribution by the gap of that month; the gap table says by how much on average.
+- The exposure bought and the gap depend on the betas' window, three years of daily returns, fixed before the code; a longer window would change both, and by how much is not measured here.
+- Whether the targeted total's sign would hold over another sample is not a question these 566 months answer; the sum is the realised factor returns times the exposures, and the study estimates no premium.
+"""),
+]
+
 
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15), ("16_factor_objective_attribution.ipynb", NB16)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))

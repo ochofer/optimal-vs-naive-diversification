@@ -1,12 +1,12 @@
 """Builds the dashboard, dashboard/B-P_dashboard.html, and the static figures in dashboard/figures/
 from the output files the notebooks write to outputs/ and from template.html.
 
-Usage, from the repository root, after notebooks 03, 07, 08, 10, 11, 12 and 13 have run:
+Usage, from the repository root, after notebooks 03, 07, 08, 10, 11, 12, 13, 15 and 16 have run:
     python3 dashboard/build_dashboard.py
 
 The page embeds the data it draws, so it opens from a file; the charts are drawn in the browser by
 Plotly, loaded from its content delivery network, so the interactive page needs a connection once.
-The two static figures (SVG, drawn with matplotlib) are the ones the README shows and need nothing.
+The three static figures (SVG, drawn with matplotlib) are the ones the README shows and need nothing.
 Every number in the page's prose is computed here from the output files and substituted into the
 template; the build stops, naming the notebook to run, if an input file is missing, and stops again
 if an input file differs from its committed copy in results/<vintage>/, so that the page can only be
@@ -80,6 +80,18 @@ active = pd.read_csv(need(f"active_returns_{V}.csv", "12"), index_col=0)
 att = pd.read_csv(need(f"attribution_summary_{V}.csv", "13"))
 att_cost = pd.read_csv(need(f"attribution_mandate_cost_{V}.csv", "13"))
 att_dec = pd.read_csv(need(f"attribution_by_decade_{V}.csv", "13"))
+roll_desc = pd.read_csv(need(f"rolling_evaluation_descriptives_{V}.csv", "12"))
+roll_bias_dec = pd.read_csv(need(f"rolling_evaluation_bias_by_decade_{V}.csv", "12"))
+fc_te = pd.read_csv(need(f"forecast_tracking_errors_{V}.csv", "12"), index_col=0)
+roll_te = pd.read_csv(need(f"rolling_tracking_error_{V}.csv", "12"), index_col=0)
+roll_w = pd.read_csv(need(f"rolling_weights_*_{V}.csv", "12"), index_col=0)
+fo_eval = pd.read_csv(need(f"factor_objective_evaluation_{V}.csv", "15"), index_col=0)
+fo_verd = pd.read_csv(need(f"factor_objective_verdicts_{V}.csv", "15"))
+fo_bm = pd.read_csv(need(f"factor_objective_budget_months_{V}.csv", "15"))
+fo_att = pd.read_csv(need(f"factor_objective_attribution_{V}.csv", "16"), index_col=0)
+fo_verd16 = pd.read_csv(need(f"factor_objective_attribution_verdict_{V}.csv", "16"))
+fo_bought = pd.read_csv(need(f"factor_objective_exposure_bought_{V}.csv", "16"), index_col=0)
+fo_gap = pd.read_csv(need(f"factor_objective_gap_{V}.csv", "16"), index_col=0)
 committed(V)
 direct = json.load(open(os.path.join(REPO, "checks", "results_crsp_direct_test.json")))   # committed with notebook 08; aggregates only
 
@@ -222,6 +234,83 @@ assert list(opt_fixes.columns)[3:5] == ["tilt only (bp)", "mandate C3 (bp)"]
 D["speed"] = {"rebalance": [int(x) for x in opt_speed["rebalance"]], "distance": [r(x * 100, 4) for x in opt_speed["one-way distance to the benchmark"]],
               "te": [r(x, 3) for x in opt_speed["forecast tracking error (bp a year)"]]}
 
+# 11. the bias statistic by decade in both states (as forecast, calibrated), and the block-bootstrap band on the whole-period statistic
+BSETS = ["C3", "C3 tilt only"]
+bd = roll_bias_dec.set_index(["set", "variant"])
+BIAS_DECADES = [c.replace("bias, 21 rule, ", "") for c in roll_bias_dec.columns if c.startswith("bias, 21 rule, ")]
+assert [c.replace("bias, calibrated, ", "") for c in roll_bias_dec.columns if c.startswith("bias, calibrated, ")] == BIAS_DECADES == DECADES
+D["bias_dec"] = {s: {"raw": {v: [r(bd.loc[(s, v), "bias, 21 rule"], 5)] + [r(bd.loc[(s, v), f"bias, 21 rule, {d}"], 5) for d in DECADES] for v in VARIANTS},
+                     "cal": {v: [r(bd.loc[(s, v), "bias, calibrated"], 5)] + [r(bd.loc[(s, v), f"bias, calibrated, {d}"], 5) for d in DECADES] for v in VARIANTS}} for s in BSETS}
+ds = roll_desc.set_index(["set", "variant"])
+D["bias_band"] = {s: {"raw": {v: [r(ds.loc[(s, v), "bias"], 5), r(ds.loc[(s, v), "bias band low"], 5), r(ds.loc[(s, v), "bias band high"], 5)] for v in VARIANTS},
+                      "cal": {v: [r(ds.loc[(s, v), "bias, calibrated"], 5), r(ds.loc[(s, v), "calibrated band low"], 5), r(ds.loc[(s, v), "calibrated band high"], 5)] for v in VARIANTS}} for s in BSETS}
+for s in BSETS:
+    for v in VARIANTS:
+        assert abs(D["bias_band"][s]["raw"][v][0] - D["bias_dec"][s]["raw"][v][0]) < 1e-4 and abs(D["bias_band"][s]["cal"][v][0] - D["bias_dec"][s]["cal"][v][0]) < 1e-4
+# the two descriptive figures of the active return, reported in no claim
+D["desc"] = {s: {v: {"fall": r(ds.loc[(s, v), "worst cumulative fall"] * 1e4, 2), "peak": str(ds.loc[(s, v), "fall peak"]), "trough": str(ds.loc[(s, v), "fall trough"]),
+                     "months": int(ds.loc[(s, v), "fall months"]), "positive": r(ds.loc[(s, v), "share of positive months"], 5)} for v in VARIANTS} for s in BSETS}
+
+# 12. the realised tracking error over the 36 months ending in each month, beside the mean forecast over the same months
+WINDOW = len(active) - len(roll_te) + 1
+assert WINDOW == 36 and list(roll_te.index) == list(active.index[WINDOW - 1:]) and list(fc_te.index) == list(active.index)
+fc_roll = fc_te.rolling(WINDOW).mean().iloc[WINDOW - 1:]
+D["rolling"] = {"window": WINDOW, "month": list(roll_te.index), "median": {s: [r(x * 1e4, 2) for x in roll_te[f"median of seven | {s}"]] for s in BSETS}}
+for s in BSETS:
+    D["rolling"][s] = {v: {"realised": [r(x * 1e4, 2) for x in roll_te[f"{v} | {s}"]], "forecast": [r(x * 1e4, 2) for x in fc_roll[f"{v} | {s}"]]} for v in VARIANTS}
+
+# 13. the weights of the last month, every path under the mandate and under the tilt alone, against the benchmark's
+INDUSTRIES = list(roll_w.columns)
+assert len(INDUSTRIES) == 49 and "benchmark" in roll_w.index
+D["weights"] = {"industries": INDUSTRIES, "benchmark": [r(x * 100, 4) for x in roll_w.loc["benchmark"]], "excluded": ["Smoke", "Guns"]}
+for s in BSETS:
+    D["weights"][s] = {v: [r(x * 100, 4) for x in roll_w.loc[f"{v} | {s}"]] for v in VARIANTS}
+
+# 14. version 2, module A: the nineteen paths of the factor objective (notebooks 15 and 16)
+FO_PATHS = list(fo_eval.index)
+assert FO_PATHS == list(fo_att.index) == list(fo_bought.index) == list(fo_gap.index) and len(FO_PATHS) == 19
+BUDGETS = sorted(set(int(b) for b in fo_eval["budget (bp)"]))
+assert BUDGETS == [75, 100, 150]
+TARGETED = ["HML", "RMW", "CMA", "Mom"]
+FO_VLABEL = dict(VLABEL)
+FO_VLABEL.update({"sample, daily 3y, value alone": "Sample, 3y daily, value alone", "sample, daily 3y, momentum alone": "Sample, 3y daily, momentum alone"})
+FO_VSHORT = dict(VSHORT)
+FO_VSHORT.update({"sample, daily 3y, value alone": "Value alone", "sample, daily 3y, momentum alone": "Momentum alone"})
+D["fo"] = {"budgets": BUDGETS, "targeted": TARGETED, "vlabel": FO_VLABEL, "vshort": FO_VSHORT, "paths": []}
+for p in FO_PATHS:
+    e, a, b, g = fo_eval.loc[p], fo_att.loc[p], fo_bought.loc[p], fo_gap.loc[p]
+    v = p.split(" | ")[0]   # the estimator, with "value alone" or "momentum alone" appended on the two single-factor paths
+    assert v in FO_VLABEL and v.startswith(e["variant"]) and a["variant"] == e["variant"] and int(a["budget (bp)"]) == int(e["budget (bp)"])
+    D["fo"]["paths"].append({
+        "path": p, "variant": v, "budget": int(e["budget (bp)"]), "main": v in VARIANTS[:5], "target": e["target"],
+        "realised": r(e["realised TE"] * 1e4, 4), "forecast": r(e["forecast TE (mean)"] * 1e4, 4), "bias": r(e["bias"], 5), "ratio": r(e["realised over budget"], 5),
+        "gross": r(e["active return (gross)"] * 1e4, 4), "se": r(e["standard error of the gross active return"] * 1e4, 4),
+        "cost50": r(e["cost at 50 bp"] * 1e4, 4), "net50": r(e["net active return at 50 bp"] * 1e4, 4), "turnover": r(e["turnover (one-way)"] * 100, 5),
+        "cap_binds": int(e["cap binds months"]), "budget_binds": int(e["budget binds months"]), "not_met": int(e["budget not met months"]),
+        "objective": r(e["mean objective"], 6), "exposure": {f: r(e[f"mean exposure {f}"], 6) for f in TARGETED}, "four": r(sum(e[f"mean exposure {f}"] for f in TARGETED), 6), "per_bp": r(e["exposure per bp of realised TE"], 7),
+        "contribution": {f: r(a[f"contribution {f} (per year)"] * 1e4, 4) for f in FACTORS}, "residual": r(a["residual (per year)"] * 1e4, 4),
+        "active": r(a["active return (per year)"] * 1e4, 4), "active_se": r(a["active return (standard error)"] * 1e4, 4),
+        "targeted_total": r(a["targeted total (per year)"] * 1e4, 4), "targeted_se": r(a["targeted total (standard error)"] * 1e4, 4), "share": r(a["factor share"], 5),
+        "var_factor": r(a["factor total variance share"], 5), "var_residual": r(a["residual variance share"], 5), "var_cov": r(a["covariance share"], 5),
+        "bought": {f: r(b[FLABEL[f]], 7) for f in TARGETED}, "bought_total": r(b["total"], 7), "gap": r(g["mean absolute gap"], 6), "gap_per_unit": r(g["gap per unit"], 5)})
+    assert abs(sum(D["fo"]["paths"][-1]["bought"].values()) - D["fo"]["paths"][-1]["bought_total"]) < 2e-6
+verd = fo_verd.set_index("expectation")
+verd16 = fo_verd16.set_index("expectation")
+assert verd.loc["E4", "verdict"] == "notebook 16" and set(verd16.index) == {"E4"}
+def detail_words(text):
+    """A path's code label inside a verdict's text becomes its name, with the measure the clause is about."""
+    for p in FO_PATHS:
+        if p in text:
+            v = p.split(" | ")[0]
+            name = FO_VLABEL[v][0].lower() + FO_VLABEL[v][1:]
+            name = name.replace("sample, ", "sample covariance, ", 1)
+            text = text.replace("worst calibrated " + p, f"worst calibrated: the {name} ({fo_eval.loc[p, 'bias']:.2f})").replace(p, name)
+    return text
+D["fo"]["verdicts"] = [{"expectation": x, "verdict": str((verd16 if x == "E4" else verd).loc[x, "verdict"]), "detail": detail_words(str((verd16 if x == "E4" else verd).loc[x, "detail"]))} for x in ["E1", "E2", "E3", "E4", "E5", "E6", "E7"]]
+FO = {q["path"]: q for q in D["fo"]["paths"]}
+FO_MAIN = [p for p in FO_PATHS if FO[p]["main"]]
+assert len(FO_MAIN) == 15
+
 # --- the prose numbers ---
 MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 
@@ -349,6 +438,154 @@ tilted_in_top = [{"Util": "Utilities"}.get(i, i) for i in top_ind if i in D["til
 P["tilted_in_top"] = (", ".join(tilted_in_top[:-1]) + " and " + tilted_in_top[-1] if len(tilted_in_top) > 1 else tilted_in_top[0]) + " are " + \
                      {1: "one", 2: "two", 3: "three"}[len(tilted_in_top)] + " of the three industries" if tilted_in_top else "none of the three industries"
 
+# the prose numbers of the additions of 18 October and 6 and 8 November 2026 (version 1), and of version 2, module A
+WORDS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+def word(n, of=None):
+    """A count under ten as a word; a count equal to its total as 'all <total>'."""
+    n = int(n)
+    if of is not None and n == of:
+        return "all " + WORDS[of]
+    return WORDS[n] if n < 10 else str(n)
+
+
+def lohi(xs, d, sign=False):
+    f = (lambda x: signed(x, d)) if sign else (lambda x: f"{x:.{d}f}")
+    return f(min(xs)), f(max(xs))
+
+
+falls = [D["desc"]["C3"][v]["fall"] for v in VARIANTS]
+P["fall_lo"], P["fall_hi"] = lohi(falls, 0)
+fall_months = [D["desc"]["C3"][v]["months"] for v in VARIANTS]
+def span(m):
+    return f"{m} months" if m < 24 else f"{m / 12:.0f} years"
+P["fall_span_lo"], P["fall_span_hi"] = span(min(fall_months)), span(max(fall_months))
+P["positive_lo"], P["positive_hi"] = lohi([D["desc"]["C3"][v]["positive"] for v in VARIANTS], 2)
+troughs = [D["desc"]["C3"][v]["trough"] for v in VARIANTS]
+P["trough_common"] = words(max(set(troughs), key=troughs.count))
+P["trough_count_w"] = word(troughs.count(max(set(troughs), key=troughs.count)))
+P["bands_without_one_w"] = word(sum(1 for v in VARIANTS if D["bias_band"]["C3"]["raw"][v][1] > 1))
+P["bands_cal_with_one_w"] = word(sum(1 for v in VARIANTS if D["bias_band"]["C3"]["cal"][v][1] <= 1 <= D["bias_band"]["C3"]["cal"][v][2]), of=len(VARIANTS))
+P["bias_decade_first_lo"], P["bias_decade_first_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][1] for v in VARIANTS[:4]], 2)
+P["bias_decade_cal_first_lo"], P["bias_decade_cal_first_hi"] = lohi([D["bias_dec"]["C3"]["cal"][v][1] for v in VARIANTS[:4]], 2)
+P["bias_first_decade"] = DECADES[0].replace(" to ", " to ")
+robust_band = D["bias_band"]["C3"]["raw"]["robust, all five"]
+P["robust_band_lo"], P["robust_band_hi"] = f"{robust_band[1]:.2f}", f"{robust_band[2]:.2f}"
+sample_band = D["bias_band"]["C3"]["raw"]["sample, daily 3y"]
+P["sample_band_lo"], P["sample_band_hi"] = f"{sample_band[1]:.2f}", f"{sample_band[2]:.2f}"
+P["window"] = str(WINDOW)
+med = roll_te["median of seven | C3"] * 1e4
+P["roll_max"], P["roll_max_w"], P["roll_last"] = f"{med.max():.0f}", words(med.idxmax()), f"{med.iloc[-1]:.0f}"
+P["roll_min"], P["roll_min_w"] = f"{med.min():.0f}", words(med.idxmin())
+med_t = roll_te["median of seven | C3 tilt only"] * 1e4
+P["roll_tilt_max"], P["roll_tilt_last"] = f"{med_t.max():.0f}", f"{med_t.iloc[-1]:.0f}"
+below = [(roll_te[f"{v} | C3"] > fc_roll[f"{v} | C3"]).mean() * 100 for v in VARIANTS]
+P["roll_below_lo"], P["roll_below_hi"] = f"{min(below):.0f}", f"{max(below):.0f}"
+P["roll_first"], P["roll_first_w"] = roll_te.index[0], words(roll_te.index[0])
+sw = roll_w.loc["sample, daily 3y | C3"] - roll_w.loc["benchmark"]
+P["w_sample_bound"] = str(int((sw.abs() >= 0.0199).sum()))
+P["w_sample_over"] = sw.idxmax()
+P["w_sample_over_pp"] = f"{sw.max() * 100:.1f}"
+P["w_sample_held"] = str(int((roll_w.loc["sample, daily 3y | C3"] > 1e-6).sum()))
+P["w_oil_bench"] = f"{roll_w.loc['benchmark', 'Oil'] * 100:.1f}"
+P["w_oil_sample"] = f"{roll_w.loc['sample, daily 3y | C3', 'Oil'] * 100:.1f}"
+P["w_util_bench"] = f"{roll_w.loc['benchmark', 'Util'] * 100:.1f}"
+P["w_util_sample"] = f"{roll_w.loc['sample, daily 3y | C3', 'Util'] * 100:.1f}"
+
+# version 2, module A
+main100 = [p for p in FO_MAIN if FO[p]["budget"] == 100]
+main150 = [p for p in FO_MAIN if FO[p]["budget"] == 150]
+main75 = [p for p in FO_MAIN if FO[p]["budget"] == 75]
+daily100 = [p for p in main100 if FO[p]["variant"] in VARIANTS[:4]]
+monthly = {b: f"sample, monthly 120 | {b}" for b in BUDGETS}
+P["fo_paths"] = str(len(FO_PATHS))
+P["fo_budgets"] = ", ".join(str(b) for b in BUDGETS[:-1]) + " or " + str(BUDGETS[-1])
+P["fo_te_lo"], P["fo_te_hi"] = lohi([FO[p]["realised"] for p in daily100], 1)
+P["fo_te_monthly"] = f"{FO[monthly[100]]['realised']:.1f}"
+P["fo_spread"] = f"{max(FO[p]['realised'] for p in daily100) - min(FO[p]['realised'] for p in daily100):.1f}"
+P["fo_ratio_lo"], P["fo_ratio_hi"] = lohi([FO[p]["ratio"] for p in daily100], 2)
+P["fo_ratio_monthly"] = f"{FO[monthly[100]]['ratio']:.2f}"
+daily_all = [p for p in FO_MAIN if FO[p]["variant"] in VARIANTS[:4]]
+P["fo_ratio_daily_lo"], P["fo_ratio_daily_hi"] = lohi([FO[p]["ratio"] for p in daily_all], 2)
+P["fo_ratio_inside"] = str(sum(1 for p in daily_all if 1.2 <= FO[p]["ratio"] <= 1.6))
+P["fo_ratio_cells"] = str(len(daily_all))
+P["fo_ratio_monthly_lo"], P["fo_ratio_monthly_hi"] = lohi([FO[monthly[b]]["ratio"] for b in BUDGETS], 2)
+P["fo_robust_te"] = f"{FO['robust, all five | 100']['realised']:.1f}"
+P["fo_robust_bias"] = f"{FO['robust, all five | 100']['bias']:.2f}"
+P["fo_monthly_bias"] = f"{FO[monthly[100]]['bias']:.2f}"
+P["fo_monthly_bias150"] = f"{FO[monthly[150]]['bias']:.2f}"
+P["fo_factor_bias150"] = f"{FO['factor, daily 3y | 150']['bias']:.2f}"
+P["fo_bias_daily_lo"], P["fo_bias_daily_hi"] = lohi([FO[p]["bias"] for p in daily100], 2)
+assert FO[monthly[75]]["bias"] > max(FO[f"{v} | 75"]["bias"] for v in VARIANTS[:4]) and FO[monthly[100]]["bias"] > max(FO[p]["bias"] for p in daily100) and FO[monthly[150]]["bias"] < FO["factor, daily 3y | 150"]["bias"]
+P["fo_obj_lo"], P["fo_obj_hi"] = lohi([FO[p]["objective"] for p in main100], 3)
+P["fo_obj150_lo"], P["fo_obj150_hi"] = lohi([FO[p]["objective"] for p in main150], 3)
+P["fo_obj75_lo"], P["fo_obj75_hi"] = lohi([FO[p]["objective"] for p in main75], 3)
+for f, wd in [("HML", "value"), ("RMW", "prof"), ("CMA", "inv"), ("Mom", "mom")]:
+    P[f"fo_{wd}_lo"], P[f"fo_{wd}_hi"] = lohi([FO[p]["exposure"][f] for p in main100], 3, sign=True)
+    P[f"fo_bought_{wd}_lo"], P[f"fo_bought_{wd}_hi"] = lohi([FO[p]["bought"][f] for p in main100], 5)
+P["fo_sample_avg"] = f"{FO['sample, daily 3y | 100']['objective'] / 4:.4f}"
+P["fo_perbp_lo"], P["fo_perbp_hi"] = lohi([FO[p]["per_bp"] for p in main100], 5)
+perbp4 = [FO[p]["per_bp"] for p in daily100]
+P["fo_perbp_pct"] = f"{(max(perbp4) - min(perbp4)) / np.mean(perbp4) * 100:.1f}"
+P["fo_value_alone_value"] = f"{FO['sample, daily 3y, value alone | 100']['bought']['HML']:.5f}"
+P["fo_value_alone_inv"] = f"{FO['sample, daily 3y, value alone | 100']['bought']['CMA']:.5f}"
+P["fo_mom_alone_mom"] = f"{FO['sample, daily 3y, momentum alone | 100']['bought']['Mom']:.5f}"
+P["fo_mom_alone_total"] = f"{FO['sample, daily 3y, momentum alone | 100']['bought_total']:.5f}"
+P["fo_gross_lo"], P["fo_gross_hi"] = lohi([FO[p]["gross"] for p in main100], 1, sign=True)
+P["fo_se_lo"], P["fo_se_hi"] = lohi([FO[p]["se"] for p in main100], 0)
+P["fo_gross150_lo"], P["fo_gross150_hi"] = lohi([FO[p]["gross"] for p in main150], 1, sign=True)
+P["fo_se150_lo"], P["fo_se150_hi"] = lohi([FO[p]["se"] for p in main150], 0)
+P["fo_gross75_lo"], P["fo_gross75_hi"] = lohi([FO[p]["gross"] for p in main75], 1, sign=True)
+P["fo_se75_lo"], P["fo_se75_hi"] = lohi([FO[p]["se"] for p in main75], 0)
+P["fo_cost_lo"], P["fo_cost_hi"] = lohi([FO[p]["cost50"] for p in main100], 1)
+P["fo_net_lo"], P["fo_net_hi"] = lohi([FO[p]["net50"] for p in main100], 1, sign=True)
+P["fo_turn_lo"], P["fo_turn_hi"] = lohi([FO[p]["turnover"] for p in main100], 2)
+P["fo_cap_lo"], P["fo_cap_hi"] = str(min(FO[p]["cap_binds"] for p in main100)), str(max(FO[p]["cap_binds"] for p in main100))
+P["fo_positive"] = str(sum(1 for p in main100 if FO[p]["gross"] > 0))
+ratios = {p: abs(FO[p]["active"]) / FO[p]["active_se"] for p in FO_PATHS}
+P["fo_largest_ratio"] = f"{max(ratios.values()):.2f}"
+P["fo_largest_ratio_path"] = FO_VLABEL[FO[max(ratios, key=ratios.get)]["variant"]] + f" at {FO[max(ratios, key=ratios.get)]['budget']}"
+P["fo_beyond_two"] = str(sum(1 for x in ratios.values() if x > 2))
+P["fo_tt_lo"], P["fo_tt_hi"] = lohi([FO[p]["targeted_total"] for p in main100], 1, sign=True)
+P["fo_tt150_lo"], P["fo_tt150_hi"] = lohi([FO[p]["targeted_total"] for p in main150], 1, sign=True)
+P["fo_tt75_lo"], P["fo_tt75_hi"] = lohi([FO[p]["targeted_total"] for p in main75], 1, sign=True)
+P["fo_tt_se_lo"], P["fo_tt_se_hi"] = lohi([FO[p]["targeted_se"] for p in main100 + main150], 0)
+P["fo_tt_se100_lo"], P["fo_tt_se100_hi"] = lohi([FO[p]["targeted_se"] for p in main100], 0)
+P["fo_tt_beyond"] = str(sum(1 for p in FO_MAIN if FO[p]["targeted_total"] / FO[p]["targeted_se"] > 2))
+P["fo_tt_positive"] = str(sum(1 for p in FO_MAIN if FO[p]["targeted_total"] > 0))
+P["fo_main"] = str(len(FO_MAIN))
+P["fo_tt_all_lo"], P["fo_tt_all_hi"] = lohi([FO[p]["targeted_total"] for p in FO_MAIN], 1, sign=True)
+share10 = [FO[p]["share"] for p in main100 + main150]
+P["fo_share_lo"], P["fo_share_hi"] = lohi(share10, 2)
+P["fo_share_above"] = str(sum(1 for x in share10 if x >= 0.30))
+P["fo_varf_lo"], P["fo_varf_hi"] = lohi([FO[p]["var_factor"] * 100 for p in main100 + main150], 0)
+P["fo_varr_lo"], P["fo_varr_hi"] = lohi([FO[p]["var_residual"] * 100 for p in main100 + main150], 0)
+P["fo_varc_lo"], P["fo_varc_hi"] = lohi([-FO[p]["var_cov"] * 100 for p in main100 + main150], 0)
+ftot100 = [sum(FO[p]["contribution"].values()) for p in main100]
+P["fo_factor_lo"], P["fo_factor_hi"] = lohi(ftot100, 0, sign=True)
+P["fo_resid_back_lo"], P["fo_resid_back_hi"] = lohi([-FO[p]["residual"] for p in main100], 0)
+P["fo_resid_lo"], P["fo_resid_hi"] = lohi([FO[p]["residual"] for p in FO_PATHS], 0, sign=True)
+assert max(FO[p]["residual"] for p in FO_PATHS) < 0
+P["fo_mkt_lo"], P["fo_mkt_hi"] = lohi([fo_att.loc[p, "exposure Mkt-RF"] for p in daily100], 3)
+P["fo_mkt_monthly"] = f"{fo_att.loc[monthly[100], 'exposure Mkt-RF']:.3f}"
+P["fo_mkt_c_lo"], P["fo_mkt_c_hi"] = lohi([FO[p]["contribution"]["Mkt-RF"] for p in daily100], 1, sign=True)
+P["fo_mkt_se_lo"], P["fo_mkt_se_hi"] = lohi([fo_att.loc[p, "contribution Mkt-RF (standard error)"] * 1e4 for p in daily100], 1)
+P["fo_smb_c_lo"], P["fo_smb_c_hi"] = lohi([FO[p]["contribution"]["SMB"] for p in main100], 1, sign=True)
+P["v1_mkt_abs_max"] = f"{max(abs(att_c3.loc[v, 'exposure Mkt-RF']) for v in VARIANTS[:4]):.4f}"
+P["fo_gap_lo"], P["fo_gap_hi"] = lohi([FO[p]["gap_per_unit"] for p in main100], 3)
+P["fo_gap150_lo"], P["fo_gap150_hi"] = lohi([FO[p]["gap_per_unit"] for p in main150], 3)
+P["fo_gap75_lo"], P["fo_gap75_hi"] = lohi([FO[p]["gap_per_unit"] for p in main75], 3)
+P["fo_gap_val"] = f"{FO['sample, daily 3y, value alone | 100']['gap']:.5f}"
+P["fo_gap_mom"] = f"{FO['sample, daily 3y, momentum alone | 100']['gap']:.5f}"
+P["fo_gpu_val"] = f"{FO['sample, daily 3y, value alone | 100']['gap_per_unit']:.3f}"
+P["fo_gpu_mom"] = f"{FO['sample, daily 3y, momentum alone | 100']['gap_per_unit']:.3f}"
+fo_met = sum(1 for q in D["fo"]["verdicts"] if q["verdict"] == "MET")
+fo_not_met = sum(1 for q in D["fo"]["verdicts"] if q["verdict"] == "NOT MET")
+assert fo_met + fo_not_met == 7
+P["fo_met_w"], P["fo_not_met_w"] = word(fo_met), word(fo_not_met)
+bm = fo_bm.set_index("path")
+P["fo_e1_lo"], P["fo_e1_hi"] = lohi([bm.loc[p, "E1 share"] * 100 for p in daily100], 1)
+P["fo_e1_cannot_lo"], P["fo_e1_cannot_hi"] = str(int(min(bm.loc[p, "mandate alone cannot meet"] for p in daily100))), str(int(max(bm.loc[p, "mandate alone cannot meet"] for p in daily100)))
+P["fo_e1_further_lo"], P["fo_e1_further_hi"] = str(int(min(bm.loc[p, "path further misses"] for p in daily100))), str(int(max(bm.loc[p, "path further misses"] for p in daily100)))
 # --- the static figures ---
 import matplotlib  # noqa: E402
 matplotlib.use("Agg")
@@ -416,6 +653,54 @@ fig.text(0.01, 0.03, "Source: Kenneth R. French Data Library and author's calcul
 fig.text(0.01, 0.005, f"results/{V}/attribution_summary_{V}.csv (notebook 13). The mark is the active return, the sum of the bars.", fontsize=7.2, color=META)
 fig.tight_layout(rect=(0, 0.13, 1, 1))
 fig.savefig(os.path.join(FIG_DIR, "fig_attribution.svg"), metadata={"Creator": None, "Date": None})
+plt.close(fig)
+
+# Figure 3: version 2, module A. Left: the factor objective bought against the realised tracking error it cost, by estimator
+# and budget. Right: the attribution of the nineteen paths' active return, contributions and residual.
+fig, (axl, axr) = plt.subplots(1, 2, figsize=(8.2, 5.2), gridspec_kw={"width_ratios": [1, 1.25]})
+for v in VARIANTS[:5]:
+    ps = [p for p in FO_MAIN if FO[p]["variant"] == v]
+    xs = [FO[p]["realised"] for p in ps]
+    ys = [FO[p]["objective"] for p in ps]
+    axl.plot(xs, ys, "-o", color=VCOLOUR[v], label=VLABEL[v], lw=1.4, ms=4.5)
+for b in BUDGETS:
+    pb = [p for p in FO_MAIN if FO[p]["budget"] == b]
+    left = min(pb, key=lambda p: FO[p]["realised"])   # the leftmost marker at this budget; the label sits to its left
+    axl.annotate(f"{b} bp", (FO[left]["realised"], FO[left]["objective"]), xytext=(-3, 5), textcoords="offset points", fontsize=7.2, color=INK2, ha="right")
+axl.set_xlim(left=min(FO[p]["realised"] for p in FO_MAIN) - 10)   # room for the budget labels left of the leftmost markers
+axl.set_xlabel("realised tracking error, basis points a year")
+axl.set_ylabel("mean factor objective, beta units")
+axl.set_title("The exposure bought, against what it cost", loc="left", fontsize=9.5, color=INK)
+axl.legend(frameon=False, fontsize=7.5, loc="lower right")
+axl.grid(axis="both", lw=0.6, color=GRID)
+y = np.arange(len(FO_PATHS))
+left_pos = np.zeros(len(FO_PATHS))
+left_neg = np.zeros(len(FO_PATHS))
+for f in FACTORS:
+    vals = np.array([FO[p]["contribution"][f] for p in FO_PATHS])
+    pos = np.where(vals > 0, vals, 0)
+    neg = np.where(vals < 0, vals, 0)
+    axr.barh(y, pos, left=left_pos, color=FCOLOUR[f], height=0.66, edgecolor="white", linewidth=0.5, label=FLABEL[f])
+    axr.barh(y, neg, left=left_neg, color=FCOLOUR[f], height=0.66, edgecolor="white", linewidth=0.5)
+    left_pos += pos
+    left_neg += neg
+resid = np.array([FO[p]["residual"] for p in FO_PATHS])
+axr.barh(y, np.where(resid > 0, resid, 0), left=left_pos, color=RESID_COLOUR, height=0.66, edgecolor="white", linewidth=0.5, label="residual (the industries' own returns)")
+axr.barh(y, np.where(resid < 0, resid, 0), left=left_neg, color=RESID_COLOUR, height=0.66, edgecolor="white", linewidth=0.5)
+axr.plot([FO[p]["active"] for p in FO_PATHS], y, "|", color=INK, ms=9, mew=1.5, label="active return")
+axr.axvline(0, color=FRAME, lw=0.8)
+axr.set_yticks(y)
+axr.set_yticklabels([f"{FO_VSHORT[FO[p]['variant']]} | {FO[p]['budget']}" for p in FO_PATHS], fontsize=7.2)
+axr.invert_yaxis()
+axr.set_title("Where the active return came from, by path", loc="left", fontsize=9.5, color=INK)
+axr.set_xlabel("basis points a year")
+axr.grid(axis="x", lw=0.6, color=GRID)
+handles, labels = axr.get_legend_handles_labels()
+fig.legend(handles, labels, frameon=False, fontsize=7.2, loc="lower center", ncol=4, bbox_to_anchor=(0.5, 0.045))
+fig.text(0.01, 0.03, "Source: Kenneth R. French Data Library and author's calculations. The mark is the active return, the sum of the bars.", fontsize=7.2, color=META)
+fig.text(0.01, 0.005, f"results/{V}/factor_objective_evaluation_{V}.csv (notebook 15) and factor_objective_attribution_{V}.csv (notebook 16), {MONTHS} months.", fontsize=7.2, color=META)
+fig.tight_layout(rect=(0, 0.13, 1, 1))
+fig.savefig(os.path.join(FIG_DIR, "fig_factor_objective.svg"), metadata={"Creator": None, "Date": None})
 plt.close(fig)
 
 # --- the page ---

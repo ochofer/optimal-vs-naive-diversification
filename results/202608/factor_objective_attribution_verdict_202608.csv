@@ -1,0 +1,2 @@
+expectation,verdict,detail
+E4,NOT MET,targeted total positive on 15 of 15 main paths; factor share at least 0.30 on 0 of 10 main paths at 100 and 150 bp (0.1439 to 0.2751)

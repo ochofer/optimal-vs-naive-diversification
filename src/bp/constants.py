@@ -230,6 +230,16 @@ EXT_SAMPLE_START = "1969-07"
 # French revises history. A run on the cached 202608 files is unchanged by the
 # cut. Not an expectation: a data rule, disclosed here and in the README.
 EXT_SAMPLE_END = "2026-08"
+# The rule in the design's words, written here on 8 November 2026 with the
+# design's approval of 6 November, and carried in the README's run section in
+# the same words: the sample is July 1979 to August 2026, fixed in the code.
+# The recorded tables are those of the 202608 vintage as cached. A run on a
+# later vintage, cut at August 2026, is a confirmation run: it is labelled by
+# its vintage in the provenance record, it is expected to reproduce every
+# verdict line and every printed decimal and not every digit, because French
+# revises history, and it replaces no committed table without a dated decision.
+EXT_SAMPLE_END_RULE_DATE = "2026-11-08"
+EXT_CONFIRMATION_RUN = "a run on a later vintage, cut at August 2026, labelled by its vintage in the provenance record"
 
 # The benchmark (the index the portfolio tracks): the cap-weighted combination
 # of the 49 industries, weights from firm count times average firm size, must
@@ -488,7 +498,7 @@ EVAL_RERUN_CONE_MAX_DIFFERENCE = 1e-8        # the monthly records of the cone p
 # records' number above stays as written; the verdict of expectation 10 is
 # unchanged.
 EVAL_RERUN_CONE_MEASURES_MAX_DIFFERENCE = 1e-7
-EVAL_RERUN_MEASURE_TABLES = ("rolling_evaluation", "rolling_evaluation_by_decade", "rolling_evaluation_calibration", "rolling_tracking_error")
+EVAL_RERUN_MEASURE_TABLES = ("rolling_evaluation", "rolling_evaluation_by_decade", "rolling_evaluation_calibration", "rolling_tracking_error", "rolling_evaluation_bias_by_decade")   # the last added 8 November 2026
 
 # Notebook 13, the factor attribution, fixed 6 October 2026 before its code: each
 # path's monthly active return split into the contributions of the six factors
@@ -709,3 +719,34 @@ FO_SOLVER_OPTIONS_LOOSE = {"tol_gap_abs": 1e-7, "tol_gap_rel": 1e-7, "tol_feas":
 # below the budget.
 FO_NOTEBOOK_15_JUDGES = ("E1", "E2", "E3", "E5", "E6", "E7")
 FO_NOTEBOOK_16_JUDGES = ("E4",)
+# Notebook 16, the attribution of the nineteen paths, built 8 November 2026,
+# after the recorded run of notebook 15 and the design's reading of it on 6
+# November, before any attribution ran. It rebuilds the nineteen paths from the
+# modules, as notebook 13 rebuilds version 1's, checks each path's realised
+# tracking error against notebook 15's below within ATTRIBUTION_REPRODUCTION_TOL
+# and, where the repository is present, the records against the committed
+# monthly table under the rule for reruns; it attributes each path's active
+# return exactly as notebook 13 does and judges E4. Two measures it reports,
+# in no claim: the exposure bought per factor, the mean active exposure to
+# each targeted factor divided by the realised tracking error in basis points
+# a year, the per-factor form of notebook 15's exposure per basis point; and
+# the gap per unit of exposure bought, the path's mean absolute gap divided by
+# its mean factor objective, which the design of 6 November 2026 allows as a
+# reported measure with no expectation attached.
+FO_ATTRIBUTION_DATE = "2026-11-08"
+FO_ATTRIBUTION_REFERENCE_TE = {                  # notebook 15's realised tracking errors, per year, for the reproduction check
+    "sample, daily 3y | 75": 0.01002117, "sample, daily 3y | 100": 0.01205713, "sample, daily 3y | 150": 0.01731365,
+    "ledoit_wolf, daily 3y | 75": 0.00985564, "ledoit_wolf, daily 3y | 100": 0.01185552, "ledoit_wolf, daily 3y | 150": 0.01713197,
+    "factor, daily 3y | 75": 0.01102305, "factor, daily 3y | 100": 0.01335962, "factor, daily 3y | 150": 0.01876902,
+    "pca, daily 3y | 75": 0.01126859, "pca, daily 3y | 100": 0.01369633, "pca, daily 3y | 150": 0.01849629,
+    "sample, monthly 120 | 75": 0.01279599, "sample, monthly 120 | 100": 0.01501193, "sample, monthly 120 | 150": 0.01917291,
+    "robust, all five | 100": 0.01156417, "RiskMetrics, daily 5y | 100": 0.01186274,
+    "sample, daily 3y, value alone | 100": 0.01227800, "sample, daily 3y, momentum alone | 100": 0.01230211,
+}
+FO_EXPOSURE_BOUGHT_PER_FACTOR = "mean active exposure to the factor over the realised tracking error in basis points a year"
+FO_GAP_PER_UNIT = "mean absolute gap over the mean factor objective"
+# Notebook 12, added 8 November 2026 in no claim, for the dashboard's figure of
+# the forecasts' miss by decade in one measure for both of its states: the bias
+# statistic by decade under the 21 rule and after calibration, for every path under C3 and the tilt alone,
+# written as a table beside the calibration table, which stays as committed.
+EVAL_BIAS_BY_DECADE_DATE = "2026-11-08"
