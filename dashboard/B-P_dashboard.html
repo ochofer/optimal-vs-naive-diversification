@@ -25,26 +25,53 @@ h1, h2 { font-family: "EB Garamond", Garamond, Georgia, serif; font-weight: 500;
 h3, h4 { color: var(--navy); font-weight: 600; }
 a { color: var(--link); text-underline-offset: .18em; text-decoration-color: rgba(31,58,96,.35); }
 .ch-band { background: linear-gradient(90deg, #121a2c 0%, #172238 60%, #1a263b 100%); }
-.ch-band__in { max-width: 1180px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+.ch-band__in { max-width: 1180px; margin: 0 auto; padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
 .ch-word { font-family: "EB Garamond", Garamond, Georgia, serif; font-weight: 500; text-transform: uppercase; letter-spacing: .22em; color: #ece6d9; text-decoration: none; font-size: 17px; }
 .ch-nav a { color: rgba(236,230,217,.78); text-decoration: none; font-size: 15px; margin-left: 20px; }
 .ch-nav a:hover { color: #ece6d9; }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
-.ch-back { margin: 14px 0 0; font-size: 14px; color: var(--ink2); }
-h1 { font-size: 2.2rem; line-height: 1.15; margin: .5rem 0 .3rem; }
-.stamp { color: var(--ink2); font-size: 14px; margin: 0 0 12px; }
-.tabs { position: sticky; top: 0; background: #ffffff; border-bottom: 1px solid var(--rule); z-index: 5; }
-.tabs .wrap { display: flex; gap: 4px; overflow-x: auto; }
-.tabs button { font: inherit; font-size: 15px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 12px 12px 10px; color: var(--ink2); white-space: nowrap; min-height: 44px; cursor: pointer; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 32px; }
+.ch-hero { background: linear-gradient(90deg, #121a2c 0%, #172238 60%, #1a263b 100%); border-top: 1px solid rgba(255,255,255,.07); padding: 6px 0 34px; color: #c9ced8; }
+.ch-hero .ch-back { margin: 16px 0 0; font-size: 13px; color: #c9ced8; }
+.ch-hero .ch-back a { color: #c9ced8; text-decoration-color: rgba(201,206,216,.5); }
+.ch-over { margin: 26px 0 0; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-weight: 600; color: #aab2c0; }
+.ch-hero h1 { margin: 8px 0 0; font-size: 46px; line-height: 1.08; color: #f4f1ea; }
+.ch-lead { max-width: 720px; margin: 14px 0 0; font-size: 17px; line-height: 1.55; color: #d3d8e0; }
+.ch-meta { margin: 18px 0 0; font-size: 13.5px; color: #aab2c0; display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.ch-docs { margin: 10px 0 0; font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 6px 20px; }
+.ch-docs a { color: #f4f1ea; text-decoration-color: rgba(244,241,234,.45); }
+.tabs { position: sticky; top: 0; z-index: 5; background: #ffffff; border-bottom: 1px solid var(--frame); }
+.tabs .wrap { display: flex; gap: 40px; overflow-x: auto; }
+.tabs button { font: inherit; font-size: 16.5px; color: #3a4150; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px; padding: 22px 0 19px; white-space: nowrap; min-height: 44px; cursor: pointer; }
+.tabs button:hover { color: var(--navy); border-bottom-color: #c5ccd8; }
+.tabs button[aria-selected="true"] { color: var(--navy); font-weight: 600; border-bottom-color: var(--navy); }
 .tabs .sh { display: none; }
-@media (max-width: 560px) { .tabs .lg { display: none; } .tabs .sh { display: inline; } .tabs .wrap { gap: 0; justify-content: space-between; } .tabs button { font-size: 13px; padding: 12px 4px 10px; } }
-@media (max-width: 359px) { .tabs button { font-size: 12px; padding: 12px 2px 10px; letter-spacing: -.01em; } }
-.tabs button[aria-selected="true"] { color: var(--navy); border-bottom-color: var(--navy); font-weight: 600; }
+.tabs.more::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; }
+.ch-view-lead { margin: 26px 0 0; font-size: 15px; color: var(--ink2); }
+.ch-top { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 36px; margin: 18px 0 0; align-items: start; }
+.ch-kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--navy); border-bottom: 1px solid var(--rule); }
+.ch-kpi { padding: 16px 18px 16px 0; min-width: 0; }
+.ch-kpi + .ch-kpi { padding-left: 18px; border-left: 1px solid var(--rule); }
+.ch-kpi__label { font-size: 12.5px; color: var(--ink2); font-weight: 500; }
+.ch-kpi__value { margin: 8px 0 2px; font-size: 27px; font-weight: 500; color: var(--navy); letter-spacing: -.01em; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+.ch-kpi__ref { font-size: 12.5px; color: var(--meta); }
+.ch-facts { background: var(--tint); border-top: 2px solid var(--navy); padding: 18px 20px 8px; }
+.ch-facts h3 { margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); font-weight: 600; }
+.ch-facts dl { margin: 0; }
+.ch-fact { display: grid; grid-template-columns: 118px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--rule); font-size: 13px; line-height: 1.45; }
+.ch-fact:first-of-type { border-top: 0; }
+.ch-fact dt { color: var(--ink2); }
+.ch-fact dd { margin: 0; color: var(--ink); }
+.ch-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.pairctl { margin-top: 34px; padding-top: 14px; border-top: 1px solid var(--rule); }
+.ch-pair .fig { margin-top: 20px; border-top: 0; padding-top: 0; }
+.ch-pair .fig { min-width: 0; }
 main { padding-bottom: 8px; }
 .view { display: none; }
 .view.on { display: block; }
-.lead { max-width: 75ch; margin: 18px 0 6px; }
+.lead { max-width: 75ch; margin: 14px 0 6px; }
 .kp { margin: 22px 0 8px; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; max-width: 1000px; }
+.ch-top .kp { grid-template-columns: 1fr; margin: 22px 0 0; max-width: none; }
+.ch-top .kp li:last-child:nth-child(odd) { grid-column: auto; }
 .kp li { border-left: 3px solid var(--navy); padding: 2px 0 2px 12px; }
 .kp li:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .verdicts td:nth-child(2), .verdicts td:nth-child(3) { white-space: normal; min-width: 16em; text-align: left; }
@@ -53,9 +80,10 @@ main { padding-bottom: 8px; }
 h2 { font-size: 1.45rem; margin: 30px 0 4px; }
 h3 { font-size: 1.05rem; margin: 30px 0 4px; }
 h4 { font-size: 14px; margin: 10px 0 2px; }
-.fig { margin: 0; }
+.fig { margin: 34px 0 0; border-top: 1px solid var(--rule); padding-top: 14px; }
+.fig h2 { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14.5px; font-weight: 600; color: var(--navy); line-height: 1.4; }
 .fig p { max-width: 75ch; }
-.cap { font-size: 14px; color: var(--ink2); margin: 0 0 8px; }
+.cap { font-size: 12.5px; color: var(--meta); margin: 3px 0 10px; }
 .text { margin: 0 0 10px; }
 .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; }
 .panels.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -76,10 +104,9 @@ thead th:first-child { background: var(--tint); }
 tbody th { font-weight: 500; }
 td { text-align: right; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
-.src { font-size: 13px; color: var(--meta); margin: 8px 0 0; }
-.src code { font-size: 12px; overflow-wrap: anywhere; }
+.src { font-size: 12px; color: var(--meta); margin: 4px 0 0; overflow-wrap: anywhere; }
 code { overflow-wrap: anywhere; }
-.basis { font-size: 13px; color: var(--ink2); margin: 6px 0 0; }
+.basis { font-size: 12.5px; color: var(--ink2); margin: 6px 0 0; }
 .ctl { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 4px 0 8px; font-size: 14px; }
 .ctl .lab { color: var(--ink2); }
 .ctl button { font: inherit; font-size: 14px; padding: 8px 12px; min-height: 44px; border: 1px solid var(--rule); background: #ffffff; color: var(--ink); border-radius: 4px; cursor: pointer; }
@@ -94,21 +121,38 @@ code { overflow-wrap: anywhere; }
 dl.terms { font-size: 14px; max-width: 75ch; }
 dl.terms dt { font-weight: 600; margin-top: 8px; }
 dl.terms dd { margin: 0 0 0 1rem; }
-.ch-foot { background: var(--tint); border-top: 1px solid var(--rule); color: var(--ink2); font-size: 14px; margin-top: 40px; }
-.ch-foot > div { max-width: 1180px; margin: 0 auto; padding: 20px 16px 32px; }
+.ch-foot { background: var(--tint); border-top: 1px solid var(--rule); color: var(--ink2); font-size: 14px; margin-top: 48px; }
+.ch-foot > div { max-width: 1180px; margin: 0 auto; padding: 20px 32px 32px; }
 .ch-foot p { max-width: 90ch; margin: 0 0 8px; }
 @media (max-width: 1000px) { .panels.four { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 860px) {
+  .wrap, .ch-foot > div, .ch-band__in { padding-left: 16px; padding-right: 16px; }
+  .ch-hero h1 { font-size: 34px; }
+  .ch-lead { font-size: 16px; }
+  .tabs .wrap { gap: 15px; }
+  .tabs button { font-size: 14px; padding: 17px 0 14px; }
+  .ch-top { grid-template-columns: 1fr; gap: 24px; }
+  .ch-kpis { grid-template-columns: 1fr 1fr; }
+  .ch-kpi__value { font-size: 24px; }
+  .ch-kpi:nth-child(3) { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); }
+  .ch-kpi:nth-child(4) { border-top: 1px solid var(--rule); }
+  .ch-pair { grid-template-columns: 1fr; gap: 0; }
+  .ch-pair .fig + .fig { margin-top: 34px; border-top: 1px solid var(--rule); padding-top: 14px; }
+  .ch-fact { grid-template-columns: 104px 1fr; }
+}
 @media (max-width: 700px) {
   .panels, .panels.four { grid-template-columns: 1fr; }
   .chart, .chart.tall, .chart.short { height: 340px; }
   .chart.legendy { height: 440px; }
   .kp { grid-template-columns: 1fr; }
-  h1 { font-size: 1.8rem; }
 }
 @media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
+@media (max-width: 560px) { .tabs .lg { display: none; } .tabs .sh { display: inline; } .tabs .wrap { gap: 12px; } }
+@media (max-width: 385px) { .tabs .wrap { gap: 9px; } .tabs button { font-size: 13.5px; } }
+@media (max-width: 368px) { .tabs .wrap { gap: 8px; } .tabs button { font-size: 13px; } }
 .ch-word, .ch-nav a { white-space: nowrap; }
 @media (max-width: 359px) { .ch-word { font-size: 15px; letter-spacing: .12em; } .ch-nav a { font-size: 13px; margin-left: 12px; } }
-@media print { .tabs, .tw::after { display: none; } .view { display: block; } .fig { break-inside: avoid; } }
+@media print { .tabs, .tw::after, .tabs::after { display: none; } .view { display: block; } .fig { break-inside: avoid; } }
 </style>
 <script src="https://cdn.plot.ly/plotly-cartesian-2.35.2.min.js" charset="utf-8"></script>
 <script data-goatcounter="https://carlohofer.goatcounter.com/count" async src="https://gc.zgo.at/count.v5.js" crossorigin="anonymous" integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ"></script>
@@ -130,32 +174,61 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <body>
 <header class="ch-band"><div class="ch-band__in">
   <a class="ch-word" href="https://www.carlohofer.com/">Carlo Hofer</a>
-  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Investment research</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">Academic CV</a></nav>
+  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Investment research</a><a href="https://www.carlohofer.com/projects/rules-based-portfolio/">Portfolio</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">Academic CV</a></nav>
 </div></header>
-<div class="wrap">
-<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">Investment research</a></p>
+<section class="ch-hero"><div class="wrap">
+<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a></p>
+<p class="ch-over">Investment research</p>
 <h1>Optimal versus naive diversification: the results</h1>
-<p class="stamp">Simulated on Kenneth R. French's data, July 1979 to August 2026 (vintage 202608). Built 10 November 2026. <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a></p>
-</div>
+<p class="ch-lead">A replication of DeMiguel, Garlappi and Uppal (2009) on Kenneth R. French's data, and an extension to index tracking on his 49 industries under a mandate of the kind an enhanced index fund runs: how much tracking error four covariance estimators forecast and realised, what the tilt cost in tracking error, and, in version 2, what a budget of tracking error buys in factor exposure. Every figure is a simulation drawn from the tables committed with the code.</p>
+<div class="ch-meta"><span>Simulated on Kenneth R. French's data, vintage 202608</span><span>Built 10 November 2026</span></div>
+<div class="ch-docs"><a href="../note/B-P_note_2026-10.pdf">Note on version 1 (PDF)</a><a href="../note/B-P_note_moduleA_2026-11.pdf">Note on version 2, module A (PDF)</a><a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a></div>
+</div></section>
 <nav class="tabs" aria-label="Views"><div class="wrap">
 <button type="button" data-view="summary" aria-selected="true">Summary</button><button type="button" data-view="mandate" aria-selected="false"><span class="lg">Index-tracking mandate</span><span class="sh">Mandate</span></button><button type="button" data-view="factor" aria-selected="false"><span class="lg">Factor objective</span><span class="sh">Objective</span></button><button type="button" data-view="replication" aria-selected="false">Replication</button><button type="button" data-view="method" aria-selected="false"><span class="lg">Method and terms</span><span class="sh">Method</span></button>
 </div></nav>
 <main class="wrap">
 
 <section id="summary" class="view on">
+<p class="ch-view-lead">What was tested, the main results and where every number comes from.</p>
+<div class="ch-top">
+<div>
+<div class="ch-kpis">
+<div class="ch-kpi"><div class="ch-kpi__label">Realised tracking error</div><div class="ch-kpi__value">84.7 to 93.4</div><div class="ch-kpi__ref">bp a year, the four daily estimators under the mandate, simulated, before fees</div></div>
+<div class="ch-kpi"><div class="ch-kpi__label">Forecast bias</div><div class="ch-kpi__value">1.22 to 1.61</div><div class="ch-kpi__ref">realised over forecast on the five estimators, 1 for a calibrated forecast</div></div>
+<div class="ch-kpi"><div class="ch-kpi__label">Active return</div><div class="ch-kpi__value">−6.9 to −1.0</div><div class="ch-kpi__ref">bp a year under the mandate, before costs, within one standard error of zero on every path</div></div>
+<div class="ch-kpi"><div class="ch-kpi__label">Replication</div><div class="ch-kpi__value">29 of 30</div><div class="ch-kpi__ref">Sharpe ratios inside the band of 0.03 fixed before the code, four datasets</div></div>
+</div>
 <ul class="kp">
 <li>Under the mandate the four covariance estimators built from daily returns realise 84.7 to 93.4 basis points a year of tracking error and the monthly sample covariance 95.8, so the estimator still matters, by about a tenth.</li>
 <li>Every estimator under-forecasts its own tracking error, by 22 to 61 per cent (bias statistics 1.22 to 1.61). Calibrating each forecast on the path's own previous 60 months brings the daily estimators to 1.11 to 1.17. The finding is applied in a real-money portfolio: the <a href="https://www.carlohofer.com/rules-based-portfolio/">rules-based portfolio</a> reports the calibration of its own risk forecast by the same measure, and its <a href="https://www.carlohofer.com/rules-based-portfolio/#method-not-done">Method view</a> explains why its split is set by a risk limit and not by an optimiser.</li>
 <li>The tilt alone is associated with an active return of +2 to +7 basis points a year against a standard error of 12 to 13. Under the mandate the active return is −6.9 to −1.0 basis points a year before costs, within one standard error of zero on every path.</li>
-<li>The replication of DeMiguel, Garlappi and Uppal (2009) reproduces 29 of the 30 Sharpe ratios that carry a band of 0.03 and 30 of 30 turnover figures within 25 per cent. In the 261 months since the paper, 1 of 32 rule-dataset cells beats 1/N at the 5 per cent level.</li>
+<li>The replication of DeMiguel, Garlappi and Uppal (2009) reproduces 29 of the 30 Sharpe ratios that carry a band of 0.03 and 30 of 30 turnover figures within 25 per cent. In the 261 months since the paper, none of the seven optimising rules earns a higher Sharpe ratio than 1/N at the 5 per cent level on any of the four datasets. The one cell of the 32 that does is the value-weighted market on MKT/SMB/HML, which is not an optimising rule.</li>
 <li>Version 2, module A, spends a budget of forecast tracking error on the factor objective under the same mandate. At 100 basis points the budget buys exposures of 0.109 to 0.140 in beta units to value, profitability, investment and momentum together, at a realised tracking error of 118.6 to 137.0 basis points a year on the daily estimators. The four targeted factors contributed +26.7 to +35.5 basis points a year on standard errors of 11 to 17, the industries' own returns took back 31 to 37 of the factor part's +37 to +47, and no path's active return is beyond two standard errors of zero. Of the seven expectations written before the run, three are met and four are not, each stated with its arithmetic in the Factor objective view.</li>
 </ul>
+</div>
+<aside class="ch-facts"><h3>Key facts</h3><dl>
+<div class="ch-fact"><dt>Data</dt><dd>Kenneth R. French Data Library, vintage 202608, downloaded at run time</dd></div>
+<div class="ch-fact"><dt>Period</dt><dd>July 1979 to August 2026, 566 months</dd></div>
+<div class="ch-fact"><dt>Universe</dt><dd>French's 49 value-weighted US industry portfolios</dd></div>
+<div class="ch-fact"><dt>Benchmark</dt><dd>The cap-weighted combination of the 49</dd></div>
+<div class="ch-fact"><dt>Mandate</dt><dd>Long-only, active weights within 2 percentage points, one-way turnover at most 2 per cent a month, Coal, Oil and Utilities at no more than half their benchmark weight, tobacco and weapons excluded, a beta of one to the benchmark</dd></div>
+<div class="ch-fact"><dt>Estimators compared</dt><dd>Sample, Ledoit-Wolf, six-factor and principal-component covariances from three years of daily returns, the sample covariance from 120 monthly returns, with a robust and a RiskMetrics variant</dd></div>
+<div class="ch-fact"><dt>Rebalancing</dt><dd>Monthly, from the previous month's weights after the month's returns</dd></div>
+<div class="ch-fact"><dt>Costs</dt><dd>Gross of fees, trading cost at 50 basis points per unit of one-way turnover where stated</dd></div>
+<div class="ch-fact"><dt>Replication</dt><dd>DeMiguel, Garlappi and Uppal (2009), four datasets, July 1973 to November 2004 out of sample, run forward to August 2026</dd></div>
+<div class="ch-fact"><dt>Version 2, module A</dt><dd>The factor objective at a budget of 75, 100 or 150 bp of forecast tracking error, four targeted factors</dd></div>
+<div class="ch-fact"><dt>Specification written</dt><dd>10 September 2026 for the bands and the extension, 8 October 2026 for module A, with every later change dated in the constants</dd></div>
+</dl></aside>
+</div>
 
+<div class="fig" id="table-1-block">
 <h2 id="table-1">Table 1 | Key figures under the mandate, July 1979 to August 2026</h2>
 <p class="cap">One row per path, 566 months. Tracking error, active return, its standard error and cost in basis points a year. Turnover in per cent a month. Industries held as the average count of the 49.</p>
 <div class="tw"><div class="tscroll" id="table1"></div></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. Trading cost at 50 basis points per unit of one-way turnover, and the net active return is the gross less that cost. Bias statistic: the standard deviation of the monthly active return divided by the same month's forecast (the forecast tracking error over the square root of twelve), 1 for a calibrated forecast. The benchmark itself turns over 0.39 per cent a month, which costs an index fund 2.3 basis points a year at the same rate.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/rolling_evaluation_202608.csv</code> and <code>attribution_summary_202608.csv</code>, notebooks 12 and 13.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/rolling_evaluation_202608.csv and attribution_summary_202608.csv, notebooks 12 and 13.</p>
+</div>
 
 <figure class="fig" id="figure-1">
 <h2>Figure 1 | Forecast and realised tracking error under the mandate, July 1979 to August 2026</h2>
@@ -164,11 +237,12 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div id="f1" class="chart"></div>
 <button type="button" class="tbtn" data-table="f1" aria-pressed="false">Table</button><div class="tbl tw" id="t-f1" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/rolling_evaluation_202608.csv</code>, notebook 12.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/rolling_evaluation_202608.csv, notebook 12.</p>
 </figure>
 </section>
 
 <section id="mandate" class="view">
+<p class="ch-view-lead">How much tracking error each estimator forecast and realised under the mandate, and what the active return was.</p>
 <p class="lead">The extension: a portfolio of French's 49 industries tracks their cap-weighted combination under a mandate of the kind an enhanced index fund runs (long-only, within 2 percentage points of the index in every industry, 2 per cent one-way turnover a month, Coal, Oil and Utilities at half their index weight, tobacco and weapons excluded, a beta of one), with the forecast from one of five covariance estimators plus a robust and a RiskMetrics variant. Each month's weights are formed from data available before the month, over 566 months from July 1979 to August 2026.</p>
 
 <figure class="fig" id="figure-2">
@@ -183,7 +257,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f2" aria-pressed="false">Table</button><div class="tbl tw" id="t-f2" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. The calibration uses the previous 60 months of the same path only. The band: a circular block bootstrap in 12-month blocks, 2,000 resamples, the 2.5th and 97.5th percentiles.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/rolling_evaluation_bias_by_decade_202608.csv</code> and <code>rolling_evaluation_descriptives_202608.csv</code>, notebook 12.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/rolling_evaluation_bias_by_decade_202608.csv and rolling_evaluation_descriptives_202608.csv, notebook 12.</p>
 </figure>
 
 <figure class="fig" id="figure-3">
@@ -193,32 +267,32 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div id="f3" class="chart"></div>
 <button type="button" class="tbtn" data-table="f3" aria-pressed="false">Table</button><div class="tbl tw" id="t-f3" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/rolling_evaluation_202608.csv</code>, notebook 12.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/rolling_evaluation_202608.csv, notebook 12.</p>
 </figure>
 
+<div class="ctl pairctl" role="group" aria-label="Constraint set, figures 4 and 5"><span class="lab">Rules, figures 4 and 5:</span><button type="button" data-set="C3" aria-pressed="true">The mandate</button><button type="button" data-set="C3 tilt only" aria-pressed="false">The tilt alone</button></div>
+<div class="ctl hlbox" role="group" aria-label="Highlighted path, figures 4 and 5"><span class="lab">Highlight, figures 4 and 5:</span></div>
+<div class="ch-pair">
 <figure class="fig" id="figure-4">
 <h2>Figure 4 | Cumulative active return of one path, July 1979 to August 2026</h2>
 <p class="cap">The highlighted path's cumulative active return (portfolio minus benchmark) in percentage points, the other six in grey, under the mandate or under the tilt alone.</p>
 <p class="text">The tilt alone earned +2 to +7 basis points a year against a standard error of 12 to 13. The mandate's two additions, beta neutrality and the exclusions, cost 8 to 10 basis points a year against the tilt alone, so under the mandate the mean active return is −6.9 to −1.0 basis points a year. No path's active return is more than one standard error from zero. Two descriptive figures stand beside that sentence and enter no claim: under the mandate the worst cumulative fall of the active return was 488 to 677 basis points, the falls lasting 17 months to 29 years, six of the seven troughs in November 2008, and the share of months with a positive active return was 0.49 to 0.52.</p>
-<div class="ctl" role="group" aria-label="Constraint set"><span class="lab">Rules:</span><button type="button" data-set="C3" aria-pressed="true">The mandate</button><button type="button" data-set="C3 tilt only" aria-pressed="false">The tilt alone</button></div>
-<div class="ctl hlbox" role="group" aria-label="Highlighted path"><span class="lab">Highlight:</span></div>
 <div id="f4" class="chart"></div>
 <button type="button" class="tbtn" data-table="f4" aria-pressed="false">Table</button><div class="tbl tw" id="t-f4" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees and trading costs.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/active_returns_202608.csv</code> and <code>rolling_evaluation_descriptives_202608.csv</code>, notebook 12, and the standard errors from <code>attribution_summary_202608.csv</code>, notebook 13.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/active_returns_202608.csv and rolling_evaluation_descriptives_202608.csv, notebook 12, and the standard errors from attribution_summary_202608.csv, notebook 13.</p>
 </figure>
 
 <figure class="fig" id="figure-5">
 <h2>Figure 5 | Realised against forecast tracking error over rolling 36-month windows, June 1982 to August 2026</h2>
 <p class="cap">For the highlighted path, the tracking error realised over the 36 months ending in each month (navy) beside the mean forecast over the same months (grey), in basis points a year, under the mandate or under the tilt alone. The dotted line is the median of the seven realised values.</p>
 <p class="text">The realised value lies above the mean forecast in 50 to 99 per cent of the windows, by path, under the mandate. The median across the seven paths peaks at 240 basis points in January 1983, falls to 27 in February 2026 and ends at 34 in August 2026. Under the tilt alone it peaks at 227 and ends at 37. The whole-period figures of Table 1 average over windows this different.</p>
-<div class="ctl" role="group" aria-label="Constraint set"><span class="lab">Rules:</span><button type="button" data-set="C3" aria-pressed="true">The mandate</button><button type="button" data-set="C3 tilt only" aria-pressed="false">The tilt alone</button></div>
-<div class="ctl hlbox" role="group" aria-label="Highlighted path"><span class="lab">Highlight:</span></div>
 <div id="f-roll" class="chart legendy"></div>
 <button type="button" class="tbtn" data-table="f-roll" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-roll" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. Each window's realised tracking error is the standard deviation of its 36 monthly active returns times the square root of twelve, and its forecast the mean of the 36 monthly forecasts.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/rolling_tracking_error_202608.csv</code> and <code>forecast_tracking_errors_202608.csv</code>, notebook 12.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/rolling_tracking_error_202608.csv and forecast_tracking_errors_202608.csv, notebook 12.</p>
 </figure>
+</div>
 
 <figure class="fig" id="figure-6">
 <h2>Figure 6 | The active weights of one path in August 2026, industry by industry</h2>
@@ -229,7 +303,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div id="f-weights" class="chart legendy"></div>
 <button type="button" class="tbtn" data-table="f-weights" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-weights" hidden></div>
 <p class="basis">Simulated. The weights of the last evaluation month, after that month's rebalance.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. August 2026, US industries. <code>results/202608/rolling_weights_2026-08_202608.csv</code>, notebook 12.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. August 2026, US industries. results/202608/rolling_weights_2026-08_202608.csv, notebook 12.</p>
 </figure>
 
 <figure class="fig" id="figure-7">
@@ -242,7 +316,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f5" aria-pressed="false">Table</button><div class="tbl tw" id="t-f5" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. Trading cost at 50 basis points per unit of one-way turnover.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/rolling_evaluation_202608.csv</code>, notebook 12.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/rolling_evaluation_202608.csv, notebook 12.</p>
 </figure>
 
 <figure class="fig" id="figure-8">
@@ -256,7 +330,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f6" aria-pressed="false">Table</button><div class="tbl tw" id="t-f6" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees and trading costs.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/attribution_summary_202608.csv</code> and <code>attribution_mandate_cost_202608.csv</code>, notebook 13.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/attribution_summary_202608.csv and attribution_mandate_cost_202608.csv, notebook 13.</p>
 </figure>
 
 <figure class="fig" id="figure-9">
@@ -266,7 +340,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div id="f7" class="chart"></div>
 <button type="button" class="tbtn" data-table="f7" aria-pressed="false">Table</button><div class="tbl tw" id="t-f7" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees and trading costs.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/attribution_by_decade_202608.csv</code>, notebook 13.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/attribution_by_decade_202608.csv, notebook 13.</p>
 </figure>
 
 <figure class="fig" id="figure-10">
@@ -279,7 +353,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f8" aria-pressed="false">Table</button><div class="tbl tw" id="t-f8" hidden></div>
 <p class="basis">Simulated. Forecasts from the covariance estimate of each month.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, US industries, USD. <code>results/202608/optimiser_fixes_202608.csv</code> and <code>optimiser_speed_limit_202608.csv</code>, notebook 11.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, US industries, USD. results/202608/optimiser_fixes_202608.csv and optimiser_speed_limit_202608.csv, notebook 11.</p>
 </figure>
 
 <figure class="fig" id="figure-11">
@@ -288,7 +362,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <p class="text">The combination of the 49 industries, rebuilt from French's firm counts and average sizes, tracks French's market return within 46.7 basis points a year over 686 months. The gap comes from French's end-of-June formation (a firm listed since June is in the market and in no industry until the next July). A direct test on the CRSP monthly file accounts for 84 per cent of its variance.</p>
 <div id="f9" class="chart short"></div>
 <button type="button" class="tbtn" data-table="f9" aria-pressed="false">Table</button><div class="tbl tw" id="t-f9" hidden></div>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1969 to August 2026, US industries, USD. <code>results/202608/benchmark_returns_202608.csv</code>, notebook 08.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1969 to August 2026, US industries, USD. results/202608/benchmark_returns_202608.csv, notebook 08.</p>
 </figure>
 
 <figure class="fig" id="figure-12">
@@ -297,23 +371,28 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <p class="text">The benchmark's own composition moved: Oil and Utilities are two of the three industries the tilt holds at half their weight, and Oil's share fell from 15.1 per cent at July 1979 to 3.0 per cent at August 2026, so the tilt's size moved with it.</p>
 <div id="f10" class="chart tall"></div>
 <button type="button" class="tbtn" data-table="f10" aria-pressed="false">Table</button><div class="tbl tw" id="t-f10" hidden></div>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1969 to August 2026, US industries. <code>results/202608/benchmark_weights_202608.csv</code>, notebook 08.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1969 to August 2026, US industries. results/202608/benchmark_weights_202608.csv, notebook 08.</p>
 </figure>
 </section>
 
 <section id="factor" class="view">
+<p class="ch-view-lead">What a budget of forecast tracking error buys in exposure to four factors, and what it cost.</p>
 <p class="lead">Version 2, module A: the same mandate, with the question the other way round. Each month's portfolio spends a budget of forecast tracking error, 75, 100 or 150 basis points a year, on the factor objective, the sum of its active exposures to value, profitability, investment and momentum, the four factors with a documented premium, each counted in the direction of its premium and weighted equally in beta units, under every constraint of the mandate and its turnover cap. The 19 paths run over the 566 months from July 1979 to August 2026, each portfolio built on the data before its month: the five covariance estimators at the three budgets, the 15 main paths, and at 100 basis points the robust portfolio, RiskMetrics, and the sample covariance targeting value alone and momentum alone. Seven expectations were written before any path ran: three are met and four are not, and Table 3 states each with its arithmetic. The study estimates no premium: the targeted factors' contributions are their realised returns over these months times the exposures the budget bought.</p>
 
+<div class="fig" id="table-2-block">
 <h2 id="table-2">Table 2 | Key figures of the factor objective's paths, July 1979 to August 2026</h2>
 <p class="cap">One row per path, 566 months. Tracking error, active return, its standard error and cost in basis points a year. The factor objective in beta units and the exposure bought per basis point of realised tracking error. The attribution of each path, its factor share and its gap per unit are in the table under Figure 18.</p>
 <div class="tw"><div class="tscroll" id="table2"></div></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. Trading cost at 50 basis points per unit of one-way turnover, and the net active return is the gross less the mean cost, so it carries the gross return's standard error. The main paths are the five estimators at the three budgets, the four others sensitivities at 100 basis points.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/factor_objective_evaluation_202608.csv</code>, notebook 15, and <code>factor_objective_attribution_202608.csv</code>, notebook 16.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/factor_objective_evaluation_202608.csv, notebook 15, and factor_objective_attribution_202608.csv, notebook 16.</p>
+</div>
 
+<div class="fig" id="table-3-block">
 <h2 id="table-3">Table 3 | The seven expectations, written before the run, and what the run found</h2>
 <p class="cap">E1 to E7 as written in <code>src/bp/constants.py</code> on 8 October 2026 (E1 and E2 restated on 9 October from the arithmetic of notebook 14, before any path ran, the earlier levels kept there marked as superseded), the finding in the words of the notebook that judged it, and the verdict.</p>
 <div class="tw"><div class="tscroll" id="table3"></div></div>
-<p class="src">Source: <code>results/202608/factor_objective_verdicts_202608.csv</code>, notebook 15, and <code>factor_objective_attribution_verdict_202608.csv</code>, notebook 16.</p>
+<p class="src">Source: results/202608/factor_objective_verdicts_202608.csv, notebook 15, and factor_objective_attribution_verdict_202608.csv, notebook 16.</p>
+</div>
 
 <figure class="fig" id="figure-16">
 <h2>Figure 16 | What the budget bought: the factor objective against the budget, by estimator</h2>
@@ -326,7 +405,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f-obj" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-obj" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. The exposures are means over the 566 months, in beta units: the portfolio's beta to the factor minus the benchmark's.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/factor_objective_evaluation_202608.csv</code> and <code>factor_objective_budget_months_202608.csv</code>, notebook 15.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/factor_objective_evaluation_202608.csv and factor_objective_budget_months_202608.csv, notebook 15.</p>
 </figure>
 
 <figure class="fig" id="figure-17">
@@ -336,7 +415,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div id="f-te" class="chart legendy"></div>
 <button type="button" class="tbtn" data-table="f-te" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-te" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. A month in which the mandate's tracking-error-minimising portfolio already exceeds the budget takes that portfolio and is counted.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/factor_objective_evaluation_202608.csv</code>, notebook 15.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/factor_objective_evaluation_202608.csv, notebook 15.</p>
 </figure>
 
 <figure class="fig" id="figure-18">
@@ -347,11 +426,12 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div id="f-att" class="chart legendy"></div>
 <button type="button" class="tbtn" data-table="f-att" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-att" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees and trading costs. Contributions with the betas estimated on the three years of daily returns before each month, as the optimiser saw them.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/factor_objective_attribution_202608.csv</code>, <code>factor_objective_exposure_bought_202608.csv</code> and <code>factor_objective_gap_202608.csv</code>, notebook 16, and <code>factor_objective_evaluation_202608.csv</code>, notebook 15.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/factor_objective_attribution_202608.csv, factor_objective_exposure_bought_202608.csv and factor_objective_gap_202608.csv, notebook 16, and factor_objective_evaluation_202608.csv, notebook 15.</p>
 </figure>
 </section>
 
 <section id="replication" class="view">
+<p class="ch-view-lead">Whether the paper's Sharpe ratios and turnover figures reproduce, and how the rules have done since.</p>
 <p class="lead">The replication: DeMiguel, Garlappi and Uppal (2009) asked whether optimised portfolios beat 1/N out of sample and found that none of their optimising rules did so reliably. Their Tables 3 and 5 are rebuilt here on four of the five datasets the paper takes from French's library, against bands fixed before the code ran, and the comparison is run forward to August 2026.</p>
 
 <figure class="fig" id="figure-13">
@@ -364,17 +444,17 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f11" aria-pressed="false">Table</button><div class="tbl tw" id="t-f11" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing with a 120-month estimation window. Before costs.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations, with the published values from DeMiguel, Garlappi and Uppal (2009), Tables 3 and 5. Monthly, July 1973 to November 2004, US portfolios, USD. <code>results/202608/replication_sharpe_202608.csv</code> and <code>replication_turnover_202608.csv</code>, notebook 03.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations, with the published values from DeMiguel, Garlappi and Uppal (2009), Tables 3 and 5. Monthly, July 1973 to November 2004, US portfolios, USD. results/202608/replication_sharpe_202608.csv and replication_turnover_202608.csv, notebook 03.</p>
 </figure>
 
 <figure class="fig" id="figure-14">
 <h2>Figure 14 | Sharpe ratios in the paper's period and since, by dataset, to August 2026</h2>
 <p class="cap">Each rule's Sharpe ratio in the paper's period (grey) and in the 261 months since (December 2004 to August 2026, navy), one panel per dataset, and the dotted line is 1/N in the new period.</p>
-<p class="text">1 of 32 rule-dataset cells beats 1/N at the 5 per cent level in the new period. The cells that fall below it at that level are the minimum-variance rules on MKT/SMB/HML and on FF-4-factor.</p>
+<p class="text">In the 261 months since the paper, none of the seven optimising rules earns a higher Sharpe ratio than 1/N at the 5 per cent level on any of the four datasets. The one cell of the 32 that does is the value-weighted market on MKT/SMB/HML, which is not an optimising rule. The cells that fall below 1/N at that level are the minimum-variance rules on MKT/SMB/HML and on FF-4-factor.</p>
 <div class="panels" id="f12"></div>
 <button type="button" class="tbtn" data-table="f12" aria-pressed="false">Table</button><div class="tbl tw" id="t-f12" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing with a 120-month estimation window. Before costs.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1973 to August 2026, US portfolios, USD. <code>results/202608/extended_sample_sharpe_202608.csv</code> and <code>extended_sample_vs_1N_202608.csv</code>, notebook 07.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1973 to August 2026, US portfolios, USD. results/202608/extended_sample_sharpe_202608.csv and extended_sample_vs_1N_202608.csv, notebook 07.</p>
 </figure>
 
 <figure class="fig" id="figure-15">
@@ -387,11 +467,12 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </div>
 <button type="button" class="tbtn" data-table="f13" aria-pressed="false">Table</button><div class="tbl tw" id="t-f13" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before costs.</p>
-<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. <code>results/202608/covariance_estimators_202608.csv</code>, notebook 10.</p>
+<p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, July 1979 to August 2026, US industries, USD. results/202608/covariance_estimators_202608.csv, notebook 10.</p>
 </figure>
 </section>
 
 <section id="method" class="view method">
+<p class="ch-view-lead">The data, what is known at each date, the costs, what the study cannot show, and the terms.</p>
 <h2>Method</h2>
 <p><strong>Universe and period.</strong> The extension runs on Kenneth R. French's 49 value-weighted industry portfolios and his six factors, downloaded at run time, vintage 202608. The benchmark is the cap-weighted combination of the 49, rebuilt from French's firm counts and average sizes. Every path runs over the 566 months from July 1979 to August 2026. The replication uses four of the five datasets the paper takes from the library (Industry, MKT/SMB/HML, FF-1-factor, FF-4-factor), 1963 to November 2004 with a 120-month estimation window, so July 1973 to November 2004 out of sample, and runs the same rules forward to August 2026.</p>
 <p><strong>Rebalancing.</strong> Monthly. The optimiser forms each month's weights from the previous month's weights after the month's returns have moved them, under the constraint set in force. The turnover cap of 2 per cent one-way a month is relaxed to the smallest feasible turnover in the months in which the benchmark itself moves more than the cap allows, and those months are counted.</p>
@@ -460,7 +541,8 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </main>
 
 <footer class="ch-foot"><div>
-<p>Built by <code>dashboard/build_dashboard.py</code> from the tables in <code>results/202608/</code>, written by notebooks 03, 07, 08, 10, 11, 12, 13, 15 and 16 on vintage 202608 of French's files, and rebuilt whenever a notebook is rerun, from the tables committed with it. Every figure has a table under it. Charts drawn with Plotly 2.35.2.</p>
+<p>Every figure on this page is a simulation on Kenneth R. French's portfolios, gross of fees unless a trading cost is stated, and none is a record.</p>
+<p>Built by dashboard/build_dashboard.py from the tables in results/202608/, written by notebooks 03, 07, 08, 10, 11, 12, 13, 15 and 16 on vintage 202608 of French's files, and rebuilt whenever a notebook is rerun, from the tables committed with it. Every figure has a table under it. Charts drawn with Plotly 2.35.2.</p>
 <p>Carlo Hofer &middot; Data: Kenneth R. French Data Library &middot; <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a> &middot; Built 10 November 2026</p>
 </div></footer>
 
@@ -482,6 +564,9 @@ dl.terms dd { margin: 0 0 0 1rem; }
   function fcol(f) { return CH.cat[D.factors.indexOf(f)]; }
   function pick(cond, a, b) { if (cond) { return a; } return b; }
   function minus(s) { return String(s).replace(/-/g, "−"); }
+  var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function mon(ym) { var m = /^(\d{4})-(\d{2})$/.exec(String(ym)); if (m) { return MON[Number(m[2]) - 1] + " " + m[1]; } return ym; }
+  function mons(t) { return String(t).replace(/(\d{4})-(\d{2})/g, function (_, y, m) { return MON[Number(m) - 1] + " " + y; }); }
   function fmt(x, d, sign) {
     if (x === null || x === undefined || x !== x) { return ""; }
     var s = Math.abs(x).toFixed(d);
@@ -572,7 +657,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
     l2.xaxis = axis({ value: true, range: [0.85, 1.9], title: pick(narrow(), "with the 95 per cent band", measure + ", with the 95 per cent band") });
     l2.yaxis = axis({ autorange: "reversed", tickfont: { size: 11, color: CH.ink } });
     plot("f2b", t2, l2);
-    setTable("f2", ["Covariance estimate", "Whole period"].concat(D.decades).concat(["Band, low", "Band, high"]), D.variants.map(function (v) { return [vname(v)].concat(src[v].map(function (x) { return fmt(x, 2); })).concat([fmt(band[v][1], 2), fmt(band[v][2], 2)]); }));
+    setTable("f2", ["Covariance estimate", "Whole period"].concat(D.decades.map(mons)).concat(["Band, low", "Band, high"]), D.variants.map(function (v) { return [vname(v)].concat(src[v].map(function (x) { return fmt(x, 2); })).concat([fmt(band[v][1], 2), fmt(band[v][2], 2)]); }));
   }
 
   // Figure 3: the frontier as dots joined by steps, on its side on a phone
@@ -613,9 +698,9 @@ dl.terms dd { margin: 0 0 0 1rem; }
     layout.xaxis = axis({ tickfont: { size: 11, color: CH.meta } });
     plot("f4", traces, layout);
     var step = 60, rows = [];
-    for (var i = step - 1; i < D.active.month.length; i += step) { rows.push([D.active.month[i]].concat(D.variants.map(function (v) { return fmt(a[v][i], 2, true); }))); }
+    for (var i = step - 1; i < D.active.month.length; i += step) { rows.push([mon(D.active.month[i])].concat(D.variants.map(function (v) { return fmt(a[v][i], 2, true); }))); }
     var li = D.active.month.length - 1;
-    if ((li + 1) % step !== 0) { rows.push([D.active.month[li]].concat(D.variants.map(function (v) { return fmt(a[v][li], 2, true); }))); }
+    if ((li + 1) % step !== 0) { rows.push([mon(D.active.month[li])].concat(D.variants.map(function (v) { return fmt(a[v][li], 2, true); }))); }
     setTable("f4", ["Month (every fifth year, and the last)"].concat(D.variants.map(vname)), rows);
   }
   function redrawPath() { f4(); fRoll(); fWeights(); }
@@ -642,7 +727,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
     layout.legend = legendAt(pick(narrow(), -0.2, -0.16));
     plot("f-roll", traces, layout);
     var step = 60, rows = [];
-    function row(i) { return [R.month[i]].concat(D.variants.map(function (v) { return fmt(R[state.set][v].realised[i], 0); })).concat(D.variants.map(function (v) { return fmt(R[state.set][v].forecast[i], 0); })).concat([fmt(med[i], 0)]); }
+    function row(i) { return [mon(R.month[i])].concat(D.variants.map(function (v) { return fmt(R[state.set][v].realised[i], 0); })).concat(D.variants.map(function (v) { return fmt(R[state.set][v].forecast[i], 0); })).concat([fmt(med[i], 0)]); }
     for (var i = step - 1; i < R.month.length; i += step) { rows.push(row(i)); }
     if (R.month.length % step !== 0) { rows.push(row(R.month.length - 1)); }
     setTable("f-roll", ["Window ending (every fifth year, and the last)"].concat(D.variants.map(function (v) { return "Realised, " + vname(v); })).concat(D.variants.map(function (v) { return "Forecast, " + vname(v); })).concat(["Median realised"]), rows);
@@ -755,7 +840,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
     traces.push({ x: [null], y: [null], mode: "markers", marker: hollow(CH.ink), name: "tilt alone (hollow)" });
     traces.push({ x: [null], y: [null], mode: "markers", marker: filled(CH.ink), name: "mandate (filled)" });
     var l1 = base({ margin: { l: 56, r: 16, t: 8, b: 110 } });
-    l1.xaxis = axis({ tickvals: months.map(function (m, j) { return j; }), ticktext: months, range: [-0.5, months.length - 0.5], tickfont: { size: 11, color: CH.meta } });
+    l1.xaxis = axis({ tickvals: months.map(function (m, j) { return j; }), ticktext: months.map(mon), range: [-0.5, months.length - 0.5], tickfont: { size: 11, color: CH.meta } });
     l1.yaxis = axis({ value: true, title: "forecast tracking error, bp a year", rangemode: "tozero" });
     l1.legend = legendAt(-0.16);
     plot("f8a", traces, l1);
@@ -768,7 +853,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
     l2.yaxis = axis({ value: true, title: "forecast tracking error, bp a year", rangemode: "tozero" });
     plot("f8b", t2, l2);
     var rows = [];
-    ests.forEach(function (v) { months.forEach(function (m) { var r = D.opt_fixes.filter(function (q) { return q.month === m && q.variant === v; })[0]; if (r) { rows.push([vname(v), m, fmt(r.tilt, 1), fmt(r.mandate, 1)]); } }); });
+    ests.forEach(function (v) { months.forEach(function (m) { var r = D.opt_fixes.filter(function (q) { return q.month === m && q.variant === v; })[0]; if (r) { rows.push([vname(v), mon(m), fmt(r.tilt, 1), fmt(r.mandate, 1)]); } }); });
     s.rebalance.forEach(function (rb, k) { if (marks.indexOf(rb) >= 0) { rows.push(["speed limit from 1/N", "rebalance " + rb, fmt(s.te[k], 0), fmt(s.distance[k], 1) + "% away"]); } });
     setTable("f8", ["Path", "Month", "Tilt alone, bp a year", "Mandate, bp a year"], rows);
   }
@@ -782,8 +867,8 @@ dl.terms dd { margin: 0 0 0 1rem; }
     layout.xaxis = axis({ tickfont: { size: 11, color: CH.meta } });
     plot("f9", traces, layout);
     var rows = [], step = 60;
-    for (var i = step - 1; i < b.month.length; i += step) { rows.push([b.month[i], fmt(b.benchmark[i], 2), fmt(b.market[i], 2), fmt(b.gap_cum_bp[i], 0)]); }
-    rows.push([b.month[b.month.length - 1], fmt(b.benchmark[b.month.length - 1], 2), fmt(b.market[b.month.length - 1], 2), fmt(b.gap_cum_bp[b.month.length - 1], 0)]);
+    for (var i = step - 1; i < b.month.length; i += step) { rows.push([mon(b.month[i]), fmt(b.benchmark[i], 2), fmt(b.market[i], 2), fmt(b.gap_cum_bp[i], 0)]); }
+    rows.push([mon(b.month[b.month.length - 1]), fmt(b.benchmark[b.month.length - 1], 2), fmt(b.market[b.month.length - 1], 2), fmt(b.gap_cum_bp[b.month.length - 1], 0)]);
     setTable("f9", ["Month (every fifth year, and the last)", "Benchmark, growth of 1", "French's market, growth of 1", "Cumulative gap, bp"], rows);
   }
 
@@ -812,8 +897,8 @@ dl.terms dd { margin: 0 0 0 1rem; }
     layout.showlegend = true;
     plot("f10", traces, layout);
     var rows2 = [], step = 20;
-    for (var j = 0; j < w.month.length; j += step) { rows2.push([w.month[j]].concat(w.ind.map(function (i) { return fmt(w.w[i][j] * 100, 1); }))); }
-    rows2.push([w.month[w.month.length - 1]].concat(w.ind.map(function (i) { return fmt(w.w[i][w.month.length - 1] * 100, 1); })));
+    for (var j = 0; j < w.month.length; j += step) { rows2.push([mon(w.month[j])].concat(w.ind.map(function (i) { return fmt(w.w[i][j] * 100, 1); }))); }
+    rows2.push([mon(w.month[w.month.length - 1])].concat(w.ind.map(function (i) { return fmt(w.w[i][w.month.length - 1] * 100, 1); })));
     setTable("f10", ["Month (every fifth year, and the last)"].concat(w.ind.map(function (i) { return i + ", %"; })), rows2);
   }
 
@@ -1043,6 +1128,15 @@ dl.terms dd { margin: 0 0 0 1rem; }
     wasNarrow = narrow();
     route();
   }
+  // the fade at the tab bar's right edge shows only while more of the bar lies to the right
+  (function () {
+    var bar = document.querySelector(".tabs"), row = bar.querySelector(".wrap");
+    function upd() { bar.classList.toggle("more", row.scrollWidth - row.clientWidth - row.scrollLeft > 1); }
+    if (!("ResizeObserver" in window)) { return; }
+    row.addEventListener("scroll", upd);
+    new ResizeObserver(upd).observe(row);
+    upd();
+  })();
   // the fade at a table's right edge shows only while more of the table lies to the right
   document.querySelectorAll(".tw").forEach(function (t) {
     function upd() { var s = t.firstElementChild; t.classList.toggle("more", !!s && s.scrollWidth - s.clientWidth - s.scrollLeft > 1); }

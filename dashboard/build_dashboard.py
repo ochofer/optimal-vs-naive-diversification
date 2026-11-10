@@ -448,6 +448,18 @@ def word(n, of=None):
     return WORDS[n] if n < 10 else str(n)
 
 
+# The one cell that earns a higher Sharpe ratio than 1/N at the 5 per cent level in the new period is the
+# value-weighted market, which is not an optimising rule; the sentence of the page names it from the table
+# and holds only while no optimising rule's cell does, which the assertions check.
+_opt = [r for r in RULES if r not in ("ew", "vw")]
+_beat = ext_vs[ext_vs["beats 1/N at 5%"]]
+assert len(_opt) == 7 and len(_beat) == 1 and _beat["rule"].iloc[0] == "vw" and ext_vs["dataset"].nunique() == 4
+assert not _beat["rule"].isin(_opt).any()
+P["opt_rules_w"] = word(len(_opt))
+P["datasets_w"] = word(ext_vs["dataset"].nunique())
+P["beat_cell"] = f"the {RULE_LABEL[_beat['rule'].iloc[0]]} on {_beat['dataset'].iloc[0]}"
+
+
 def lohi(xs, d, sign=False):
     f = (lambda x: signed(x, d)) if sign else (lambda x: f"{x:.{d}f}")
     return f(min(xs)), f(max(xs))
