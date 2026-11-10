@@ -195,9 +195,11 @@ tests/                  known-answer checks that run without network
 
 ## Other projects
 
-**Rules-based portfolio.** Runs a small real-money portfolio under rules published before the first order: two UCITS ETFs at 70/30, a monthly cycle with pre-trade checks, look-through exposure and ex-ante risk on a public dashboard. [Page](https://www.carlohofer.com/projects/rules-based-portfolio/), [dashboard](https://www.carlohofer.com/rules-based-portfolio/), [code](https://github.com/ochofer/rules-based-portfolio)
-
 **Climate risk as an equity signal.** An ownership graph linking 328 listed companies to the 5,115 tracked assets they own. Of 19 apparent ownership changes checked by hand, 12 had no transaction behind them. [Page](https://www.carlohofer.com/projects/climate-risk-equity-signal/), [note](https://github.com/ochofer/paper1-hazard-exposure-data/releases/download/note-v1.2/what-a-vintage-difference-measures.pdf), [code](https://github.com/ochofer/paper1-hazard-exposure-data)
+
+**Volatility-managed portfolios: a replication.** A replication of Moreira and Muir's volatility-managed portfolios and of the real-time critique on Ken French's factors, then the months after the paper's sample. In build: the data and the signal are in place, and nothing in it is a result yet. [Page](https://www.carlohofer.com/projects/volatility-managed-portfolios/), [code](https://github.com/ochofer/volatility-managed-portfolios)
+
+**Rules-based portfolio.** Runs a small real-money portfolio under rules published before the first order: two UCITS ETFs at 70/30, a monthly cycle with pre-trade checks, look-through exposure and ex-ante risk on a public dashboard. [Page](https://www.carlohofer.com/projects/rules-based-portfolio/), [dashboard](https://www.carlohofer.com/rules-based-portfolio/), [code](https://github.com/ochofer/rules-based-portfolio)
 
 The code, the notebooks and the text are released under the MIT licence (`LICENSE`). French's data are his and are downloaded from his library at run time.
 
