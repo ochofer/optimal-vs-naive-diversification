@@ -46,6 +46,7 @@ a { color: var(--link); text-underline-offset: .18em; text-decoration-color: rgb
 .tabs button[aria-selected="true"] { color: var(--navy); font-weight: 600; border-bottom-color: var(--navy); }
 .tabs .sh { display: none; }
 .tabs.more::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; }
+[id] { scroll-margin-top: 80px; }
 .ch-view-lead { margin: 26px 0 0; font-size: 15px; color: var(--ink2); }
 .ch-top { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 36px; margin: 18px 0 0; align-items: start; }
 .ch-kpis { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 2px solid var(--navy); border-bottom: 1px solid var(--rule); }
@@ -126,6 +127,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 .ch-foot p { max-width: 90ch; margin: 0 0 8px; }
 @media (max-width: 1000px) { .panels.four { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 860px) {
+  [id] { scroll-margin-top: 64px; }
   .wrap, .ch-foot > div, .ch-band__in { padding-left: 16px; padding-right: 16px; }
   .ch-hero h1 { font-size: 34px; }
   .ch-lead { font-size: 16px; }
@@ -180,7 +182,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a></p>
 <p class="ch-over">Investment research</p>
 <h1>Optimal versus naive diversification: the results</h1>
-<p class="ch-lead">A replication of DeMiguel, Garlappi and Uppal (2009) on Kenneth R. French's data, and an extension to index tracking on his 49 industries under a mandate of the kind an enhanced index fund runs: how much tracking error four covariance estimators forecast and realised, what the tilt cost in tracking error, and, in version 2, what a budget of tracking error buys in factor exposure. Every figure is a simulation drawn from the tables committed with the code.</p>
+<p class="ch-lead">Four covariance estimators under an enhanced-index mandate on Kenneth R. French's 49 industries: the tracking error they forecast and realised, what the tilt cost in tracking error, what a budget of tracking error buys in factor exposure, and a replication of DeMiguel, Garlappi and Uppal (2009). Every figure is a simulation drawn from the tables committed with the code.</p>
 <div class="ch-meta"><span>Simulated on Kenneth R. French's data, vintage {{vintage}}</span><span>Built {{build_date}}</span></div>
 <div class="ch-docs"><a href="../note/B-P_note_2026-10.pdf">Note on version 1 (PDF)</a><a href="../note/B-P_note_moduleA_2026-11.pdf">Note on version 2, module A (PDF)</a><a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a></div>
 </div></section>
@@ -411,7 +413,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <figure class="fig" id="figure-17">
 <h2>Figure 17 | What the budget cost: realised tracking error against the budget, by estimator</h2>
 <p class="cap">The tracking error each path realised, in basis points a year, against its budget, one line per estimator. The dotted diagonal is a forecast that came true and the shaded band is E3's expected range, 1.2 to 1.6 times the budget.</p>
-<p class="text">At 100 basis points the four daily estimators realise {{fo_te_lo}} to {{fo_te_hi}} basis points a year and the monthly covariance {{fo_te_monthly}}, ratios to the budget of {{fo_ratio_lo}} to {{fo_ratio_hi}} and {{fo_ratio_monthly}}. Across the three budgets the daily ratios run from {{fo_ratio_daily_lo}} to {{fo_ratio_daily_hi}}, {{fo_ratio_inside}} of the {{fo_ratio_cells}} cells inside the expected range and the others below it, and the monthly covariance's from {{fo_ratio_monthly_lo}} to {{fo_ratio_monthly_hi}}, above the largest daily ratio at every budget: E3 is not met, on the side of a smaller miss. Version 1's portfolio is the in-sample minimum of a forecast and under-forecasts by the optimisation bias of a noisy covariance, and a portfolio held at a level by the budget is less of an in-sample minimum, so the forecast at the level misses by less. The spread across the four daily estimators is {{fo_spread}} basis points on a level near 130, against {{te_range}} on a level near 90 under version 1's mandate (E7 met at 20). The monthly covariance is the worst calibrated at 75 and 100 basis points, as in version 1 (bias statistic {{fo_monthly_bias}} at 100 against {{fo_bias_daily_lo}} to {{fo_bias_daily_hi}} on the daily estimators), and at 150 its {{fo_monthly_bias150}} sits below the factor model's {{fo_factor_bias150}}; the robust portfolio realises {{fo_robust_te}} at a bias statistic of {{fo_robust_bias}}, again the best calibrated.</p>
+<p class="text">At 100 basis points the four daily estimators realise {{fo_te_lo}} to {{fo_te_hi}} basis points a year and the monthly covariance {{fo_te_monthly}}, ratios to the budget of {{fo_ratio_lo}} to {{fo_ratio_hi}} and {{fo_ratio_monthly}}. Across the three budgets the daily ratios run from {{fo_ratio_daily_lo}} to {{fo_ratio_daily_hi}}, {{fo_ratio_inside}} of the {{fo_ratio_cells}} cells inside the expected range and the others below it, and the monthly covariance's from {{fo_ratio_monthly_lo}} to {{fo_ratio_monthly_hi}}, above the largest daily ratio at every budget: E3 is not met, on the side of a smaller miss. Version 1's portfolio is the in-sample minimum of a forecast and under-forecasts by the optimisation bias of a noisy covariance, and a portfolio held at a level by the budget is less of an in-sample minimum, so the forecast at the level misses by less. The spread across the four daily estimators is {{fo_spread}} basis points on a level near 130, against {{te_range}} on a level near 90 under version 1's mandate (E7 met at 20). The monthly covariance is the worst calibrated at 75 and 100 basis points, as in version 1 (bias statistic {{fo_monthly_bias}} at 100 against {{fo_bias_daily_lo}} to {{fo_bias_daily_hi}} on the daily estimators), and at 150 its {{fo_monthly_bias150}} sits below the factor model's {{fo_factor_bias150}}. The robust portfolio realises {{fo_robust_te}} at a bias statistic of {{fo_robust_bias}}, again the best calibrated.</p>
 <div id="f-te" class="chart legendy"></div>
 <button type="button" class="tbtn" data-table="f-te" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-te" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. A month in which the mandate's tracking-error-minimising portfolio already exceeds the budget takes that portfolio and is counted.</p>
