@@ -66,6 +66,18 @@ DGU_BS_COV_DOF = "M - N - 2"   # the Bayes-Stein covariance divides by M - N - 2
 # reading is kept as rules.mv_c_cone for comparison (notebook 03).
 DGU_CONSTRAINED_BUDGET_INSIDE = True
 
+# The constrained rules' solver, set by the design on 17 November 2026: each
+# constrained rule is a quadratic programme whose budget 1'w = 1 is an equality
+# of the problem and whose lower bound is a bound on each weight, solved
+# exactly by the active-set method of
+# rules._budget_qp, so that no constraint is approximated by a weight and no
+# result depends on a setting of a library or of the module. The replication
+# tables of notebook 03 are the tables written under this decision and committed
+# with it; the extended-sample tables of notebook 07 stay as committed
+# (results/202608/README.md records why). The suite checks the optimality
+# conditions at the scale of the study's data (tests/test_rules_backtest.py).
+DGU_CONSTRAINED_SOLVER_DATE = "2026-11-17"
+
 # The rules replicated: those whose only inputs are the window's sample moments
 # (and, for Bayes-Stein, Jorion's prior built from them), plus the value-weighted
 # market, whose Sharpe ratio is the same 0.1138 in every French-sourced column

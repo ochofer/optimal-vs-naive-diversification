@@ -214,7 +214,7 @@ def min_variance_unconstrained(Sigma: np.ndarray) -> np.ndarray:
 
 
 def min_variance_long_only(Sigma: np.ndarray) -> np.ndarray:
-    """The long-only minimum-variance portfolio, solved exactly by non-negative least squares (rules.constrained_min_variance)."""
+    """The long-only minimum-variance portfolio, solved exactly by the active-set method of rules.constrained_min_variance."""
     return S.constrained_min_variance(Sigma, 0.0)
 
 

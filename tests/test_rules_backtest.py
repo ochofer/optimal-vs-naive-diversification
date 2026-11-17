@@ -151,6 +151,50 @@ def test_constrained_min_variance_matches_slsqp_and_respects_floor():
             assert np.abs(res.x - w).max() < 1e-5
 
 
+def _study_scale_window(rng, N, months=120):
+    """A window of monthly returns in decimals at the scale of the study's data: means of 0.2 to 1.2 per cent
+    a month, volatilities of 3 to 10 per cent, a one-factor structure plus idiosyncratic noise, N up to 49."""
+    beta = rng.uniform(0.6, 1.4, N)
+    mu = rng.uniform(0.002, 0.012, N)
+    idio = rng.uniform(0.02, 0.09, N)
+    f = rng.normal(0.0, 0.045, months)
+    R = mu + np.outer(f, beta) + rng.normal(0.0, 1.0, (months, N)) * idio
+    return R
+
+
+def test_constrained_rules_satisfy_optimality_conditions_at_study_scale():
+    """The optimality conditions of each constrained rule on windows at the scale of the study's data: the
+    weights sum to one, none is below its bound, the gradient of the objective is equal across the weights
+    above the bound (the budget's multiplier) and no smaller at the bound, so that lowering a bound weight
+    further would not lower the objective. N runs from 3 to 49 and the window is 120 months, as in the study."""
+    rng = np.random.default_rng(14)
+    for N in (3, 5, 8, 10, 24, 25, 49):
+        for _ in range(3):
+            R = _study_scale_window(rng, N)
+            mu, Sigma = S.sample_moments(R)
+            scale = np.abs(Sigma).max() + np.abs(mu).max()
+            cases = [(S.budget_mean_variance(mu, Sigma), Sigma @ S.budget_mean_variance(mu, Sigma) - mu, 0.0),
+                     (S.constrained_min_variance(Sigma, 0.0), 2 * Sigma @ S.constrained_min_variance(Sigma, 0.0), 0.0),
+                     (S.constrained_min_variance(Sigma, 0.5 / N), 2 * Sigma @ S.constrained_min_variance(Sigma, 0.5 / N), 0.5 / N)]
+            for w, grad, lower in cases:
+                assert abs(w.sum() - 1.0) < 1e-12
+                assert w.min() >= lower - 1e-12
+                above = w > lower + 1e-9
+                assert above.any()
+                lam = grad[above].mean()
+                assert np.abs(grad[above] - lam).max() < 1e-9 * scale      # equal gradient on the free weights
+                if (~above).any():
+                    assert grad[~above].min() >= lam - 1e-9 * scale        # no smaller at the bound
+    # the Bayes-Stein constrained rule, through the same solver on Jorion's moments
+    R = _study_scale_window(np.random.default_rng(15), 25)
+    mu_bs, Sigma_bs, _ = S.bayes_stein_moments(R)
+    w = S.budget_mean_variance(mu_bs, Sigma_bs)
+    grad = Sigma_bs @ w - mu_bs
+    above = w > 1e-9
+    assert abs(w.sum() - 1.0) < 1e-12 and w.min() >= -1e-12
+    assert np.abs(grad[above] - grad[above].mean()).max() < 1e-9 * (np.abs(Sigma_bs).max() + np.abs(mu_bs).max())
+
+
 def test_min_c_equals_min_when_no_constraint_binds():
     rng = np.random.default_rng(13)
     Sigma = np.diag([0.001, 0.002, 0.003])       # uncorrelated: minimum-variance weights are all positive

@@ -24,7 +24,7 @@ min,FF-1-factor,44.953575,45.470000,-0.011357,pass
 vw,FF-1-factor,0.000000,0.000000,,pass
 mv-c,FF-1-factor,19.067328,17.530000,0.087697,pass
 bs-c,FF-1-factor,16.105307,17.320000,-0.070132,pass
-min-c,FF-1-factor,4.201883,3.930000,0.069181,pass
+min-c,FF-1-factor,4.201883,3.930000,0.069182,pass
 g-min-c,FF-1-factor,1.945923,1.780000,0.093215,pass
 ew,FF-4-factor,0.020042,0.019800,0.012207,pass
 mv,FF-4-factor,678.029348,3553.030000,-0.809169,report

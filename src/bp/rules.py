@@ -23,15 +23,22 @@ Rules in this module, with the DGU abbreviation and section:
   min-c    short-sale-constrained minimum variance, section 1.5
   g-min-c  minimum variance with every weight at least 1/(2N), section 1.5
 
-The constrained rules are quadratic programmes. Each is solved exactly with
-the Lawson-Hanson non-negative least squares algorithm (scipy.optimize.nnls)
-after a change of variables, so there is no solver setting to tune:
-  minimise  x' Sigma x / 2 - mu' x   subject to x >= 0
-is, with Sigma = L L' (Cholesky), the same as minimising |L' x - L^-1 mu|^2,
-a non-negative least squares problem. A budget constraint 1'w = 1 is added
-as one heavily weighted extra row, then the result is renormalised; a lower
-bound w >= a is a shift of variables. tests/ checks every one against an
-independent solver.
+The constrained rules are quadratic programmes with a budget constraint,
+  minimise  w' Sigma w / 2 - mu' w   subject to 1'w = 1 and w >= a 1,
+solved exactly by an active-set method written in this module (_budget_qp):
+the budget is an equality of the problem and the lower bound a bound on each
+weight, so no constraint is approximated by a weight and no result depends on a
+solver setting. The method is the one Lawson and Hanson's algorithm belongs to:
+it starts with the whole budget on the one weight that gives the lowest
+objective, solves the equality-constrained problem on the weights above the bound, moves toward that solution until a weight reaches the
+bound, and frees a weight at the bound while its multiplier says the objective
+falls by freeing it. Every step lowers the objective, so it ends after a finite
+number of steps at the point that satisfies the optimality conditions; the
+test of a multiplier allows ten units of rounding in the last place and
+nothing more. nonneg_mean_variance, the reading of DGU's Lagrangian without the
+budget, is a non-negative least squares problem and uses scipy.optimize.nnls.
+tests/ checks every rule against an independent solver and checks the
+optimality conditions at the scale of the study's data.
 """
 from __future__ import annotations
 
@@ -136,20 +143,89 @@ def bs(R: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# Constrained rules, DGU section 1.5, solved as non-negative least squares
+# Constrained rules, DGU section 1.5: quadratic programmes with a budget
 # ---------------------------------------------------------------------------
 
-_BUDGET_WEIGHT = 1e6   # weight of the budget row; the residual on 1'w = 1 is then below 1e-12 and the result is renormalised anyway
+def _ridged(Sigma: np.ndarray) -> np.ndarray:
+    """Sigma itself when it is positive definite; a tiny ridge keeps a near-singular window solvable."""
+    N = Sigma.shape[0]
+    try:
+        np.linalg.cholesky(Sigma)
+        return Sigma
+    except np.linalg.LinAlgError:
+        return Sigma + 1e-12 * np.trace(Sigma) / N * np.eye(N)
 
 
 def _cholesky_upper(Sigma: np.ndarray) -> np.ndarray:
-    """L' with Sigma = L L'. A tiny ridge keeps a near-singular window solvable."""
+    """L' with Sigma = L L', on the ridged matrix of _ridged."""
+    return np.linalg.cholesky(_ridged(Sigma)).T
+
+
+def _budget_qp(Sigma: np.ndarray, mu: np.ndarray, lower: float) -> np.ndarray:
+    """argmin w' Sigma w / 2 - mu' w over 1'w = 1 and w >= lower, by an active-set method.
+
+    In v = w - lower 1 the problem is  minimise v' Sigma v / 2 - b' v  over
+    1'v = c and v >= 0, with b = mu - lower Sigma 1 and c = 1 - N lower. The
+    free set F holds the weights above the bound; at the start it holds the one
+    weight on which the whole budget gives the lowest objective. Each round
+    solves the equality-constrained problem on F exactly, from its optimality conditions
+      Sigma_FF s_F - b_F + lam 1 = 0,   1's_F = c,
+    one linear system in s_F and the budget's multiplier lam. If every s_F is
+    positive, v = s and the multipliers of the bound weights, g = Sigma v - b + lam,
+    are read: a negative g_j says the objective falls when w_j leaves the bound,
+    so the most negative one is freed and the round repeats; if none is negative,
+    v is the optimum. If some s_F is not positive, v moves toward s only
+    as far as the first weight to reach the bound, that weight leaves F, and the
+    round repeats. A freed weight is positive in the next solution, so every
+    round lowers the objective and the method ends after a finite number of
+    rounds; the cap on rounds is a guard that a correct run never reaches.
+    """
+    Sigma = _ridged(np.asarray(Sigma, dtype=float))
+    mu = np.asarray(mu, dtype=float)
     N = Sigma.shape[0]
-    try:
-        L = np.linalg.cholesky(Sigma)
-    except np.linalg.LinAlgError:
-        L = np.linalg.cholesky(Sigma + 1e-12 * np.trace(Sigma) / N * np.eye(N))
-    return L.T
+    c = 1.0 - N * lower
+    if c < 0.0:
+        raise ValueError(f"no portfolio has {N} weights of at least {lower} that sum to one")
+    if c == 0.0:
+        return np.full(N, lower)
+    ones = np.ones(N)
+    b = mu - lower * (Sigma @ ones)
+    tol = 10.0 * np.finfo(float).eps * N * (np.abs(Sigma).max() + np.abs(b).max())
+    start = int(np.argmin(0.5 * c * c * np.diag(Sigma) - c * b))
+    v = np.zeros(N)
+    v[start] = c
+    free = np.zeros(N, dtype=bool)
+    free[start] = True
+    for _ in range(50 * N + 50):
+        F = np.flatnonzero(free)
+        k = len(F)
+        K = np.zeros((k + 1, k + 1))
+        K[:k, :k] = Sigma[np.ix_(F, F)]
+        K[:k, k] = 1.0
+        K[k, :k] = 1.0
+        sol = np.linalg.solve(K, np.concatenate([b[F], [c]]))
+        s = np.zeros(N)
+        s[F] = sol[:k]
+        lam = sol[k]
+        if np.all(s[F] > 0.0):
+            v = s
+            g = Sigma @ v - b + lam
+            bound = np.flatnonzero(~free)
+            if bound.size == 0 or g[bound].min() >= -tol:
+                return v + lower
+            free[bound[np.argmin(g[bound])]] = True
+            continue
+        hit = F[s[F] <= 0.0]
+        ratios = v[hit] / (v[hit] - s[hit])
+        alpha = ratios.min()
+        if alpha <= 0.0:
+            # only a weight freed in the round before can be at the bound here, and a freed weight is positive
+            # in exact arithmetic: a zero step means its multiplier was rounding, and the point stands
+            return v + lower
+        v = v + alpha * (s - v)
+        v[hit[ratios <= alpha]] = 0.0
+        free &= v > 0.0
+    raise RuntimeError("the active-set method did not end within its cap on rounds")
 
 
 def nonneg_mean_variance(mu: np.ndarray, Sigma: np.ndarray) -> np.ndarray:
@@ -175,31 +251,16 @@ def budget_mean_variance(mu: np.ndarray, Sigma: np.ndarray, gamma: float = C.DGU
     with the highest estimated mean. That is the "corner solutions with all
     wealth invested in a single asset" of DGU footnote 22, and it is what
     reproduces their Tables 3 to 5 (constants.DGU_CONSTRAINED_BUDGET_INSIDE).
-    As NNLS: minimise |sqrt(gamma) L'w - L^-1 mu / sqrt(gamma)|^2 with the
-    budget as a heavily weighted extra row.
+    Solved by _budget_qp as  minimise w' (gamma Sigma) w / 2 - mu' w  over
+    1'w = 1 and w >= 0.
     """
-    N = len(mu)
-    Lt = _cholesky_upper(Sigma)
-    A = np.vstack([np.sqrt(gamma) * Lt, _BUDGET_WEIGHT * np.ones(N)])
-    b = np.concatenate([np.linalg.solve(Lt.T, mu) / np.sqrt(gamma), [_BUDGET_WEIGHT]])
-    w, _ = nnls(A, b)
-    return w / w.sum()
+    return _budget_qp(gamma * np.asarray(Sigma, dtype=float), mu, 0.0)
 
 
 def constrained_min_variance(Sigma: np.ndarray, lower: float = 0.0) -> np.ndarray:
-    """argmin w'Sigma w over w >= lower, 1'w = 1, as NNLS on v = w - lower.
-
-    Objective |L'(v + lower 1)|^2, so the NNLS target is -L' lower 1; the budget
-    1'v = 1 - N lower is appended as a heavily weighted row.
-    """
-    N = Sigma.shape[0]
-    Lt = _cholesky_upper(Sigma)
-    ones = np.ones(N)
-    A = np.vstack([Lt, _BUDGET_WEIGHT * ones])
-    b = np.concatenate([-Lt @ (lower * ones), [_BUDGET_WEIGHT * (1.0 - N * lower)]])
-    v, _ = nnls(A, b)
-    w = v + lower
-    return w / w.sum()
+    """argmin w'Sigma w over w >= lower, 1'w = 1, by _budget_qp with mu = 0."""
+    N = np.asarray(Sigma).shape[0]
+    return _budget_qp(Sigma, np.zeros(N), lower)
 
 
 def mv_c(R: np.ndarray) -> np.ndarray:

@@ -485,7 +485,7 @@ NB03 = [
 | Budget constraint | the weights must sum to one |
 | Corner solution | a portfolio with all wealth in a single asset |
 | Lagrangian | the expression an optimisation problem is written as when it has constraints |
-| Non-negative least squares | a standard algorithm for least-squares problems whose unknowns may not be negative |
+| Active-set method | a way of solving a constrained minimisation exactly: it keeps a list of the constraints that hold with equality, solves the problem on that list, and adds or removes a constraint while that lowers the objective |
 | Simulated history | the 24,000 months of returns the simulation produces |
 | Seed | the number that fixes the random numbers a simulation uses; the same seed gives the same random numbers |
 | Draw | one simulated history, produced from one seed |
@@ -512,7 +512,7 @@ Both readings are built below. On the MKT/SMB/HML dataset the literal reading gi
     md("""
 ## Modules
 
-Infrastructure from notebooks 01 and 02, unchanged, then the rules module with the new rules added. The constrained rules are solved exactly by non-negative least squares (a standard algorithm for least-squares problems whose unknowns may not be negative) after a change of variables, so there is no solver setting to tune; `tests/test_rules_backtest.py` checks each against an independent solver.
+Infrastructure from notebooks 01 and 02, unchanged, then the rules module with the new rules added. The constrained rules are quadratic programmes with the budget as an equality and the short-sale constraint as a bound on each weight, solved exactly by an active-set method written in the module (a way of solving a constrained minimisation exactly: it keeps a list of the constraints that hold with equality, solves the problem on that list, and adds or removes a constraint while that lowers the objective), so no result depends on a solver setting; `tests/test_rules_backtest.py` checks each against an independent solver and checks the optimality conditions at the scale of the study's data.
 """),
     code("""
 import os
@@ -712,7 +712,7 @@ NB04 = [
 | Budget constraint | the weights must sum to one |
 | Corner solution | a portfolio with all wealth in a single asset |
 | Lagrangian | the expression an optimisation problem is written as when it has constraints |
-| Non-negative least squares | a standard algorithm for least-squares problems whose unknowns may not be negative |
+| Active-set method | a way of solving a constrained minimisation exactly: it keeps a list of the constraints that hold with equality, solves the problem on that list, and adds or removes a constraint while that lowers the objective |
 
 **What this notebook does.** The paper does two things after its empirical tables, both with known answers. The first is Proposition 1: a formula for the number of months of data the sample-based mean-variance rule needs before it beats 1/N on average, as a function of the number of assets and of how much better the tangency portfolio is than 1/N. The paper states thirteen values of that formula in its text, and this notebook checks each of them. The second is Table 6: one simulated history of 24,000 months from a one-factor model, with the rules of notebooks 02 and 03 run through windows of 120, 360 and 6,000 months on universes of 10, 25 and 50 assets. In the simulation the true means and covariances are known, so the effect of the window length and of the number of assets can be measured against the true answer.
 
