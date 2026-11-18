@@ -762,3 +762,61 @@ FO_GAP_PER_UNIT = "mean absolute gap over the mean factor objective"
 # statistic by decade under the 21 rule and after calibration, for every path under C3 and the tilt alone,
 # written as a table beside the calibration table, which stays as committed.
 EVAL_BIAS_BY_DECADE_DATE = "2026-11-08"
+
+# ---------------------------------------------------------------------------
+# 8. Paired tests of two realised volatilities, added 18 November 2026
+# ---------------------------------------------------------------------------
+# Set by the design on 18 November 2026, after every recorded run of version 1
+# and of module A, and labelled so wherever it is used. The reason: notebook 12
+# judged RiskMetrics against the sample covariance under the mandate (84.3
+# against 84.7 basis points a year) by the standard error of one tracking
+# error, about 2.5 basis points, while the two paths share their 566 months
+# and their active returns correlate at 0.99, so the difference between them
+# is far less noisy than either figure. The test is the one Dom, Howard,
+# Jansen and Lohre (2025) apply to their portfolios' realised volatilities,
+# the variance test of Ledoit and Wolf (2011), built in paired.py: the delta
+# method on the four means (each series and its square), the standard error
+# from the prewhitened Parzen kernel, and the studentised circular block
+# bootstrap with EVAL_BOOTSTRAP_BLOCK_MONTHS, EVAL_BOOTSTRAP_DRAWS,
+# EVAL_BOOTSTRAP_SEED and EVAL_BOOTSTRAP_LEVEL as they are. Two statistics
+# from the same resamples: the difference of the log variances, for the
+# p-value in the paper's form, and the difference of the two annualised
+# standard deviations in the tables' n minus 1 convention, for an interval at
+# EVAL_BOOTSTRAP_LEVEL in basis points. The comparisons below were fixed here
+# before paired.py produced any figure on the study's data, and every one is
+# reported with no verdict: the two figures, their difference, the correlation
+# of the two monthly series, the p-value and the interval. A and B are
+# computed from the committed active returns (active_returns_<vintage>.csv)
+# with no path rerun, so every version 1 table stays byte for byte; C rebuilds
+# the four minimum-variance portfolios of notebook 10 from the modules and
+# checks their realised volatilities against the committed table before the
+# test runs. The one expectation attached is the size check, P1, run before
+# the test touches the study's data: PAIRED_SIZE_PAIRS simulated pairs of
+# PAIRED_SIZE_MONTHS months with equal variances and a correlation of
+# PAIRED_SIZE_CORRELATION, Student-t shocks with PAIRED_SIZE_T_DOF degrees of
+# freedom, no difference in means; the share rejected at 5 per cent lies in
+# PAIRED_SIZE_RANGE.
+PAIRED_TEST_DATE = "2026-11-18"
+PAIRED_REFERENCE = ("sample", "daily 3y")        # the variant the comparisons of A are made against, under C3
+PAIRED_COMPARISONS_A = (                          # A: each against the reference under the mandate (C3); Holm's correction across the six, as the paper applies it
+    ("RiskMetrics", "daily 5y"), ("ledoit_wolf", "daily 3y"), ("pca", "daily 3y"), ("factor", "daily 3y"),
+    ("sample", "monthly 120"), ("robust", "all five"),
+)
+PAIRED_COMPARISON_B_SETS = ("C3", "C3 tilt only")   # B: the mandate against the tilt alone, for each of the seven variants, no correction
+PAIRED_COMPARISONS_B = (
+    ("sample", "daily 3y"), ("ledoit_wolf", "daily 3y"), ("factor", "daily 3y"), ("pca", "daily 3y"),
+    ("sample", "monthly 120"), ("robust", "all five"), ("RiskMetrics", "daily 5y"),
+)
+PAIRED_COMPARISONS_C = (                          # C: notebook 10's minimum-variance portfolios, RiskMetrics against the sample covariance, no correction
+    (("sample", "daily_5y_ewma"), ("sample", "daily_5y"), "unconstrained"), (("sample", "daily_5y_ewma"), ("sample", "daily_5y"), "long-only"),
+    (("sample", "daily_5y_ewma"), ("sample", "daily_3y"), "unconstrained"), (("sample", "daily_5y_ewma"), ("sample", "daily_3y"), "long-only"),
+)
+PAIRED_C_REPRODUCTION_TOL = 0.001                 # C: the rebuilt portfolios' realised volatilities within this of the committed table, in percentage points a year
+PAIRED_PERIODS = 12                               # months a year, the annualisation
+PAIRED_SIZE_PAIRS = 1000
+PAIRED_SIZE_MONTHS = 566                          # the months of the rolling evaluation, 1979-07 to 2026-08
+PAIRED_SIZE_SD = 0.0025                           # the monthly standard deviation of the simulated pairs, about 85 basis points a year
+PAIRED_SIZE_CORRELATION = 0.99
+PAIRED_SIZE_T_DOF = 5
+PAIRED_SIZE_SEED = 20261118                       # the date of the design, as a number
+PAIRED_SIZE_RANGE = (0.035, 0.065)                # P1: the share of simulated pairs rejected at 5 per cent
