@@ -12,9 +12,9 @@ template; the build stops, naming the notebook to run, if an input file is missi
 if an input file differs from its committed copy in results/<vintage>/ or from that copy at the
 current commit, so that the page can only be built from the tables a reader can open at the commit.
 The source lines name no file (the house standard's C6); the Method view's table "Where each exhibit
-comes from" links each exhibit's table on GitHub at the commit the build read it from, with the
-notebook that writes it, so the build runs inside the repository's checkout, after the tables are
-committed. The figures and tables are numbered here in page order (C5): the template names each
+comes from" links each exhibit's table and the notebook that writes it on GitHub, each at the commit
+that last changed it, so the build runs inside the repository's checkout, after the tables are
+committed, and a fresh build on the page's own commit reproduces the page. The figures and tables are numbered here in page order (C5): the template names each
 exhibit by a key, {{n:key}} is its number and {{id:key}} its anchor, and every reference in the text
 is written from the exhibit it points to, so an exhibit added or moved renumbers the rest. The footer
 states the vintage, the source notebooks and the build date, and the page is rebuilt whenever a
@@ -58,16 +58,25 @@ def git(*args):
     try:
         return subprocess.run(["git", "-C", REPO, *args], check=True, capture_output=True, text=True).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
-        sys.exit("dashboard/build_dashboard.py: the build runs inside the repository's checkout, because the Method view links each table on GitHub at the commit the build reads it from (git " + " ".join(args) + " failed)")
+        sys.exit("dashboard/build_dashboard.py: the build runs inside the repository's checkout, because the Method view links each table on GitHub at the commit that last changed it (git " + " ".join(args) + " failed)")
 
 
 COMMIT = git("rev-parse", "HEAD")
 GITHUB = "https://github.com/ochofer/optimal-vs-naive-diversification"
 
 
+def last_change(relpath):
+    """The commit that last changed a committed file, which the Method view's link names; a file with no
+    commit stops the build."""
+    sha = git("log", "-1", "--format=%H", "--", relpath)
+    if not re.fullmatch(r"[0-9a-f]{40}", sha):
+        sys.exit(f"dashboard/build_dashboard.py: {relpath} has no commit; commit it before building, so that the Method view can link it")
+    return sha
+
+
 def committed(vintage):
     """Stops unless every input read so far is byte-identical to its copy in results/<vintage>/, and that
-    copy is the file at the current commit, which the Method view links."""
+    copy is the file at the current commit, so that the Method view's link opens the file the build read."""
     for path in INPUTS:
         name = os.path.basename(path)
         copy = os.path.join(REPO, "results", vintage, name)
@@ -77,7 +86,7 @@ def committed(vintage):
             sys.exit(f"dashboard/build_dashboard.py: outputs/{name} differs from the committed copy results/{vintage}/{name}; copy the output files to results/{vintage}/ and commit them before building")
         at_commit = subprocess.run(["git", "-C", REPO, "rev-parse", "--verify", "-q", f"HEAD:results/{vintage}/{name}"], capture_output=True, text=True).stdout.strip()
         if at_commit != git("hash-object", path):
-            sys.exit(f"dashboard/build_dashboard.py: results/{vintage}/{name} is not the file at commit {COMMIT[:7]}; commit the tables before building, so that the Method view links the files the build read")
+            sys.exit(f"dashboard/build_dashboard.py: results/{vintage}/{name} is not the file at commit {COMMIT[:7]}; commit the tables before building, so that the Method view's links open the files the build read")
 
 
 provenance = json.load(open(need("provenance_french.json", "13")))
@@ -797,22 +806,26 @@ tpl = re.sub(r"\{\{id:(\w+)\}\}", lambda m: ANCHOR[m.group(1)], tpl)
 
 def exhibit_table():
     """The Method view's table 'Where each exhibit comes from': each exhibit's number and title, its committed
-    tables linked on GitHub at the commit the build read them from, and the notebook that writes each."""
+    tables and the notebook that writes each, linked on GitHub at the commit that last changed each file."""
     rows = []
     for key, kind in exhibits:
         m = re.search(rf"<h2[^>]*>{LABEL[key]} \| (.*?)</h2>", tpl)
         title = re.sub(r"\{\{(\w[\w-]*)\}\}", lambda mm: P[mm.group(1)], m.group(1))
-        files = "<br>".join(f"<a href=\"{GITHUB}/blob/{COMMIT}/results/{V}/{name}\">{name}</a>" for name, _ in SOURCES[key])
-        books = "<br>".join(f"<a href=\"{GITHUB}/blob/{COMMIT}/notebooks/{os.path.basename(glob.glob(os.path.join(REPO, 'notebooks', f'{nb}_*.ipynb'))[0])}\">notebook {nb}</a>" for _, nb in SOURCES[key])
+        files = "<br>".join(f"<a href=\"{GITHUB}/blob/{last_change(f'results/{V}/{name}')}/results/{V}/{name}\">{name}</a>" for name, _ in SOURCES[key])
+        books = []
+        for _, nb in SOURCES[key]:
+            book = os.path.basename(glob.glob(os.path.join(REPO, "notebooks", f"{nb}_*.ipynb"))[0])
+            books.append(f"<a href=\"{GITHUB}/blob/{last_change('notebooks/' + book)}/notebooks/{book}\">notebook {nb}</a>")
+        books = "<br>".join(books)
         rows.append(f"<tr><th>{LABEL[key]}</th><td class=\"ttl\">{title}</td><td>{files}</td><td>{books}</td></tr>")
     return ("<h2 id=\"sources\">Where each exhibit comes from</h2>\n"
-            f"<p class=\"cap\">The table each exhibit is drawn from, as committed at <a href=\"{GITHUB}/commit/{COMMIT}\">{COMMIT[:7]}</a>, the commit the page was built from, and the notebook that writes it.</p>\n"
+            "<p class=\"cap\">The committed table each exhibit is drawn from, linked on GitHub at the commit that last changed it, and the notebook that writes it.</p>\n"
             "<div class=\"tw\"><div class=\"tscroll\"><table class=\"from\"><thead><tr><th>Exhibit</th><th>Title</th><th>Committed table</th><th>Written by</th></tr></thead>\n<tbody>\n"
             + "\n".join(rows) + "\n</tbody></table></div></div>")
 
 
 P["exhibit_table"] = exhibit_table()
-print("exhibits in page order:", ", ".join(f"{LABEL[k]} {k}" for k, _ in exhibits), "; at commit", COMMIT[:7])
+print("exhibits in page order:", ", ".join(f"{LABEL[k]} {k}" for k, _ in exhibits), "; tables checked at commit", COMMIT[:7])
 
 # --- the page ---
 missing = sorted(set(re.findall(r"\{\{(\w[\w-]*)\}\}", tpl)) - set(P))
