@@ -252,4 +252,3 @@ def summarise_factor(path: pd.DataFrame, budget_annual: float, targeted: tuple =
     out["mean absolute gap"] = float(path["gap"].abs().mean())
     out["standard error of the gross active return"] = te / np.sqrt(years)
     return out
-
