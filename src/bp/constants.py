@@ -844,3 +844,23 @@ PAIRED_PAPER_GAIN_WITH_CAP = {
     "published version, Table 3 Panel B, with the cap": (13.00, 13.36),
     "working paper of January 2024, Table 2 Panel B, with the cap": (13.4, 13.6),
 }
+# Added 18 November 2026 by the design after the referee's report of that day,
+# in no verdict and with no correction, and labelled so wherever the rows
+# appear: E, the three pairs among the four daily estimators under the mandate
+# that A does not test, so that the sentence on two groups among them (the
+# sample covariance and shrinkage; the factor model and the principal-component
+# model) rests on tested differences. First series minus second, in basis
+# points a year, from the committed active returns with no path rerun.
+PAIRED_E_DATE = "2026-11-18"
+PAIRED_COMPARISONS_E = (
+    (("factor", "daily 3y"), ("ledoit_wolf", "daily 3y")),
+    (("pca", "daily 3y"), ("ledoit_wolf", "daily 3y")),
+    (("factor", "daily 3y"), ("pca", "daily 3y")),
+)
+# Notebook 03, added the same day by the design after the report: the
+# comparison of every rule with 1/N on the paper's period written as a table,
+# with the two-sided p-value the study uses beside the one-sided value the
+# paper prints (half of the two-sided value under the normal distribution of
+# the Jobson-Korkie statistic), so that each figure resolves to a committed
+# file. The study's convention stays two-sided.
+REPLICATION_VS_1N_DATE = "2026-11-18"

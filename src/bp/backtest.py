@@ -10,8 +10,10 @@ monthly returns per rule (DGU p. 1928).
 Measures, all monthly:
   Sharpe ratio        mean of out-of-sample excess returns over their standard
                       deviation, equation (12); the p-value of the difference
-                      from 1/N is the Jobson-Korkie (1981) statistic with the
-                      Memmel (2003) correction, footnote 16.
+                      from 1/N is from the Jobson-Korkie (1981) statistic with
+                      the Memmel (2003) correction, footnote 16, and is
+                      two-sided; the paper's Table 3 prints one-sided values,
+                      half of these for the same statistic.
   CEQ return          mean minus gamma/2 times variance, equation (14), with
                       the delta-method p-value of footnote 18.
   turnover            average over months of the sum of absolute trades needed
@@ -189,7 +191,7 @@ def return_loss(bt: Backtest, benchmark: Backtest, cost: float = C.DGU_TCOST) ->
 
 
 def sharpe_pvalue(x: pd.Series, y: pd.Series) -> float:
-    """Jobson-Korkie (1981) test of equal Sharpe ratios with the Memmel (2003) correction, DGU footnote 16."""
+    """Jobson-Korkie (1981) test of equal Sharpe ratios with the Memmel (2003) correction, DGU footnote 16; two-sided."""
     T = len(x)
     mi, mn = x.mean(), y.mean()
     si, sn = x.std(ddof=1), y.std(ddof=1)

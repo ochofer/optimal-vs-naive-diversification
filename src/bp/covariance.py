@@ -8,7 +8,7 @@ principal-component model describe it with a small number of common sources of m
 plus each asset's own variance. The tests measure how well each estimate
 forecasts the variance of test portfolios in the next month (the bias
 statistic) and how well the minimum-variance portfolio built from it does
-(the tests of Dom, Howard, Jansen and Lohre, 2024).
+(the tests of Dom, Howard, Jansen and Lohre, 2025).
 """
 from __future__ import annotations
 

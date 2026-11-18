@@ -513,6 +513,12 @@ P["bands_without_one_w"] = word(sum(1 for v in VARIANTS if D["bias_band"]["C3"][
 P["bands_cal_with_one_w"] = word(sum(1 for v in VARIANTS if D["bias_band"]["C3"]["cal"][v][1] <= 1 <= D["bias_band"]["C3"]["cal"][v][2]), of=len(VARIANTS))
 P["bias_decade_first_lo"], P["bias_decade_first_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][1] for v in VARIANTS[:4]], 2)
 P["bias_decade_cal_first_lo"], P["bias_decade_cal_first_hi"] = lohi([D["bias_dec"]["C3"]["cal"][v][1] for v in VARIANTS[:4]], 2)
+# the daily estimators' bias statistic by decade after the first, and the monthly covariance's from 2000 (the key point on where the understatement comes from)
+assert len(DECADES) == 5 and DECADES[1] == "1990s" and DECADES[2] == "2000s" and DECADES[3] == "2010s", DECADES
+for k, name in ((2, "1990s"), (3, "2000s"), (4, "2010s"), (5, "2020s")):
+    P[f"bias_dec_{name}_lo"], P[f"bias_dec_{name}_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][k] for v in VARIANTS[:4]], 2)
+P["bias_monthly_since2000_lo"], P["bias_monthly_since2000_hi"] = lohi([D["bias_dec"]["C3"]["raw"]["sample, monthly 120"][k] for k in (3, 4, 5)], 2)
+P["bias_dec_since2000_lo"], P["bias_dec_since2000_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][k] for v in VARIANTS[:4] for k in (3, 4, 5)], 2)
 P["bias_first_decade"] = DECADES[0].replace(" to ", " to ")
 robust_band = D["bias_band"]["C3"]["raw"]["robust, all five"]
 P["robust_band_lo"], P["robust_band_hi"] = f"{robust_band[1]:.2f}", f"{robust_band[2]:.2f}"
