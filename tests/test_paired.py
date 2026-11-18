@@ -103,6 +103,17 @@ def test_holm_by_hand():
     assert np.allclose(P.holm([0.5, 0.9]), [1.0, 1.0])
 
 
+def test_the_detectable_difference_and_the_chance_follow_the_normal_formulas():
+    assert P.normal_cdf(0) == 0.5 and P.normal_cdf(1.959963985) == pytest.approx(0.975, abs=1e-6)
+    assert P.normal_quantile(0.8) == pytest.approx(0.8416212, abs=1e-6) and P.normal_quantile(0.975) == pytest.approx(1.959964, abs=1e-6)
+    assert P.detectable_difference(1.0, 2.0, 0.8) == pytest.approx(2.8416212, abs=1e-6)
+    assert P.chance_to_exclude_zero(0.0, 1.0, 2.0) == pytest.approx(P.normal_cdf(-2.0))
+    assert P.chance_to_exclude_zero(2.8416212, 1.0, 2.0) == pytest.approx(0.8, abs=1e-6)     # at the detectable difference the chance is the power
+    assert P.chance_to_exclude_zero(-3.0, 1.5, 2.0) == P.chance_to_exclude_zero(3.0, 1.5, 2.0)
+    with pytest.raises(ValueError):
+        P.normal_quantile(1.0)
+
+
 def test_the_constants_name_the_comparisons_and_the_settings():
     assert C.PAIRED_TEST_DATE == "2026-11-18"
     assert C.PAIRED_REFERENCE == ("sample", "daily 3y") and len(C.PAIRED_COMPARISONS_A) == 6
@@ -111,4 +122,6 @@ def test_the_constants_name_the_comparisons_and_the_settings():
     assert len(C.PAIRED_COMPARISONS_C) == 4
     assert C.PAIRED_SIZE_PAIRS == 1000 and C.PAIRED_SIZE_MONTHS == 566 and C.PAIRED_SIZE_CORRELATION == 0.99
     assert C.PAIRED_SIZE_RANGE == (0.035, 0.065)
+    assert C.PAIRED_DETECTABLE_POWER == 0.80 and len(C.PAIRED_PAPER_GAIN_WITH_CAP) == 2
+    assert all(rm < sample for rm, sample in C.PAIRED_PAPER_GAIN_WITH_CAP.values())
     assert C.EVAL_BOOTSTRAP_BLOCK_MONTHS == 12 and C.EVAL_BOOTSTRAP_DRAWS == 2000 and C.EVAL_BOOTSTRAP_LEVEL == 0.95

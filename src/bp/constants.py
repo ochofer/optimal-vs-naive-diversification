@@ -337,16 +337,23 @@ EXT_COV_FREQUENCIES = ("monthly_120", "daily_3y")
 EXT_COV_DAILY_WINDOW_YEARS = 3
 EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY = (1, 5)   # reported for the sample estimator only, no verdict
 DAILY_TO_MONTHLY_SCALE = 21                        # 252 trading days a year divided by 12
-EXT_COV_EWMA_HALFLIFE_DAYS = 252                   # the recency-weighted sensitivity: a half-life of one year of trading days, the RiskMetrics setting of Dom, Howard, Jansen and Lohre (2024, section 3.3.2); 126 until 3 October 2026, changed on reading that paper, before notebook 10's code
+EXT_COV_EWMA_HALFLIFE_DAYS = 252                   # the recency-weighted sensitivity: a half-life of one year of trading days, the RiskMetrics setting of Dom, Howard, Jansen and Lohre (2025, section 3.3.2); 126 until 3 October 2026, changed on reading that paper, before notebook 10's code
 
 # Covariance estimators. The shrinkage target follows Dom, Howard, Jansen and
-# Lohre (2024), the paper the design named as its reference, checked on
-# 3 October 2026 before notebook 10's code: their linear shrinkage pulls the
-# sample covariance towards a scaled identity matrix (Ledoit and Wolf 2004b),
-# and their footnote 11 reports that the constant-correlation target gave
-# inferior results. The same paper estimates from three years of daily returns
-# and rebalances monthly, and finds that under long-only constraints the
-# differences between estimators shrink, which is notebook 10's expectation 3.
+# Lohre, the paper the design named as its reference: their linear shrinkage
+# pulls the sample covariance towards a scaled identity matrix (Ledoit and
+# Wolf 2004b), and the constant-correlation target gave inferior results. The
+# design checked that on 3 October 2026, before notebook 10's code, in the
+# working paper of January 2024 (SSRN 4684926, its footnote 11), the version
+# the study was written against, which estimates from three years of daily
+# returns, having tried one, three and five (its section 4.1.1). Set by the
+# design on 18 November 2026: the citation moved to the published version
+# (2025), whose footnote 10 reports the same result, which estimates from five
+# years (its section 4.1), rebalances monthly and finds that under long-only
+# and weight constraints the differences between estimators shrink (its
+# Table 3), which notebook 10's expectation 3 tested for this study's
+# estimators. EXT_COV_DAILY_WINDOW_YEARS stays at three, the study's own
+# setting; five years is reported as a sensitivity.
 COV_ESTIMATORS = ("sample", "ledoit_wolf", "factor", "pca")
 LW_TARGET = "scaled_identity"          # Ledoit and Wolf (2004b), "A well-conditioned estimator for large-dimensional covariance matrices"; was "constant_correlation" until 3 October 2026
 LW_TARGET_SENSITIVITY = "constant_correlation"   # Ledoit and Wolf (2004a), "Honey, I Shrunk the Sample Covariance Matrix"; reported, no verdict
@@ -442,12 +449,13 @@ EVAL_START_PORTFOLIO = "benchmark"   # every path starts as the index
 EVAL_BENCHMARK_TOL = 1e-6            # expectation 1: an active return below this a month counts as holding the benchmark; written as 1e-10 and set to the solver's precision (about 1e-7) before the recorded run
 # Expectations 8 and 9, added after notebook 12's first run (6 October 2026),
 # each fixed here before its code and labelled in the notebook. RiskMetrics
-# joins as a seventh variant because Dom, Howard, Jansen and Lohre (2024) find
-# that time dynamics matter more than shrinkage or factor structure; the
-# calibration multiplies each forecast by the ratio of realised to forecast
-# tracking error over the previous EVAL_CALIBRATION_WINDOW months of the same
-# path, using only months before the forecast.
-EWMA_VARIANT = ("sample", "daily_5y_ewma")   # the seventh variant: RiskMetrics, as in notebook 10's sensitivity
+# joins as a seventh variant because Dom, Howard, Jansen and Lohre (2025) find
+# that time dynamics matter more than shrinkage or factor structure in long-only
+# and weight-constrained portfolios (the scope added by the design on
+# 18 November 2026); the calibration multiplies each forecast by the ratio of
+# realised to forecast tracking error over the previous EVAL_CALIBRATION_WINDOW
+# months of the same path, using only months before the forecast.
+EWMA_VARIANT = ("sample", "daily_5y_ewma")   # the seventh variant: RiskMetrics, as in notebook 10's sensitivity; five years of daily returns, notebook 10's choice of 3 October 2026, which is the window of the published paper (2025, section 4.1)
 EVAL_CALIBRATION_WINDOW = 60                 # months of a path's own past the calibration uses; a standard deviation from 60 observations has a standard error of about 9%
 EVAL_CALIBRATION_MIN = 24                    # the forecast is left as it is while fewer months are available
 EVAL_CALIBRATED_BIAS_RANGE = (0.85, 1.15)    # expectation 9: the calibrated bias statistic under C3, four daily estimators
@@ -820,3 +828,19 @@ PAIRED_SIZE_CORRELATION = 0.99
 PAIRED_SIZE_T_DOF = 5
 PAIRED_SIZE_SEED = 20261118                       # the date of the design, as a number
 PAIRED_SIZE_RANGE = (0.035, 0.065)                # P1: the share of simulated pairs rejected at 5 per cent
+# Added 18 November 2026 by the design, after the first run of notebook 17 and
+# before its recorded run, in no verdict: a row whose interval includes zero
+# says what the comparison could have seen only beside the difference at which
+# the interval would exclude zero about four times in five, (the critical
+# value plus the standard normal quantile at this power) times the standard
+# error, reported in the table's units and as a share of the row's reference
+# figure, the second of the two series.
+PAIRED_DETECTABLE_POWER = 0.80
+# The paper's gain of RiskMetrics over the sample covariance for the
+# weight-capped minimum-variance portfolio, per cent volatility a year, in
+# the two versions of the paper (the figures the text of expectation 8 is
+# measured against): RiskMetrics first, the sample covariance second.
+PAIRED_PAPER_GAIN_WITH_CAP = {
+    "published version, Table 3 Panel B, with the cap": (13.00, 13.36),
+    "working paper of January 2024, Table 2 Panel B, with the cap": (13.4, 13.6),
+}

@@ -51,17 +51,31 @@ Holm (1979) adjusts the p-values of a family of comparisons, as the paper does
 across its seven: the smallest p-value is multiplied by the family's size, the
 next by one less, and each adjusted value is at least the one before it.
 
+A row whose interval includes zero says what the comparison could have seen
+only beside the difference at which the interval would exclude zero about four
+times in five: (z* + the standard normal quantile at the power) times the
+standard error, the detectable difference, with the power in constants.py
+(PAIRED_DETECTABLE_POWER, added 18 November 2026). The chance that the interval
+excludes zero at a given true difference is approximated by the normal
+probability of that difference over the standard error, less z*: a figure from
+the row's own standard error and critical value under a normal approximation,
+which refers to the interval.
+
 The block size, the number of draws, the level and the seed are the study's
 (EVAL_BOOTSTRAP_BLOCK_MONTHS, EVAL_BOOTSTRAP_DRAWS, EVAL_BOOTSTRAP_LEVEL,
 EVAL_BOOTSTRAP_SEED in constants.py); every caller passes them. The module
-depends on numpy alone, so that another study can import it unchanged.
+depends on numpy and the standard library alone, so that another study can
+import it unchanged.
 """
 from __future__ import annotations
+
+import math
 
 import numpy as np
 
 __all__ = ["log_variance_difference", "sd_difference", "standard_errors", "circular_block_indices", "test", "holm",
-           "simulate_null_pair", "size_check"]
+           "simulate_null_pair", "size_check", "normal_cdf", "normal_quantile", "detectable_difference",
+           "chance_to_exclude_zero"]
 
 
 def _moments(r1: np.ndarray, r2: np.ndarray):
@@ -287,3 +301,36 @@ def size_check(pairs: int, months: int, sd: float, rho: float, dof: int, seed: i
     return {"rate": float(rejected.mean()), "rejected": int(rejected.sum()),
             "rate_interval": float(excludes.mean()), "rejected_interval": int(excludes.sum()), "pairs": pairs,
             "p_values": p_values, "differences": np.array(differences)}
+
+
+def normal_cdf(x: float) -> float:
+    """The standard normal distribution function, from the error function."""
+    return 0.5 * (1.0 + math.erf(float(x) / math.sqrt(2.0)))
+
+
+def normal_quantile(p: float) -> float:
+    """The standard normal quantile at p, by bisection on normal_cdf to 1e-12."""
+    if not 0.0 < p < 1.0:
+        raise ValueError("p must lie strictly between 0 and 1")
+    lo, hi = -40.0, 40.0
+    while hi - lo > 1e-12:
+        mid = 0.5 * (lo + hi)
+        if normal_cdf(mid) < p:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def detectable_difference(se: float, critical: float, power: float) -> float:
+    """The difference at which the interval (difference plus and minus critical times se) would exclude
+    zero with probability `power`, under a normal approximation: (critical + the normal quantile at
+    power) times the standard error, in the units of the standard error."""
+    return (float(critical) + normal_quantile(power)) * float(se)
+
+
+def chance_to_exclude_zero(gain: float, se: float, critical: float) -> float:
+    """The approximate probability that the interval excludes zero when the true difference is `gain`:
+    the normal probability of |gain| / se less the critical value."""
+    return normal_cdf(abs(float(gain)) / float(se) - float(critical))
+

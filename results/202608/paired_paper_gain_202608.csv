@@ -1,0 +1,3 @@
+source,RiskMetrics %,sample %,"gain, share of level","gain on this level, bp",approximate chance the interval excludes zero
+"published version, Table 3 Panel B, with the cap",13.00000000,13.36000000,0.02694611,2.28109728,0.65376771
+"working paper of January 2024, Table 2 Panel B, with the cap",13.40000000,13.60000000,0.01470588,1.24491257,0.22871708

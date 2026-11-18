@@ -1,0 +1,2 @@
+pairs,months,monthly sd,correlation,t degrees of freedom,seed,block,draws,level,rejected by p-value,share rejected,intervals excluding zero,share of intervals excluding zero,range lower,range upper,P1
+1000,566,0.00250000,0.99000000,5,20261118,12,2000,0.95000000,44,0.04400000,42,0.04200000,0.03500000,0.06500000,MET
