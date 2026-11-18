@@ -9,17 +9,25 @@ Plotly, loaded from its content delivery network, so the interactive page needs 
 The three static figures (SVG, drawn with matplotlib) are the ones the README shows and need nothing.
 Every number in the page's prose is computed here from the output files and substituted into the
 template; the build stops, naming the notebook to run, if an input file is missing, and stops again
-if an input file differs from its committed copy in results/<vintage>/, so that the page can only be
-built from the tables a reader can open at the commit; the source lines name that folder. The footer
+if an input file differs from its committed copy in results/<vintage>/ or from that copy at the
+current commit, so that the page can only be built from the tables a reader can open at the commit.
+The source lines name no file (the house standard's C6); the Method view's table "Where each exhibit
+comes from" links each exhibit's table on GitHub at the commit the build read it from, with the
+notebook that writes it, so the build runs inside the repository's checkout, after the tables are
+committed. The figures and tables are numbered here in page order (C5): the template names each
+exhibit by a key, {{n:key}} is its number and {{id:key}} its anchor, and every reference in the text
+is written from the exhibit it points to, so an exhibit added or moved renumbers the rest. The footer
 states the vintage, the source notebooks and the build date, and the page is rebuilt whenever a
-notebook is rerun (copy the new output files to results/<vintage>/ first). The data are embedded
-with two decimals more than the page displays, so that no displayed number is rounded twice.
+notebook is rerun (copy the new output files to results/<vintage>/ and commit them first). The data
+are embedded with two decimals more than the page displays, so that no displayed number is rounded
+twice.
 """
 import datetime
 import glob
 import json
 import os
 import re
+import subprocess
 import sys
 import zoneinfo
 
@@ -45,8 +53,21 @@ def need(pattern, notebook):
     return hits[0]
 
 
+def git(*args):
+    """The output of a git command run in the repository, or a message saying why the build needs the checkout."""
+    try:
+        return subprocess.run(["git", "-C", REPO, *args], check=True, capture_output=True, text=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        sys.exit("dashboard/build_dashboard.py: the build runs inside the repository's checkout, because the Method view links each table on GitHub at the commit the build reads it from (git " + " ".join(args) + " failed)")
+
+
+COMMIT = git("rev-parse", "HEAD")
+GITHUB = "https://github.com/ochofer/optimal-vs-naive-diversification"
+
+
 def committed(vintage):
-    """Stops unless every input read so far is byte-identical to its copy in results/<vintage>/."""
+    """Stops unless every input read so far is byte-identical to its copy in results/<vintage>/, and that
+    copy is the file at the current commit, which the Method view links."""
     for path in INPUTS:
         name = os.path.basename(path)
         copy = os.path.join(REPO, "results", vintage, name)
@@ -54,6 +75,9 @@ def committed(vintage):
             sys.exit(f"dashboard/build_dashboard.py: outputs/{name} has no committed copy results/{vintage}/{name}; copy the output files to results/{vintage}/ and commit them before building")
         if open(path, "rb").read() != open(copy, "rb").read():
             sys.exit(f"dashboard/build_dashboard.py: outputs/{name} differs from the committed copy results/{vintage}/{name}; copy the output files to results/{vintage}/ and commit them before building")
+        at_commit = subprocess.run(["git", "-C", REPO, "rev-parse", "--verify", "-q", f"HEAD:results/{vintage}/{name}"], capture_output=True, text=True).stdout.strip()
+        if at_commit != git("hash-object", path):
+            sys.exit(f"dashboard/build_dashboard.py: results/{vintage}/{name} is not the file at commit {COMMIT[:7]}; commit the tables before building, so that the Method view links the files the build read")
 
 
 provenance = json.load(open(need("provenance_french.json", "13")))
@@ -84,7 +108,8 @@ roll_desc = pd.read_csv(need(f"rolling_evaluation_descriptives_{V}.csv", "12"))
 roll_bias_dec = pd.read_csv(need(f"rolling_evaluation_bias_by_decade_{V}.csv", "12"))
 fc_te = pd.read_csv(need(f"forecast_tracking_errors_{V}.csv", "12"), index_col=0)
 roll_te = pd.read_csv(need(f"rolling_tracking_error_{V}.csv", "12"), index_col=0)
-roll_w = pd.read_csv(need(f"rolling_weights_*_{V}.csv", "12"), index_col=0)
+roll_w_path = need(f"rolling_weights_*_{V}.csv", "12")
+roll_w = pd.read_csv(roll_w_path, index_col=0)
 fo_eval = pd.read_csv(need(f"factor_objective_evaluation_{V}.csv", "15"), index_col=0)
 fo_verd = pd.read_csv(need(f"factor_objective_verdicts_{V}.csv", "15"))
 fo_bm = pd.read_csv(need(f"factor_objective_budget_months_{V}.csv", "15"))
@@ -715,8 +740,81 @@ fig.tight_layout(rect=(0, 0.13, 1, 1))
 fig.savefig(os.path.join(FIG_DIR, "fig_factor_objective.svg"), metadata={"Creator": None, "Date": None})
 plt.close(fig)
 
-# --- the page ---
+# --- the exhibits: their sources, their numbers in page order, and the Method view's table (C5, C6, G10) ---
+# For each exhibit key of the template, the committed tables it is drawn from, each with the notebook that writes it.
+SOURCES = {
+    "kf": [(f"rolling_evaluation_{V}.csv", "12"), (f"attribution_summary_{V}.csv", "13")],
+    "f1": [(f"rolling_evaluation_{V}.csv", "12")],
+    "rep": [(f"replication_sharpe_{V}.csv", "03"), (f"replication_turnover_{V}.csv", "03")],
+    "since": [(f"extended_sample_sharpe_{V}.csv", "07"), (f"extended_sample_vs_1N_{V}.csv", "07")],
+    "est": [(f"covariance_estimators_{V}.csv", "10")],
+    "bias": [(f"rolling_evaluation_bias_by_decade_{V}.csv", "12"), (f"rolling_evaluation_descriptives_{V}.csv", "12")],
+    "frontier": [(f"rolling_evaluation_{V}.csv", "12")],
+    "cum": [(f"active_returns_{V}.csv", "12"), (f"rolling_evaluation_descriptives_{V}.csv", "12"), (f"attribution_summary_{V}.csv", "13")],
+    "roll": [(f"rolling_tracking_error_{V}.csv", "12"), (f"forecast_tracking_errors_{V}.csv", "12")],
+    "weights": [(os.path.basename(roll_w_path), "12")],
+    "turn": [(f"rolling_evaluation_{V}.csv", "12")],
+    "att": [(f"attribution_summary_{V}.csv", "13"), (f"attribution_mandate_cost_{V}.csv", "13")],
+    "attdec": [(f"attribution_by_decade_{V}.csv", "13")],
+    "opt": [(f"optimiser_fixes_{V}.csv", "11"), (f"optimiser_speed_limit_{V}.csv", "11")],
+    "bench": [(f"benchmark_returns_{V}.csv", "08")],
+    "comp": [(f"benchmark_weights_{V}.csv", "08")],
+    "fokf": [(f"factor_objective_evaluation_{V}.csv", "15"), (f"factor_objective_attribution_{V}.csv", "16")],
+    "verdicts": [(f"factor_objective_verdicts_{V}.csv", "15"), (f"factor_objective_attribution_verdict_{V}.csv", "16")],
+    "obj": [(f"factor_objective_evaluation_{V}.csv", "15"), (f"factor_objective_budget_months_{V}.csv", "15")],
+    "fote": [(f"factor_objective_evaluation_{V}.csv", "15")],
+    "foatt": [(f"factor_objective_attribution_{V}.csv", "16"), (f"factor_objective_exposure_bought_{V}.csv", "16"), (f"factor_objective_gap_{V}.csv", "16"), (f"factor_objective_evaluation_{V}.csv", "15")],
+}
+read_names = {os.path.basename(p) for p in INPUTS}
+for key, files in SOURCES.items():
+    for name, nb in files:
+        assert name in read_names, (key, name)   # the table names only files the build read and checked against the commit
+        assert len(glob.glob(os.path.join(REPO, "notebooks", f"{nb}_*.ipynb"))) == 1, nb
+
 tpl = open(os.path.join(SCRIPT_DIR, "template.html"), encoding="utf-8").read()
+# the exhibits in page order: the views stand in the template in the order of the tab bar, and each exhibit in its view
+exhibits = re.findall(r"<(?:figure|div) class=\"fig\" data-key=\"(\w+)\" data-kind=\"(figure|table)\"", tpl)
+keys = [k for k, _ in exhibits]
+assert len(keys) == len(set(keys)) and set(keys) == set(SOURCES), (sorted(set(keys) ^ set(SOURCES)))
+NUMBER, ANCHOR, LABEL = {}, {}, {}
+counts = {"figure": 0, "table": 0}
+for key, kind in exhibits:
+    counts[kind] += 1
+    NUMBER[key], ANCHOR[key], LABEL[key] = str(counts[kind]), f"{kind}-{counts[kind]}", f"{kind.capitalize()} {counts[kind]}"
+for key, kind in exhibits:   # the heading names the kind the key has
+    assert re.search(rf"<h2[^>]*>{kind.capitalize()} \{{\{{n:{key}\}}\}} \| ", tpl), key
+refs = set(re.findall(r"\{\{(?:n|id):(\w+)\}\}", tpl))
+assert refs <= set(keys), sorted(refs - set(keys))
+visible = re.sub(r"<script>.*?</script>", "", tpl, flags=re.S)
+stale = [m.group(0) for m in re.finditer(r"\b(?:Figures?|figures?|Tables?|tables?) \d", visible)]
+assert stale == ["Tables 3", "Tables 3"], stale   # the paper's Tables 3 and 5, named twice in the replication's view
+for line in visible.split("\n"):   # a source line names no file and no notebook (C6)
+    if "class=\"src\"" in line:
+        assert "results/" not in line and "notebook" not in line, line
+tpl = re.sub(r"\{\{n:(\w+)\}\}", lambda m: NUMBER[m.group(1)], tpl)
+tpl = re.sub(r"\{\{id:(\w+)\}\}", lambda m: ANCHOR[m.group(1)], tpl)
+
+
+def exhibit_table():
+    """The Method view's table 'Where each exhibit comes from': each exhibit's number and title, its committed
+    tables linked on GitHub at the commit the build read them from, and the notebook that writes each."""
+    rows = []
+    for key, kind in exhibits:
+        m = re.search(rf"<h2[^>]*>{LABEL[key]} \| (.*?)</h2>", tpl)
+        title = re.sub(r"\{\{(\w[\w-]*)\}\}", lambda mm: P[mm.group(1)], m.group(1))
+        files = "<br>".join(f"<a href=\"{GITHUB}/blob/{COMMIT}/results/{V}/{name}\">{name}</a>" for name, _ in SOURCES[key])
+        books = "<br>".join(f"<a href=\"{GITHUB}/blob/{COMMIT}/notebooks/{os.path.basename(glob.glob(os.path.join(REPO, 'notebooks', f'{nb}_*.ipynb'))[0])}\">notebook {nb}</a>" for _, nb in SOURCES[key])
+        rows.append(f"<tr><th>{LABEL[key]}</th><td class=\"ttl\">{title}</td><td>{files}</td><td>{books}</td></tr>")
+    return ("<h2 id=\"sources\">Where each exhibit comes from</h2>\n"
+            f"<p class=\"cap\">The table each exhibit is drawn from, as committed at <a href=\"{GITHUB}/commit/{COMMIT}\">{COMMIT[:7]}</a>, the commit the page was built from, and the notebook that writes it.</p>\n"
+            "<div class=\"tw\"><div class=\"tscroll\"><table class=\"from\"><thead><tr><th>Exhibit</th><th>Title</th><th>Committed table</th><th>Written by</th></tr></thead>\n<tbody>\n"
+            + "\n".join(rows) + "\n</tbody></table></div></div>")
+
+
+P["exhibit_table"] = exhibit_table()
+print("exhibits in page order:", ", ".join(f"{LABEL[k]} {k}" for k, _ in exhibits), "; at commit", COMMIT[:7])
+
+# --- the page ---
 missing = sorted(set(re.findall(r"\{\{(\w[\w-]*)\}\}", tpl)) - set(P))
 assert not missing, missing
 html = re.sub(r"\{\{(\w[\w-]*)\}\}", lambda m: P[m.group(1)], tpl)
