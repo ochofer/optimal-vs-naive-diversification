@@ -632,9 +632,10 @@ dl.terms dd { margin: 0 0 0 1rem; }
     diverging: [[0, "#24599e"], [0.5, "#f2f2f2"], [1, "#c8423b"]] };
   var CONFIG = { displayModeBar: false, scrollZoom: false, responsive: true };
   var state = { view: "summary", bias: "raw", bset: "C3", set: "C3", aset: "C3", hl: D.variants[0], budget: "100", abudget: "100" };
-  var TABLES = {}, drawn = {}, wasNarrow = null;
+  var TABLES = {}, drawn = {}, wasBand = null;
 
   function narrow() { return window.innerWidth < 700; }
+  function band() { return pick(narrow(), 0, pick(window.innerWidth < 1024, 1, 2)); }
   function vname(v) { if (narrow()) { return D.vshort[v]; } return D.vlabel[v]; }
   function vcol(v) { return CH.cat[D.variants.indexOf(v)]; }
   function fcol(f) { return CH.cat[D.factors.indexOf(f)]; }
@@ -821,7 +822,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
       traces.push({ x: [null], y: [null], type: "bar", name: spec[1], marker: { color: pick(spec[0] === 1, CH.cat[1], spec[0]) }, hoverinfo: "skip" });
     });
     var layout = base({ barmode: "overlay", margin: { l: 56, r: 16, t: 8, b: pick(narrow(), 56, 96) }, shapes: [2, -2].map(function (y) { return { type: "line", x0: -0.5, x1: names.length - 0.5, y0: y, y1: y, line: { color: CH.ink2, width: 1, dash: "dot" } }; }) });
-    layout.xaxis = axis({ tickfont: { size: 10, color: CH.meta }, tickangle: pick(narrow(), 90, -60), showticklabels: !narrow(), title: pick(narrow(), "the 49 industries, largest overweight first", "") });
+    layout.xaxis = axis({ tickfont: { size: 11, color: CH.meta }, tickangle: pick(window.innerWidth < 1024, -90, -60), dtick: 1, showticklabels: !narrow(), title: pick(narrow(), "the 49 industries, largest overweight first", "") });
     layout.yaxis = axis({ value: true, title: "active weight, percentage points", zeroline: true, zerolinecolor: CH.frame, range: [-2.6, 2.6] });
     layout.legend = legendAt(pick(narrow(), -0.2, -0.42));
     plot("f-weights", traces, layout);
@@ -1196,13 +1197,13 @@ dl.terms dd { margin: 0 0 0 1rem; }
   var timer = null;
   window.addEventListener("resize", function () {
     clearTimeout(timer);
-    timer = setTimeout(function () { var n = narrow(); if (n !== wasNarrow) { wasNarrow = n; drawn = {}; drawView(state.view); } }, 200);
+    timer = setTimeout(function () { var n = band(); if (n !== wasBand) { wasBand = n; drawn = {}; drawView(state.view); } }, 200);
   });
   if (typeof Plotly === "undefined") {
     document.querySelectorAll(".chart").forEach(function (el) { el.textContent = "The charting library did not load. This page needs a connection to cdn.plot.ly once, and every figure's numbers are in the table under it."; });
     table1(); table2(); table3();
   } else {
-    wasNarrow = narrow();
+    wasBand = band();
     route();
   }
   // the fade at the tab bar's right edge shows only while more of the bar lies to the right
