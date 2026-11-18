@@ -805,8 +805,9 @@ tpl = re.sub(r"\{\{id:(\w+)\}\}", lambda m: ANCHOR[m.group(1)], tpl)
 
 
 def exhibit_table():
-    """The Method view's table 'Where each exhibit comes from': each exhibit's number and title, its committed
-    tables and the notebook that writes each, linked on GitHub at the commit that last changed each file."""
+    """The Method view's table 'Where each exhibit comes from', in the one form of the house standard's C6: each
+    exhibit's number and title in one cell, its committed tables and the notebook that writes each, linked on
+    GitHub at the commit that last changed each file."""
     rows = []
     for key, kind in exhibits:
         m = re.search(rf"<h2[^>]*>{LABEL[key]} \| (.*?)</h2>", tpl)
@@ -817,10 +818,10 @@ def exhibit_table():
             book = os.path.basename(glob.glob(os.path.join(REPO, "notebooks", f"{nb}_*.ipynb"))[0])
             books.append(f"<a href=\"{GITHUB}/blob/{last_change('notebooks/' + book)}/notebooks/{book}\">notebook {nb}</a>")
         books = "<br>".join(books)
-        rows.append(f"<tr><th>{LABEL[key]}</th><td class=\"ttl\">{title}</td><td>{files}</td><td>{books}</td></tr>")
+        rows.append(f"<tr><th>{LABEL[key]} | {title}</th><td>{files}</td><td>{books}</td></tr>")
     return ("<h2 id=\"sources\">Where each exhibit comes from</h2>\n"
-            "<p class=\"cap\">The committed table each exhibit is drawn from, linked on GitHub at the commit that last changed it, and the notebook that writes it.</p>\n"
-            "<div class=\"tw\"><div class=\"tscroll\"><table class=\"from\"><thead><tr><th>Exhibit</th><th>Title</th><th>Committed table</th><th>Written by</th></tr></thead>\n<tbody>\n"
+            "<p class=\"cap\">The committed tables each exhibit is drawn from, each linked on GitHub at the commit that last changed it, and the notebooks that write them.</p>\n"
+            "<div class=\"tw\"><div class=\"tscroll\"><table class=\"from\"><thead><tr><th>Exhibit</th><th>Committed tables</th><th>Written by</th></tr></thead>\n<tbody>\n"
             + "\n".join(rows) + "\n</tbody></table></div></div>")
 
 
