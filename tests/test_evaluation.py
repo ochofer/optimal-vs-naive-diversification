@@ -153,6 +153,29 @@ def test_block_bootstrap_band_is_deterministic_covers_a_calibrated_forecast_and_
         E.block_bootstrap_band(active[:1], f[:1])
 
 
+def test_bias_statistic_split_reproduces_the_band_of_each_period_and_finds_a_known_difference():
+    # added 19 November 2026: the first period's band is block_bootstrap_band's on those months with the same seed; the two
+    # statistics are bias_statistic on each period; a forecast that is right from 2000 and half the truth before it gives a
+    # difference of about one whose band excludes zero
+    rng = np.random.default_rng(12)
+    months = pd.period_range("1979-07", "2026-08", freq="M")
+    second = np.asarray(months >= pd.Period("2000-01", "M"))
+    active = rng.standard_normal(len(months)) * 0.02
+    f = np.where(second, 0.02, 0.01) * np.sqrt(12)
+    out = E.bias_statistic_split(active, f, second, block=12, draws=400, seed=3)
+    assert out["months before"] == 246 and out["months from"] == 320 and out["months before"] + out["months from"] == len(months)
+    assert out["before"] == pytest.approx(E.bias_statistic(active[~second], f[~second]))
+    assert out["from"] == pytest.approx(E.bias_statistic(active[second], f[second]))
+    assert (out["before lower"], out["before upper"]) == E.block_bootstrap_band(active[~second], f[~second], block=12, draws=400, seed=3)
+    assert out["before lower"] < out["before"] < out["before upper"] and out["from lower"] < 1.0 < out["from upper"]
+    assert out["difference"] == pytest.approx(out["before"] - out["from"]) and 0.7 < out["difference"] < 1.3
+    assert 0 < out["difference lower"] < out["difference"] < out["difference upper"]
+    assert E.bias_statistic_split(active, f, second, block=12, draws=400, seed=3) == out                     # the same seed, the same answer
+    assert np.isnan(E.bias_statistic_split(active, np.zeros(len(months)), second)["difference"])
+    with pytest.raises(ValueError):
+        E.bias_statistic_split(active, f, np.zeros(len(months), dtype=bool))
+
+
 def _factor_world(T=10, N=30, seed=5):
     months, Sigma, weights, returns = _world(T=T, N=N, seed=seed)
     rng = np.random.default_rng(seed + 100)

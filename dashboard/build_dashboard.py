@@ -115,6 +115,7 @@ att_cost = pd.read_csv(need(f"attribution_mandate_cost_{V}.csv", "13"))
 att_dec = pd.read_csv(need(f"attribution_by_decade_{V}.csv", "13"))
 roll_desc = pd.read_csv(need(f"rolling_evaluation_descriptives_{V}.csv", "12"))
 roll_bias_dec = pd.read_csv(need(f"rolling_evaluation_bias_by_decade_{V}.csv", "12"))
+bias_split = pd.read_csv(need(f"bias_split_2000_{V}.csv", "17"))
 fc_te = pd.read_csv(need(f"forecast_tracking_errors_{V}.csv", "12"), index_col=0)
 roll_te = pd.read_csv(need(f"rolling_tracking_error_{V}.csv", "12"), index_col=0)
 roll_w_path = need(f"rolling_weights_*_{V}.csv", "12")
@@ -519,6 +520,20 @@ for k, name in ((2, "1990s"), (3, "2000s"), (4, "2010s"), (5, "2020s")):
     P[f"bias_dec_{name}_lo"], P[f"bias_dec_{name}_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][k] for v in VARIANTS[:4]], 2)
 P["bias_monthly_since2000_lo"], P["bias_monthly_since2000_hi"] = lohi([D["bias_dec"]["C3"]["raw"]["sample, monthly 120"][k] for k in (3, 4, 5)], 2)
 P["bias_dec_since2000_lo"], P["bias_dec_since2000_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][k] for v in VARIANTS[:4] for k in (3, 4, 5)], 2)
+# the bias statistic before 2000 and from 2000 with its bands (notebook 17, added 19 November 2026 after a referee's review, no verdict): the key point
+# states that each daily estimator's band from 2000 contains 1 and each difference's band excludes zero, and that the monthly covariance's does not, so the build checks it
+bs = bias_split.set_index("variant")
+assert (bs["set"] == "C3").all() and (bs["split month"] == "2000-01").all() and set(bs.index) == set(VARIANTS)
+for v in VARIANTS:
+    assert abs(bs.loc[v, "bias, whole period"] - D["bias_dec"]["C3"]["raw"][v][0]) < 1e-4, v
+for v in VARIANTS[:4]:
+    assert bs.loc[v, "from lower"] < 1 < bs.loc[v, "from upper"] and bs.loc[v, "difference lower"] > 0, v
+assert bs.loc["sample, monthly 120", "difference lower"] < 0 < bs.loc["sample, monthly 120", "difference upper"]
+P["split_daily_before_lo"], P["split_daily_before_hi"] = lohi([bs.loc[v, "bias before"] for v in VARIANTS[:4]], 2)
+P["split_daily_from_lo"], P["split_daily_from_hi"] = lohi([bs.loc[v, "bias from"] for v in VARIANTS[:4]], 2)
+P["split_monthly_before"], P["split_monthly_from"] = f"{bs.loc['sample, monthly 120', 'bias before']:.2f}", f"{bs.loc['sample, monthly 120', 'bias from']:.2f}"
+P["split_monthly_diff"] = signed(bs.loc["sample, monthly 120", "difference"], 2)
+P["split_monthly_diff_lo"], P["split_monthly_diff_hi"] = signed(bs.loc["sample, monthly 120", "difference lower"], 2), signed(bs.loc["sample, monthly 120", "difference upper"], 2)
 P["bias_first_decade"] = DECADES[0].replace(" to ", " to ")
 robust_band = D["bias_band"]["C3"]["raw"]["robust, all five"]
 P["robust_band_lo"], P["robust_band_hi"] = f"{robust_band[1]:.2f}", f"{robust_band[2]:.2f}"
@@ -763,7 +778,7 @@ SOURCES = {
     "rep": [(f"replication_sharpe_{V}.csv", "03"), (f"replication_turnover_{V}.csv", "03")],
     "since": [(f"extended_sample_sharpe_{V}.csv", "07"), (f"extended_sample_vs_1N_{V}.csv", "07")],
     "est": [(f"covariance_estimators_{V}.csv", "10")],
-    "bias": [(f"rolling_evaluation_bias_by_decade_{V}.csv", "12"), (f"rolling_evaluation_descriptives_{V}.csv", "12")],
+    "bias": [(f"rolling_evaluation_bias_by_decade_{V}.csv", "12"), (f"rolling_evaluation_descriptives_{V}.csv", "12"), (f"bias_split_2000_{V}.csv", "17")],
     "frontier": [(f"rolling_evaluation_{V}.csv", "12")],
     "cum": [(f"active_returns_{V}.csv", "12"), (f"rolling_evaluation_descriptives_{V}.csv", "12"), (f"attribution_summary_{V}.csv", "13")],
     "roll": [(f"rolling_tracking_error_{V}.csv", "12"), (f"forecast_tracking_errors_{V}.csv", "12")],

@@ -181,6 +181,46 @@ def block_bootstrap_band(active: np.ndarray, forecast_te: np.ndarray, block: int
     return (float(lo), float(hi))
 
 
+def _resampled_bias_statistics(ratio: np.ndarray, block: int, draws: int, rng: np.random.Generator) -> np.ndarray:
+    """The bias statistic on `draws` circular block resamples of the monthly ratios, drawn as block_bootstrap_band draws
+    them, from the generator passed in."""
+    n = len(ratio)
+    k = int(np.ceil(n / block))
+    starts = rng.integers(0, n, size=(draws, k))
+    idx = ((starts[:, :, None] + np.arange(block)[None, None, :]) % n).reshape(draws, k * block)[:, :n]
+    return np.std(ratio[idx], axis=1, ddof=1)
+
+
+def bias_statistic_split(active: np.ndarray, forecast_te: np.ndarray, second: np.ndarray, block: int = C.EVAL_BOOTSTRAP_BLOCK_MONTHS,
+                         draws: int = C.EVAL_BOOTSTRAP_DRAWS, seed: int = C.EVAL_BOOTSTRAP_SEED, level: float = C.EVAL_BOOTSTRAP_LEVEL) -> dict:
+    """Added 19 November 2026 (constants.PAIRED_ADDITIONS_DATE): the bias statistic on the months before a split and on the
+    months from it (`second` marks the months from the split), each with the band of block_bootstrap_band on its own
+    months, the two periods resampled in turn from one generator seeded with `seed` (the first period's band is the one
+    block_bootstrap_band gives on those months with the same seed), and the band of the difference, the first period's
+    statistic less the second's, from the resampled statistics paired draw by draw. nan throughout when a forecast is zero."""
+    a = np.asarray(active, dtype=float)
+    f = np.asarray(forecast_te, dtype=float) / np.sqrt(PERIODS_PER_YEAR)
+    s = np.asarray(second, dtype=bool)
+    if len(a) != len(f) or len(a) != len(s) or s.sum() < 2 or (~s).sum() < 2 or block < 1 or draws < 1:
+        raise ValueError("the split needs at least two months on each side, a block of one month or more and one draw or more")
+    out = {"months before": int((~s).sum()), "months from": int(s.sum())}
+    if (np.asarray(forecast_te, dtype=float) <= C.OPT_TOL_TE).any():
+        return {**out, **{k: float("nan") for k in ("before", "before lower", "before upper", "from", "from lower", "from upper",
+                                                   "difference", "difference lower", "difference upper")}}
+    ratio = a / f
+    rng = np.random.default_rng(seed)
+    stats_before = _resampled_bias_statistics(ratio[~s], block, draws, rng)
+    stats_from = _resampled_bias_statistics(ratio[s], block, draws, rng)
+    tail = 100.0 * (1.0 - level) / 2.0
+    out["before"] = float(np.std(ratio[~s], ddof=1))
+    out["before lower"], out["before upper"] = (float(x) for x in np.percentile(stats_before, [tail, 100.0 - tail]))
+    out["from"] = float(np.std(ratio[s], ddof=1))
+    out["from lower"], out["from upper"] = (float(x) for x in np.percentile(stats_from, [tail, 100.0 - tail]))
+    out["difference"] = out["before"] - out["from"]
+    out["difference lower"], out["difference upper"] = (float(x) for x in np.percentile(stats_before - stats_from, [tail, 100.0 - tail]))
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Version 2, module A: the factor path (notebook 15)
 # ---------------------------------------------------------------------------

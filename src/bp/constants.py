@@ -348,8 +348,9 @@ EXT_COV_EWMA_HALFLIFE_DAYS = 252                   # the recency-weighted sensit
 # the study was written against, which estimates from three years of daily
 # returns, having tried one, three and five (its section 4.1.1). Set by the
 # design on 18 November 2026: the citation moved to the published version
-# (2025), whose footnote 10 reports the same result, which estimates from five
-# years (its section 4.1), rebalances monthly and finds that under long-only
+# (2025; the section, table and footnote numbers are the accepted manuscript's
+# of January 2025), whose footnote 10 reports the same result, which estimates
+# from five years (its section 4.1), rebalances monthly and finds that under long-only
 # and weight constraints the differences between estimators shrink (its
 # Table 3), which notebook 10's expectation 3 tested for this study's
 # estimators. EXT_COV_DAILY_WINDOW_YEARS stays at three, the study's own
@@ -865,7 +866,7 @@ PAIRED_COMPARISONS_E = (
 # file. The study's convention stays two-sided.
 REPLICATION_VS_1N_DATE = "2026-11-18"
 # Added 19 November 2026 by the design after the referee's review of the
-# corrections at a1592f5, in no verdict, and labelled so wherever the figures
+# corrections at a1592f5, with no verdict, and labelled so wherever the figures
 # appear. The referee's own recomputation of that day produced every figure
 # these settings lead to before this code ran, so none is an expectation, and
 # the text says of each that its outcome was known from the referee's run.
