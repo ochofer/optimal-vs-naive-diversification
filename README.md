@@ -185,6 +185,7 @@ src/bp/optimiser.py     the constrained tracking-error minimiser and its robust 
 src/bp/evaluation.py    the rolling evaluation: one path per specification, its records and its measures; the descriptive figures and the block-bootstrap band; the factor path of version 2
 src/bp/attribution.py   the factor attribution of a path's active return: exposures, contributions, residual, identity; used by notebooks 13 and 16
 src/bp/paired.py        the variance test of Ledoit and Wolf (2011) on two series that share their months, the test Dom, Howard, Jansen and Lohre (2025) apply: the delta method, the prewhitened Parzen kernel, the studentised circular block bootstrap, Holm's correction; added 18 November 2026
+src/bp/daily.py         the daily returns of a path from its monthly weights, drifting within each month with no trade, the compounded monthly return, the reconciliation of gate D1 and the description of a covariance window by its weights; added 18 November 2026
 checks/                 the direct test's script and its aggregate results (the data stay where they are)
 note/                   the write-up: the two notes as HTML and PDF
 companion/              the companion page, its template and the build script that fills it from outputs/

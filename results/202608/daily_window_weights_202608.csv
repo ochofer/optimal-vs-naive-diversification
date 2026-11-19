@@ -1,0 +1,4 @@
+window,years,"halflife, days","days, mean","days, min","days, max","mean age of an observation, days",effective number of observations,share of weight in the last 756 days
+"RiskMetrics, daily 5y",5,252.00000000,1260.68197880,1254,1266,323.47008673,683.12947550,0.90317242
+"flat, daily 3y",3,,756.28975265,750,762,378.64487633,756.28975265,0.99852146
+"flat, daily 5y",5,,1260.68197880,1254,1266,630.84098940,1260.68197880,0.59967933

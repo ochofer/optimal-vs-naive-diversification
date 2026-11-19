@@ -103,6 +103,13 @@ def test_holm_by_hand():
     assert np.allclose(P.holm([0.5, 0.9]), [1.0, 1.0])
 
 
+def test_chunked_bootstrap_equals_unchunked_to_the_last_digit():
+    r1, r2 = _pair(600, 8)
+    whole = P.test(r1, r2, draws=301, seed=4)
+    for chunk in (1, 7, 100, 301, 1000):
+        assert P.test(r1, r2, draws=301, seed=4, chunk=chunk) == whole
+
+
 def test_the_detectable_difference_and_the_chance_follow_the_normal_formulas():
     assert P.normal_cdf(0) == 0.5 and P.normal_cdf(1.959963985) == pytest.approx(0.975, abs=1e-6)
     assert P.normal_quantile(0.8) == pytest.approx(0.8416212, abs=1e-6) and P.normal_quantile(0.975) == pytest.approx(1.959964, abs=1e-6)

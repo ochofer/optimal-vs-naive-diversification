@@ -6031,7 +6031,235 @@ print(f"active returns tested: {active_path}, SHA-256 {active_sha}")
 ]
 
 
+NB18 = [
+    md("""
+# 18. Tracking error measured on daily returns: the paired test at the paper's horizon
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Basis point | one hundredth of a percentage point, so 10 basis points is 0.1% |
+| Standard error | the uncertainty of an estimate; for an average over M observations it is the standard deviation of the observations divided by the square root of M |
+| Factor | a return series that moves many assets at once, for example the return of the whole market |
+| Beta | how much an asset moves with the factor |
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation; a cap-weighted index of industries gives each industry the share of the total that its firms' market capitalisation amounts to |
+| Value-weighted return | the return of a group of firms in which each firm counts in proportion to its market capitalisation, French's industry returns |
+| Benchmark | in the extension, the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08, its weights set each month |
+| Active return | the portfolio's return less the benchmark's, over a month or over a day |
+| Tracking error | the standard deviation of the active return, stated per year: times the square root of 12 on months, of 252 on trading days; in basis points |
+| Path | the month-by-month sequence of portfolios of one specification, each built on the data before its month |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less noise |
+| Variant | one covariance estimator at one data frequency, or the robust portfolio; notebook 12 ran seven under each constraint set |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets |
+| Tilt | a constraint holding named industries below their benchmark weight, here Coal, Oil and Utilities at no more than half of it |
+| Mandate | the constraint set C3 of notebook 12: long-only, every untilted industry within 2 percentage points of its benchmark weight, turnover capped at 2% a month, the tilt, the market beta restored to the benchmark's, Smoke and Guns excluded |
+| Tilt alone | the mandate without beta neutrality and the exclusions, the constraint set notebook 12 runs as a sensitivity |
+| Minimum-variance portfolio | the weights that make the forecast variance of a portfolio as small as the covariance estimate allows, with no benchmark; long-only when no weight may be negative, unconstrained otherwise (notebook 10) |
+| RiskMetrics | the covariance estimator of J.P. Morgan's 1996 RiskMetrics document: a weighted sample covariance in which each day's weight falls by half every half-life, one year here, over five years of daily returns |
+| Robust portfolio | the weights whose largest forecast tracking error across the five covariance estimates is smallest (notebook 11) |
+| Drift | what a portfolio's weights do between trades: each weight grows with its industry's return and the weights are rescaled to sum to one; within a month no path trades, so its weights drift from the month's first day to its last |
+| Compounded return | the return over a month from its days, the product of one plus each day's return, minus one |
+| Rerun rule | the study's rule for a rerun of a recorded run: a table from the quadratic programs reproduces to the last digit, a table from the cone program (the robust portfolio's) to 1e-8 per cell |
+| Gate | a check that must hold before the notebook goes on; a gate that fails stops the notebook, which reports it |
+| Paired | said of two series measured on the same days, so that their difference is less noisy than either of them |
+| Variance test | the test of Ledoit and Wolf (2011) of whether two paired series have the same variance, notebook 17's test, here on daily series |
+| Seed | the number that fixes the random numbers a bootstrap or a simulation uses; the same seed gives the same random numbers |
+| Draw | one resample of the days, or one simulated pair of series, produced from the seed |
+| Circular block bootstrap | resampling the days in blocks of 252 consecutive trading days, one year, the series joined end to start so that every block is complete; each draw recomputes the statistic |
+| Studentised | said of a bootstrap in which each draw's statistic is divided by its own standard error |
+| p-value | the share of draws whose statistic is at least as large as the one observed, plus one over the number of draws plus one; the probability of a difference this large if the two variances were equal |
+| Interval | the range of differences of the two tracking errors consistent with the data at the 95% level: the observed difference plus and minus the critical value times its standard error |
+| Critical value | the 95th percentile of the bootstrap distribution of the absolute studentised difference |
+| Detectable difference | the difference at which a row's interval would exclude zero about four times in five: the critical value plus 0.84, the normal quantile at a power of 0.80, times the standard error |
+| Holm's correction | the step-down adjustment of a family of p-values that keeps the chance of any false rejection in the family at the level |
+| Size check | a run of the test on simulated pairs with equal variances: the share rejected at 5% should be near 5%, and the expectation sets the range |
+| Fat tails | more very large daily moves than the normal distribution gives |
+| Student-t | a distribution with fat tails |
+| Degrees of freedom | the Student-t's tail parameter, fewer meaning fatter tails; 5 here |
+| Volatility clustering | volatility that persists from day to day, so that a turbulent day is usually followed by another |
+| GARCH | GARCH(1,1), the standard model of volatility clustering, in which the variance of a day is a constant plus a weight times the squared shock of the day before plus a weight times the variance of the day before |
+| Window | the span of past daily returns a covariance estimator is computed from, three or five years here; a flat window weighs every day the same, RiskMetrics' weights fall by half every half-life |
+| Mean age of an observation | the average, over the days of a window, of how many days back each day lies, weighted as the estimator weighs it; the most recent day has age 1 |
+| Effective number of observations | one over the sum of the squared weights of a window; equal to the number of days for a flat window and smaller when recent days weigh more |
+| Verdict | MET or NOT MET for an expectation; the comparisons carry none |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** Notebook 17 measured each path's realised tracking error on 566 monthly active returns and tested the differences between paths on the months they share. On those months the comparison of RiskMetrics with the sample covariance under the mandate cannot tell no gain from a gain of the size the paper reports: the difference is minus 0.38 basis points, the interval minus 2.30 to plus 1.55, and the smallest difference the comparison could detect about 2.7. Dom, Howard, Jansen and Lohre (2025) measure volatility on daily portfolio returns, about 6,800 days. French's daily files of the 49 industries cover the whole evaluation, about 11,900 trading days, so the same paths can be measured a second time, at the paper's horizon, with the same test. The daily tracking error is not the monthly one: notebook 10 found the benchmark's daily variance failing to scale to its monthly one by decade, and the ratio of the two is reported for every series, so that the daily figures are read as the same question at the paper's horizon and not as the same number. One more thing, raised on 18 November 2026 after every recorded run: the study's comparison A sets RiskMetrics, computed over five years with a one-year half-life, against the sample covariance on three years, two estimators whose weights lie on nearly the same data, while the paper compares the two on one window; family D, added that day, is the comparison on one window, RiskMetrics against the sample covariance on five years, with the sample covariance on five years against the one on three beside it as what the window alone does.
+
+**What this notebook does.** It was set on 18 November 2026, after every recorded run and after notebook 17, and it changes no table of theirs. It is built in three parts, each committed on its own: (a) the constants (`constants.py`, section 9), the code (`paired.py`'s bootstrap computed in chunks of draws, `daily.py`), their tests, and the size check P3 on made-up daily data with clustered volatility, which runs in part (a), before part (b) builds the study's daily series; (b) the daily series of the fourteen paths under the mandate and under the tilt alone and of notebook 10's six minimum-variance portfolios, rebuilt from the modules with their weights kept, drifting within each month with no trade, with two gates, D0 and D1, before any daily figure is compared, and the fifteenth path of family D, the sample covariance on five years of daily returns under the mandate, built and run as the seven variants are, added on 18 November 2026 after every recorded run, its records in tables of their own; (c) the daily test, its table and the text, with family D's two comparisons on months and on days. Every comparison is reported with no verdict. Part (a) also describes the three windows of family D by their weights, computed from the weights and the evaluation months' window lengths and typed nowhere.
+
+**The daily series (part b).** French's daily value-weighted returns of the 49 industries, the cached file the study uses for its covariances, from the first trading day of July 1979 to the last trading day of August 2026. A portfolio's weights are those the study sets for the month, in force from the month's first trading day, and they drift with the industries' daily returns until the month's last day, with no trade within the month; the benchmark is treated the same way from its weights of the month. The daily return of each is the sum of the drifted weights of the day before times the day's returns, and the daily active return is the portfolio's daily return less the benchmark's; for the minimum-variance portfolios the series is the portfolio's own daily return. 252 trading days a year.
+
+**The two gates (part b).** D0: the rebuilt paths reproduce the committed monthly records under the rerun rule, the quadratic programs to the last digit and the robust path to 1e-8; the rebuilt minimum-variance portfolios' realised volatilities within 0.001 percentage points of the committed table. D1: for each of the fourteen paths, the month's active return compounded from the daily series (the portfolio's compounded return less the benchmark's) against the committed monthly active return, a correlation of at least 0.995 over the 566 months and a realised tracking error from the compounded series within 1 basis point a year of the committed one, with the largest monthly gap of each path and the same comparison for the benchmark's own return reported beside. If either gate fails, the notebook stops and reports; no daily test runs on a series that does not reconcile. D1 exists because French's monthly industry returns need not equal his daily returns compounded.
+
+**The test at daily frequency (part c).** `paired.py` unchanged in what it computes: 252 periods a year, blocks of 252 trading days, so that a block is one year at both frequencies and the count of blocks is the same, 47; draws, level and seed as notebook 17's. The bootstrap's statistics are computed in chunks of draws, the indices drawn once, so every monthly result of notebook 17 stays to the last digit (`tests/test_paired.py`). The comparisons are notebook 17's: A daily, the six variants against the sample covariance under the mandate, Holm across the six; B daily, the mandate against the tilt alone for each of the seven variants; C daily, RiskMetrics against the sample covariance on five and on three years of daily data, unconstrained and long-only, on the portfolios' daily returns, the measurement closest to the paper's own table. Each row carries the two daily figures, their difference, its standard error, the critical value, the interval, the correlation of the two daily series, the p-value, for A the Holm value, and the detectable difference; beside each row, with no verdict, the same two figures on monthly returns and the ratio of the monthly to the daily variance of each series.
+
+**What I expect to see, written before the run (`constants.py`, 18 November 2026).**
+
+- P3, the size check on made-up daily data (part a): 3,000 pairs (500 in the plan of 18 November, the count raised to 3,000 on 19 November 2026 before the larger run, because one run of 1,000 monthly pairs has a standard error of about 0.65 percentage points on the share rejected, `DAILY_SIZE_PAIRS_RAISED`; the run at 500 pairs made before the raise stays recorded with its outcome as it fell and is reported beside, its pairs being the first 500 of the larger run, and where the two differ P3 is read on the 3,000), each with as many days as the evaluation, equal variances, a correlation of 0.99, an annual standard deviation of 85 basis points, Student-t shocks with 5 degrees of freedom, and one GARCH(1,1) variance common to both series, the variance of day t being 0.02 plus 0.06 times the squared common shock of the day before plus 0.92 times the variance of the day before, scaling the common shock and both own shocks; seed 20261119. P3 is met when the test rejects in at most 6.5% of the pairs at the 5% level. The share is reported whatever it is, and a share under 3.5% is stated as a test that rejects less often than its level at P3's setting, a correlation of 0.99 with one common GARCH(1,1) variance on 11,888 days: a pilot on 400 made-up pairs with 999 draws rejected 2.8% with blocks of 252 days and 3.7% with blocks of 63, the standard error close to the spread of the differences in both, and the block of one year was kept because it is the monthly test's and real clustering lasts longer than the pilot's, which is why the criterion is one-sided.
+- ED1 (part b): gate D1 holds for all fourteen paths. From the arithmetic of the gate: the gap between French's monthly returns and his daily ones compounded is well under a basis point a month on an active return whose monthly standard deviation is about 25.
+- ED2 (part c): for RiskMetrics against the sample covariance under the mandate, the standard error of the daily difference is at most half the monthly one, 0.91 basis points. About 21 times the observations would give a factor of 4.6 if days behaved like months; fat tails and clustering take part of it away.
+- ED3 (part c): the factor model and the principal-component model realise a higher daily tracking error than the sample covariance, each with an interval above zero and a Holm value below 0.05. Both are so on months (plus 8.79 and plus 6.83 basis points, Holm 0.003 and 0.025), and a difference of that size should not depend on the horizon.
+- No expectation on family D (`DAILY_COMPARISONS_D`): notebook 10's minimum-variance portfolios already give the like-for-like figures on months, RiskMetrics against the sample covariance on five years 0.26 points lower unconstrained and 0.02 higher long-only, neither beyond its interval, and what the mandate gives is not known. The four readings below apply to its first row.
+- No expectation on the RiskMetrics rows; their readings are fixed instead, in part (a), committed and pushed before part (c) runs. With the difference RiskMetrics less the sample covariance and its 95% interval, and the paper's gain as its share of the reference figure here: an interval wholly below zero reads "a gain from RiskMetrics is found, of the size and interval stated, and set beside the paper's"; an interval that includes zero and excludes a gain of the published size reads "no gain is found, and a gain as large as the published one is excluded here"; an interval that includes zero and a gain of the published size reads "daily data do not settle it either, at the detectable difference stated"; an interval wholly above zero reads "RiskMetrics realises more than the sample covariance here". The paper's figures, RiskMetrics against the sample covariance in per cent volatility a year, sit in `PAIRED_PAPER_FIGURES` with their table and version: the published Table 3, Panel B, 11.36 against 10.91 unconstrained, 11.31 against 12.24 long-only, 13.00 against 13.36 with the cap; the working paper of January 2024, Table 2, Panel B, 14.7 against 14.3, 12.0 against 12.5, 13.4 against 13.6. The mandate's rows (A) are read against the capped portfolio, the minimum-variance rows (C) against the unconstrained and the long-only one, and every reading names the difference in setting: 49 industries here, about 500 stocks there, a tracking mandate here, a minimum-variance portfolio there.
+
+Running time: about eighty minutes for part (a), the 3,000 pairs of the size check, and about four minutes for part (b), the covariances and the fifteen paths.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader`, `benchmark`, `rules`, `covariance`, `optimiser` and `evaluation` are those of notebooks 12 and 13, needed in part (b) to rebuild the paths. `paired` is notebook 17's test, its bootstrap now computed in chunks of draws. `daily` is new: the drift of a month's weights, the daily returns of a path, the compounded monthly return and the reconciliation of gate D1, with its tests in `tests/test_daily.py`.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    writefile("paired.py"),
+    writefile("daily.py"),
+    md("""
+## Count first: the days of the evaluation
+
+The daily file is read for its count alone here: the trading days from the first of July 1979 to the last of August 2026 give the length of the simulated pairs of P3. No daily return of the study is used in part (a).
+"""),
+    code("""
+import hashlib
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import paired as PT
+from bp import daily as DY
+
+pd.set_option("display.width", 250)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 40)
+pd.set_option("display.float_format", lambda v: f"{v:,.4f}")
+
+provenance = [fl.download(key) for key in ("ind49", "factors3", "factors5", "momentum", "ind49_daily", "factors3_daily", "factors5_daily", "momentum_daily")]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+assert len({r["vintage_line"].split("the ")[1].split(" ")[0] for r in provenance}) == 1, "the eight files are of one vintage"
+returns_d = fl.load_monthly("ind49_daily", r"Value Weighted Returns -- Daily")
+first_month, last_month = pd.Period(C.DAILY_FIRST_MONTH, "M"), pd.Period(C.EXT_SAMPLE_END, "M")
+month_of_day = returns_d.index.asfreq("M")
+eval_days = returns_d.index[(month_of_day >= first_month) & (month_of_day <= last_month)]
+assert returns_d.loc[eval_days].notna().all().all(), "a missing daily return inside the evaluation"
+n_days = len(eval_days)
+eval_months = pd.period_range(first_month, last_month, freq="M")
+assert len(eval_months) == C.PAIRED_SIZE_MONTHS == 566
+SETTINGS = dict(block=C.DAILY_BLOCK, draws=C.EVAL_BOOTSTRAP_DRAWS, level=C.EVAL_BOOTSTRAP_LEVEL, periods=C.DAILY_PERIODS, chunk=C.DAILY_CHUNK_DRAWS)
+print(f"daily file: {len(returns_d):,} trading days, {returns_d.index[0]} to {returns_d.index[-1]}; the evaluation {eval_days[0]} to {eval_days[-1]}: {n_days:,} trading days in {len(eval_months)} months, {n_days // C.DAILY_BLOCK} blocks of {C.DAILY_BLOCK}")
+print(f"the test on days: {SETTINGS['periods']} periods a year, blocks of {SETTINGS['block']} days, {SETTINGS['draws']:,} draws in chunks of {SETTINGS['chunk']}, level {SETTINGS['level']:.0%}, seed {C.EVAL_BOOTSTRAP_SEED}; set on {C.DAILY_TEST_DATE}")
+print(f"P3: {C.DAILY_SIZE_PAIRS} pairs of {n_days:,} days, annual sd {C.DAILY_SIZE_SD_ANNUAL:.4f} ({1e4 * C.DAILY_SIZE_SD_ANNUAL:.0f} bp), correlation {C.DAILY_SIZE_CORRELATION}, t with {C.DAILY_SIZE_T_DOF} degrees of freedom, GARCH {C.DAILY_SIZE_GARCH}, seed {C.DAILY_SIZE_SEED}; met at a rejection share of at most {C.DAILY_SIZE_RATE_MAX:.1%}, a share under {C.DAILY_SIZE_RATE_LOW:.1%} stated as rejecting less often than its level at this setting")
+print(f"CRSP vintage of the eight files: {vintage}")
+"""),
+    md("""
+## P3, the size check on made-up daily data with clustered volatility
+
+Three thousand pairs with as many days as the evaluation are drawn with equal variances, a correlation of 0.99, Student-t shocks and one GARCH(1,1) variance common to both series, and the test is run on each with the daily settings. The share rejected at 5% by the p-value is the verdict; the share of intervals that exclude zero, the spread of the simulated differences, the mean and the median standard error and the median critical value are reported beside it (the mean standard error and the median critical value added 19 November 2026, before this run, so that the spread can be read against the interval's half-width). The count was 500 until 19 November 2026 and was raised before this run, because one run of 1,000 monthly pairs has a standard error of about 0.65 percentage points on the share rejected; the first 500 pairs are those of the run made at 500 before the raise (one generator, the pairs drawn in sequence, one bootstrap seed per pair spawned in sequence), so that run's outcome is reported beside the whole as it fell, in a row of its own, and where the two differ P3 is read on the 3,000.
+"""),
+    code("""
+t0 = time.time()
+sd_daily = C.DAILY_SIZE_SD_ANNUAL / np.sqrt(C.DAILY_PERIODS)
+size = PT.size_check_daily(pairs=C.DAILY_SIZE_PAIRS, days=n_days, sd=sd_daily, rho=C.DAILY_SIZE_CORRELATION, dof=C.DAILY_SIZE_T_DOF,
+                           garch=C.DAILY_SIZE_GARCH, seed=C.DAILY_SIZE_SEED, **SETTINGS)
+assert C.DAILY_SIZE_PAIRS == 3000 and C.DAILY_SIZE_PAIRS_FIRST == 500 and size["pairs"] == C.DAILY_SIZE_PAIRS
+def size_row(which, n):
+    # the first n pairs of the run, or all of them: the pairs are drawn in sequence from one generator and each has its own bootstrap seed
+    # spawned in sequence, so the first DAILY_SIZE_PAIRS_FIRST pairs are the run made at that count on 19 November before the raise
+    p, ex, d, se, cv = size["p_values"][:n], size["excludes_interval"][:n], size["differences"][:n], size["standard_errors"][:n], size["critical_values"][:n]
+    rejected = int((p < 1 - SETTINGS["level"]).sum()); rate = rejected / n
+    return {"pairs counted": which, "pairs": n, "days": n_days, "annual sd": C.DAILY_SIZE_SD_ANNUAL, "daily sd": sd_daily, "correlation": C.DAILY_SIZE_CORRELATION,
+            "t degrees of freedom": C.DAILY_SIZE_T_DOF, "garch omega": C.DAILY_SIZE_GARCH[0], "garch alpha": C.DAILY_SIZE_GARCH[1], "garch beta": C.DAILY_SIZE_GARCH[2],
+            "seed": C.DAILY_SIZE_SEED, "block": SETTINGS["block"], "draws": SETTINGS["draws"], "level": SETTINGS["level"], "periods": SETTINGS["periods"],
+            "rejected by p-value": rejected, "share rejected": rate, "standard error of the share": float(np.sqrt(rate * (1 - rate) / n)),
+            "intervals excluding zero": int(ex.sum()), "share of intervals excluding zero": float(ex.mean()),
+            "sd of the differences, bp a year": 1e4 * float(np.std(d, ddof=1)), "mean standard error, bp a year": 1e4 * float(np.mean(se)),
+            "median standard error, bp a year": 1e4 * float(np.median(se)), "median critical value": float(np.median(cv)),
+            "rate max": C.DAILY_SIZE_RATE_MAX, "rate low": C.DAILY_SIZE_RATE_LOW,
+            "P3": "MET" if rate <= C.DAILY_SIZE_RATE_MAX else "NOT MET", "rejects too seldom": bool(rate < C.DAILY_SIZE_RATE_LOW)}
+size_table = pd.DataFrame([size_row(f"first {C.DAILY_SIZE_PAIRS_FIRST}, the run of 19 November before the count was raised", C.DAILY_SIZE_PAIRS_FIRST), size_row("all", C.DAILY_SIZE_PAIRS)])
+assert size_table.loc[1, "rejected by p-value"] == size["rejected"] and size_table.loc[1, "share rejected"] == size["rate"]
+print(size_table.T.to_string(header=False))
+for _, r in size_table.iterrows():
+    print(f"P3 on {r['pairs counted']}: {int(r['rejected by p-value'])} of {int(r['pairs']):,} pairs rejected at {1 - SETTINGS['level']:.0%}, {r['share rejected']:.2%} (standard error {r['standard error of the share']:.2%}), at most {C.DAILY_SIZE_RATE_MAX:.1%}: {r['P3']}"
+          f"{'; under ' + format(C.DAILY_SIZE_RATE_LOW, '.1%') + ', so at this setting, a correlation of ' + format(r['correlation'], '.2f') + ' with one common GARCH(1,1) variance on ' + format(int(r['days']), ',') + ' days, the test rejects less often than its level' if r['rejects too seldom'] else ''}; "
+          f"{r['share of intervals excluding zero']:.2%} of the intervals exclude zero; the simulated differences spread {r['sd of the differences, bp a year']:.3f} bp a year against a mean standard error of {r['mean standard error, bp a year']:.3f} and a median of {r['median standard error, bp a year']:.3f}; the median critical value is {r['median critical value']:.2f}")
+print(f"P3 is read on the {C.DAILY_SIZE_PAIRS:,}: {size_table.loc[1, 'P3']}; {time.time() - t0:.0f}s")
+"""),
+    md("""
+## The three windows of family D, described by their weights
+
+Added on 18 November 2026 after every recorded run. For each evaluation month the window of three years and the window of five years of daily returns before it are counted as `covariance.daily_window` counts them, and the weights a flat window and RiskMetrics' half-life of 252 days put on those days give the mean age of an observation, the effective number of observations and the share of the weight in the last 756 days; the table carries the mean over the 566 months of each figure and the range of the window lengths. Nothing here reads a return.
+"""),
+    code("""
+window_rows = []
+for label, years, halflife in C.DAILY_WINDOWS_DESCRIBED:
+    stats = []
+    for month in eval_months:
+        n = len(CV.daily_window(returns_d, month, years))
+        stats.append(DY.window_weight_statistics(n, halflife, C.DAILY_RECENT_DAYS))
+    frame = pd.DataFrame(stats)
+    window_rows.append({"window": label, "years": years, "halflife, days": halflife if halflife is not None else np.nan,
+                        "days, mean": frame["days"].mean(), "days, min": int(frame["days"].min()), "days, max": int(frame["days"].max()),
+                        "mean age of an observation, days": frame["mean age"].mean(), "effective number of observations": frame["effective number"].mean(),
+                        f"share of weight in the last {C.DAILY_RECENT_DAYS} days": frame["share in recent days"].mean()})
+window_table = pd.DataFrame(window_rows)
+print(window_table.to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+rm, flat3, flat5 = window_table.iloc[0], window_table.iloc[1], window_table.iloc[2]
+print(f"RiskMetrics over five years with a half-life of {C.EXT_COV_EWMA_HALFLIFE_DAYS} days: mean age {rm['mean age of an observation, days']:.0f} days against {flat3['mean age of an observation, days']:.0f} for the flat three-year window and {flat5['mean age of an observation, days']:.0f} for the flat five-year one; "
+      f"effective number {rm['effective number of observations']:.0f} against {flat3['effective number of observations']:.0f} and {flat5['effective number of observations']:.0f}; "
+      f"{rm[f'share of weight in the last {C.DAILY_RECENT_DAYS} days']:.1%} of its weight in the last {C.DAILY_RECENT_DAYS} days")
+"""),
+    md("""
+## The tables of part (a), written to `outputs/`
+
+The size check and the three windows in tables of their own; the tables of parts (b) and (c) follow in their commits.
+"""),
+    code("""
+os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+size_table.to_csv(f"{C.OUTPUT_DIR}/paired_size_check_daily_{vintage}.csv", index=False, float_format="%.8f")
+window_table.to_csv(f"{C.OUTPUT_DIR}/daily_window_weights_{vintage}.csv", index=False, float_format="%.8f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if (f.startswith("paired_") and "daily" in f) or f.startswith("daily_window")))
+"""),
+    md("""
+## Verdicts and results, part (a)
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| Count first | 11,888 trading days from 1979-07-02 to 2026-08-31 in 566 months, 47 blocks of 252 | holds |
+| P3. Size check on clustered daily data | 89 of 3,000 simulated pairs rejected at 5%, 2.97% (standard error 0.31 points), at most 6.5%; under 3.5%, so at P3's setting, a correlation of 0.99 with one common GARCH(1,1) variance on 11,888 days, the test rejects less often than its level; 3.13% of the intervals exclude zero; the differences spread 0.165 basis points a year against a mean standard error of 0.150, a median of 0.1364 and a median critical value of 2.090. On the first 500 pairs, the run of 19 November made before the count was raised from 500 to 3,000: 15 of 500, 3.0%, 3.4% of the intervals, a spread of 0.163 against 0.150, 0.1358 and 2.091 | MET |
+| The three windows of family D | RiskMetrics over five years with a half-life of 252 days: a mean observation age of 323 days against 379 for the flat three-year window and 631 for the flat five-year one; an effective number of observations of 683 against 756 and 1,261; 90.3% of its weight in the last 756 days (means over the 566 evaluation months, whose windows hold 750 to 762 and 1,254 to 1,266 trading days) | reported |
+
+**P3 is met, and at its setting the test rejects less often than its level.** On 3,000 pairs of 11,888 days with equal variances, Student-t shocks, a correlation of 0.99 and one GARCH(1,1) variance common to both series, the test rejects 2.97% at the 5% level by the p-value (89 of 3,000, a standard error of 0.31 percentage points) and 3.13% by the interval, less often than its level. The count of pairs was 500 in the plan of 18 November and was raised to 3,000 on 19 November 2026 before this run, because one run of 1,000 monthly pairs has a standard error of about 0.65 percentage points on the share rejected (`DAILY_SIZE_PAIRS_RAISED`); the run made at 500 before the raise is the first 500 pairs of this one, drawn in sequence from the same generator with the same bootstrap seeds, and it rejected 3.0% by the p-value and 3.4% by the interval (15 and 17 of 500), so the two differ by 0.03 points and the verdict stands on both; where they differ, P3 is read on the 3,000. The share is under 3.5%, as the pilot on 400 made-up pairs found (2.8% with blocks of 252 days). What this means for the daily intervals of part (c), at a correlation of 0.99: an interval that excludes zero stands; an interval that includes zero is weaker evidence of no difference than a test of exact size would give. The simulated differences spread 0.165 basis points a year across the pairs; the standard error is 0.150 on average and 0.1364 at the median, and the median critical value from the studentised bootstrap is 2.090, so the median interval's half-width is 2.090 times 0.1364, 0.285 basis points, 1.7 times the spread (the mean standard error and the median critical value added 19 November 2026 before this run, so that the spread can be read against the half-width).
+
+**The three windows of family D, reported.** Computed from the weights and the windows' lengths, as means over the 566 evaluation months: RiskMetrics' five-year window with a half-life of 252 days has a mean observation age of 323 days against 379 for the flat three-year window and 631 for the flat five-year one, an effective number of observations of 683 against 756 and 1,261, and 90.3% of its weight in the last 756 days. The comparison of family A therefore sets RiskMetrics against a window, the flat three-year one, whose weights lie on nearly the same data, and family D, RiskMetrics against the sample covariance on five years, is the comparison on one window, the two estimators differing only in how they weigh it. The table is `daily_window_weights`.
+
+Parts (b) and (c) follow in their own commits, with their results written here when they run.
+"""),
+]
+
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15), ("16_factor_objective_attribution.ipynb", NB16), ("17_paired_tests.ipynb", NB17)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15), ("16_factor_objective_attribution.ipynb", NB16), ("17_paired_tests.ipynb", NB17), ("18_daily_tracking_error.ipynb", NB18)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))
