@@ -520,7 +520,7 @@ for k, name in ((2, "1990s"), (3, "2000s"), (4, "2010s"), (5, "2020s")):
     P[f"bias_dec_{name}_lo"], P[f"bias_dec_{name}_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][k] for v in VARIANTS[:4]], 2)
 P["bias_monthly_since2000_lo"], P["bias_monthly_since2000_hi"] = lohi([D["bias_dec"]["C3"]["raw"]["sample, monthly 120"][k] for k in (3, 4, 5)], 2)
 P["bias_dec_since2000_lo"], P["bias_dec_since2000_hi"] = lohi([D["bias_dec"]["C3"]["raw"][v][k] for v in VARIANTS[:4] for k in (3, 4, 5)], 2)
-# the bias statistic before 2000 and from 2000 with its bands (notebook 17, added 19 November 2026 after a referee's review, no verdict): the key point
+# the bias statistic before 2000 and from 2000 with its bands (notebook 17, added on 19 November 2026 after the study's results were known, no verdict): the key point
 # states that each daily estimator's band from 2000 contains 1 and each difference's band excludes zero, and that the monthly covariance's does not, so the build checks it
 bs = bias_split.set_index("variant")
 assert (bs["set"] == "C3").all() and (bs["split month"] == "2000-01").all() and set(bs.index) == set(VARIANTS)

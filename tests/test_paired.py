@@ -125,14 +125,14 @@ def test_the_constants_name_the_comparisons_and_the_settings():
     assert C.PAIRED_DETECTABLE_POWER == 0.80 and len(C.PAIRED_PAPER_GAIN_WITH_CAP) == 2
     assert all(rm < sample for rm, sample in C.PAIRED_PAPER_GAIN_WITH_CAP.values())
     assert C.EVAL_BOOTSTRAP_BLOCK_MONTHS == 12 and C.EVAL_BOOTSTRAP_DRAWS == 2000 and C.EVAL_BOOTSTRAP_LEVEL == 0.95
-    # E, added after the referee's report of 18 November 2026: the three pairs among the four daily estimators that A does not test
+    # E, added on 18 November 2026 after every recorded run: the three pairs among the four daily estimators that A does not test
     assert C.PAIRED_E_DATE == "2026-11-18" and len(C.PAIRED_COMPARISONS_E) == 3
     daily = {("ledoit_wolf", "daily 3y"), ("factor", "daily 3y"), ("pca", "daily 3y")}
     assert all(a in daily and b in daily and a != b for a, b in C.PAIRED_COMPARISONS_E)
     assert len({frozenset(pair) for pair in C.PAIRED_COMPARISONS_E}) == 3
     assert C.PAIRED_REFERENCE not in {v for pair in C.PAIRED_COMPARISONS_E for v in pair}
     assert C.REPLICATION_VS_1N_DATE == "2026-11-18"
-    # the additions of 19 November 2026 after the referee's review of the corrections: block lengths, Holm for B and across A with E,
+    # the additions of 19 November 2026, after the study's results were known: block lengths, Holm for B and across A with E,
     # the further size checks, the bias statistic before 2000 and from 2000
     assert C.PAIRED_ADDITIONS_DATE == "2026-11-19"
     assert C.PAIRED_BLOCK_LENGTHS_FURTHER == (3, 6, 24) and C.EVAL_BOOTSTRAP_BLOCK_MONTHS not in C.PAIRED_BLOCK_LENGTHS_FURTHER

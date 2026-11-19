@@ -6,8 +6,8 @@ their portfolios' realised volatilities.
     Ledoit, O. and Wolf, M. (2011). Robust performance hypothesis testing with
     the variance. Wilmott, 2011(55), 86-89.
 
-Added on 18 November 2026, after every recorded run of the study, by the design
-of that day, and labelled so wherever it is used: notebook 12 had judged one
+Added on 18 November 2026, after every recorded run of the study, and
+labelled so wherever it is used: notebook 12 had judged one
 path against another by the standard error of a single tracking error, while
 two paths that share their months and whose active returns move together have
 a difference far less noisy than either figure. The module repeats the

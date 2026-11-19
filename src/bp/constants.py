@@ -66,7 +66,7 @@ DGU_BS_COV_DOF = "M - N - 2"   # the Bayes-Stein covariance divides by M - N - 2
 # reading is kept as rules.mv_c_cone for comparison (notebook 03).
 DGU_CONSTRAINED_BUDGET_INSIDE = True
 
-# The constrained rules' solver, set by the design on 17 November 2026: each
+# The constrained rules' solver, set on 17 November 2026: each
 # constrained rule is a quadratic programme whose budget 1'w = 1 is an equality
 # of the problem and whose lower bound is a bound on each weight, solved
 # exactly by the active-set method of
@@ -242,8 +242,7 @@ EXT_SAMPLE_START = "1969-07"
 # French revises history. A run on the cached 202608 files is unchanged by the
 # cut. Not an expectation: a data rule, disclosed here and in the README.
 EXT_SAMPLE_END = "2026-08"
-# The rule in the design's words, written here on 8 November 2026 with the
-# design's approval of 6 November, and carried in the README's run section in
+# The rule, written here on 8 November 2026 after the decision of 6 November, and carried in the README's run section in
 # the same words: the sample is July 1979 to August 2026, fixed in the code.
 # The recorded tables are those of the 202608 vintage as cached. A run on a
 # later vintage, cut at August 2026, is a confirmation run: it is labelled by
@@ -340,14 +339,14 @@ DAILY_TO_MONTHLY_SCALE = 21                        # 252 trading days a year div
 EXT_COV_EWMA_HALFLIFE_DAYS = 252                   # the recency-weighted sensitivity: a half-life of one year of trading days, the RiskMetrics setting of Dom, Howard, Jansen and Lohre (2025, section 3.3.2); 126 until 3 October 2026, changed on reading that paper, before notebook 10's code
 
 # Covariance estimators. The shrinkage target follows Dom, Howard, Jansen and
-# Lohre, the paper the design named as its reference: their linear shrinkage
+# Lohre, the paper the study takes as its reference: their linear shrinkage
 # pulls the sample covariance towards a scaled identity matrix (Ledoit and
-# Wolf 2004b), and the constant-correlation target gave inferior results. The
-# design checked that on 3 October 2026, before notebook 10's code, in the
+# Wolf 2004b), and the constant-correlation target gave inferior results.
+# Checked on 3 October 2026, before notebook 10's code, in the
 # working paper of January 2024 (SSRN 4684926, its footnote 11), the version
 # the study was written against, which estimates from three years of daily
-# returns, having tried one, three and five (its section 4.1.1). Set by the
-# design on 18 November 2026: the citation moved to the published version
+# returns, having tried one, three and five (its section 4.1.1). Set on
+# 18 November 2026: the citation moved to the published version
 # (2025; the section, table and footnote numbers are the accepted manuscript's
 # of January 2025), whose footnote 10 reports the same result, which estimates
 # from five years (its section 4.1), rebalances monthly and finds that under long-only
@@ -452,7 +451,7 @@ EVAL_BENCHMARK_TOL = 1e-6            # expectation 1: an active return below thi
 # each fixed here before its code and labelled in the notebook. RiskMetrics
 # joins as a seventh variant because Dom, Howard, Jansen and Lohre (2025) find
 # that time dynamics matter more than shrinkage or factor structure in long-only
-# and weight-constrained portfolios (the scope added by the design on
+# and weight-constrained portfolios (the scope added on
 # 18 November 2026); the calibration multiplies each forecast by the ratio of
 # realised to forecast tracking error over the previous EVAL_CALIBRATION_WINDOW
 # months of the same path, using only months before the forecast.
@@ -460,7 +459,7 @@ EWMA_VARIANT = ("sample", "daily_5y_ewma")   # the seventh variant: RiskMetrics,
 EVAL_CALIBRATION_WINDOW = 60                 # months of a path's own past the calibration uses; a standard deviation from 60 observations has a standard error of about 9%
 EVAL_CALIBRATION_MIN = 24                    # the forecast is left as it is while fewer months are available
 EVAL_CALIBRATED_BIAS_RANGE = (0.85, 1.15)    # expectation 9: the calibrated bias statistic under C3, four daily estimators
-# Additions of 18 October 2026 to notebook 12, by the design of 9 October 2026,
+# Additions of 18 October 2026 to notebook 12, planned on 9 October 2026,
 # fixed here before their code, after the recorded run of 7 October (commit
 # 6835d49) and labelled in the notebook. (a) Two saves, so that the dashboard
 # can draw the forecasts and the holdings from committed tables: the monthly
@@ -484,7 +483,7 @@ EVAL_CALIBRATED_BIAS_RANGE = (0.85, 1.15)    # expectation 9: the calibrated bia
 EVAL_ADDITIONS_DATE = "2026-10-18"
 EVAL_BOOTSTRAP_BLOCK_MONTHS = 12
 EVAL_BOOTSTRAP_DRAWS = 2000
-EVAL_BOOTSTRAP_SEED = 20261009               # the date of the design's ruling, as a number
+EVAL_BOOTSTRAP_SEED = 20261009               # the date of the decision, as a number
 EVAL_BOOTSTRAP_LEVEL = 0.95
 EVAL_RERUN_IDENTICAL = ("rolling_evaluation", "rolling_evaluation_by_decade", "rolling_evaluation_calibration", "active_returns")   # expectation 10
 
@@ -497,8 +496,8 @@ EVAL_RERUN_IDENTICAL = ("rolling_evaluation", "rolling_evaluation_by_decade", "r
 # A reported measure in no claim, with no expectation attached; the window is
 # three years, the length of the daily covariance windows. Written as a table
 # so that a figure drawn from the series is traced to a committed table like
-# every other figure. (b) The rule for every rerun from now on, set by the
-# design on 6 November 2026 beside expectation 10 and not part of its verdict,
+# every other figure. (b) The rule for every rerun from now on, set on
+# 6 November 2026 beside expectation 10 and not part of its verdict,
 # which stays as written: a table from the quadratic programs reproduces the
 # committed copy to the last digit; a table from the cone program (the robust
 # variant, ROBUST_VARIANT) reproduces it to EVAL_RERUN_CONE_MAX_DIFFERENCE per cell;
@@ -508,7 +507,7 @@ EVAL_RERUN_IDENTICAL = ("rolling_evaluation", "rolling_evaluation_by_decade", "r
 EVAL_ROLLING_ADDITIONS_DATE = "2026-11-06"
 EVAL_ROLLING_TE_MONTHS = 36
 EVAL_RERUN_CONE_MAX_DIFFERENCE = 1e-8        # the monthly records of the cone program (active_returns)
-# The measures' own number, set by the design on 7 November 2026 after the run
+# The measures' own number, set on 7 November 2026 after the run
 # of 6 November showed the robust variant's by-decade and calibration rows up
 # to 3e-8 and 2e-8 from their committed copies while its monthly active returns
 # were within 3.2e-9: a measure computed over the 566 months from those
@@ -609,9 +608,9 @@ FO_PATH_COUNT = 19
 # absolute value over the months is the path's gap.
 FO_GAP_DEFINITION = "s'(B_t - B_{t+1})' a_t, mean absolute value over the months"
 # The seven expectations, each a strict pass or fail; the levels from
-# version 1's results at 6835d49, with the design's reasons.
+# version 1's results at 6835d49, with their reasons.
 # E1 and E2 were restated on 9 October 2026, after notebook 14's check of
-# the arithmetic and before any path ran, by the design of 9 October 2026:
+# the arithmetic and before any path ran, on 9 October 2026:
 # a level changed at that point, between the pre-run check notebook 14
 # exists for and the first rolling run, is a pre-run restatement, dated and
 # disclosed here and once in the write-up; a level changed after notebook 15
@@ -741,7 +740,7 @@ FO_SOLVER_OPTIONS_LOOSE = {"tol_gap_abs": 1e-7, "tol_gap_rel": 1e-7, "tol_feas":
 FO_NOTEBOOK_15_JUDGES = ("E1", "E2", "E3", "E5", "E6", "E7")
 FO_NOTEBOOK_16_JUDGES = ("E4",)
 # Notebook 16, the attribution of the nineteen paths, built 8 November 2026,
-# after the recorded run of notebook 15 and the design's reading of it on 6
+# after the recorded run of notebook 15 and its reading on 6
 # November, before any attribution ran. It rebuilds the nineteen paths from the
 # modules, as notebook 13 rebuilds version 1's, checks each path's realised
 # tracking error against notebook 15's below within ATTRIBUTION_REPRODUCTION_TOL
@@ -775,7 +774,7 @@ EVAL_BIAS_BY_DECADE_DATE = "2026-11-08"
 # ---------------------------------------------------------------------------
 # 8. Paired tests of two realised volatilities, added 18 November 2026
 # ---------------------------------------------------------------------------
-# Set by the design on 18 November 2026, after every recorded run of version 1
+# Set on 18 November 2026, after every recorded run of version 1
 # and of module A, and labelled so wherever it is used. The reason: notebook 12
 # judged RiskMetrics against the sample covariance under the mandate (84.3
 # against 84.7 basis points a year) by the standard error of one tracking
@@ -827,9 +826,9 @@ PAIRED_SIZE_MONTHS = 566                          # the months of the rolling ev
 PAIRED_SIZE_SD = 0.0025                           # the monthly standard deviation of the simulated pairs, about 85 basis points a year
 PAIRED_SIZE_CORRELATION = 0.99
 PAIRED_SIZE_T_DOF = 5
-PAIRED_SIZE_SEED = 20261118                       # the date of the design, as a number
+PAIRED_SIZE_SEED = 20261118                       # the date of the plan, as a number
 PAIRED_SIZE_RANGE = (0.035, 0.065)                # P1: the share of simulated pairs rejected at 5 per cent
-# Added 18 November 2026 by the design, after the first run of notebook 17 and
+# Added on 18 November 2026, after the first run of notebook 17 and
 # before its recorded run, in no verdict: a row whose interval includes zero
 # says what the comparison could have seen only beside the difference at which
 # the interval would exclude zero about four times in five, (the critical
@@ -845,9 +844,8 @@ PAIRED_PAPER_GAIN_WITH_CAP = {
     "published version, Table 3 Panel B, with the cap": (13.00, 13.36),
     "working paper of January 2024, Table 2 Panel B, with the cap": (13.4, 13.6),
 }
-# Added 18 November 2026 by the design after the referee's report of that day,
-# in no verdict and with no correction, and labelled so wherever the rows
-# appear: E, the three pairs among the four daily estimators under the mandate
+# Added on 18 November 2026 after every recorded run, in no verdict and with
+# no correction, and labelled so wherever the rows appear: E, the three pairs among the four daily estimators under the mandate
 # that A does not test, so that the sentence on two groups among them (the
 # sample covariance and shrinkage; the factor model and the principal-component
 # model) rests on tested differences. First series minus second, in basis
@@ -858,18 +856,16 @@ PAIRED_COMPARISONS_E = (
     (("pca", "daily 3y"), ("ledoit_wolf", "daily 3y")),
     (("factor", "daily 3y"), ("pca", "daily 3y")),
 )
-# Notebook 03, added the same day by the design after the report: the
+# Notebook 03, added the same day after every recorded run: the
 # comparison of every rule with 1/N on the paper's period written as a table,
 # with the two-sided p-value the study uses beside the one-sided value the
 # paper prints (half of the two-sided value under the normal distribution of
 # the Jobson-Korkie statistic), so that each figure resolves to a committed
 # file. The study's convention stays two-sided.
 REPLICATION_VS_1N_DATE = "2026-11-18"
-# Added 19 November 2026 by the design after the referee's review of the
-# corrections at a1592f5, with no verdict, and labelled so wherever the figures
-# appear. The referee's own recomputation of that day produced every figure
-# these settings lead to before this code ran, so none is an expectation, and
-# the text says of each that its outcome was known from the referee's run.
+# Added on 19 November 2026 after the study's results were known, with no
+# verdict, and labelled so wherever the figures appear: none is an expectation,
+# and the text says of each that it was added after the results were known.
 # The additions below go into notebook 17, each computed from the committed
 # records with no path rerun and with EVAL_BOOTSTRAP_DRAWS, EVAL_BOOTSTRAP_SEED
 # and EVAL_BOOTSTRAP_LEVEL as they are, so that every earlier table stays byte
@@ -896,7 +892,7 @@ PAIRED_HOLM_JOINT_FAMILIES = ("A", "E")
 # at 0.93, the monthly covariance's at 0.81), PAIRED_SIZE_PAIRS pairs each with
 # the other settings of P1; every rate with the standard error of a share, the
 # square root of rate times (1 minus rate) over the pairs.
-PAIRED_SIZE_FURTHER_SEEDS = (20261119, 20261120, 20261121)   # the date of the referee's review as a number, and the two integers after it
+PAIRED_SIZE_FURTHER_SEEDS = (20261119, 20261120, 20261121)   # the date of the addition as a number, and the two integers after it
 PAIRED_SIZE_FURTHER_CORRELATIONS = (0.93, 0.81)
 # (4) The years before 2000 and from 2000. The bias statistic under the 21
 # rule (evaluation.bias_statistic) for each variant under EVAL_BIAS_SPLIT_SET,
