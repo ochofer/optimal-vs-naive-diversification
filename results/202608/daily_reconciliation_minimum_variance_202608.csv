@@ -1,0 +1,7 @@
+portfolio,rebuilt vol %,committed vol %,gap,D0
+"sample, daily_5y_ewma, unconstrained",11.6576020906,11.6576020000,0.0000000906,holds
+"sample, daily_5y_ewma, long-only",12.0763237515,12.0763240000,-0.0000002485,holds
+"sample, daily_5y, unconstrained",11.9132297893,11.9132300000,-0.0000002107,holds
+"sample, daily_5y, long-only",12.0591938178,12.0591940000,-0.0000001822,holds
+"sample, daily_3y, unconstrained",11.9346954303,11.9346950000,0.0000004303,holds
+"sample, daily_3y, long-only",12.1702943560,12.1702940000,0.0000003560,holds

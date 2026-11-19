@@ -6243,11 +6243,193 @@ window_table.to_csv(f"{C.OUTPUT_DIR}/daily_window_weights_{vintage}.csv", index=
 print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if (f.startswith("paired_") and "daily" in f) or f.startswith("daily_window")))
 """),
     md("""
-## Verdicts and results, part (a)
+## Part (b): the panels, the covariances, the fourteen paths rebuilt with their weights, and the fifteenth path of family D
+
+As notebook 13 rebuilds them: each estimator variant's covariance once per month, then the seven variants under the mandate's C3 and under the tilt alone, from the same modules on the same files, keeping every month's weights. Notebook 10's six minimum-variance portfolios are rebuilt as notebook 17 rebuilds them, keeping their weights too. The fifteenth path, family D's, is the sample covariance on five years of daily returns under the mandate, built and run exactly as the seven variants are and added on 18 November 2026 after every recorded run; it has no committed record, so its monthly records are written to a table of its own below.
+"""),
+    code("""
+from bp import benchmark as BM
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import evaluation as E
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+assert (months == eval_months).all() and len(months) == 566
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+SETS = {"C3": C.CONSTRAINT_SETS["C3"], "C3 tilt only": C.CONSTRAINT_SET_TILT_ONLY}
+assert tuple(SETS) == C.DAILY_PATH_SETS
+VARIANTS = list(CV.ALL_VARIANTS)
+LABEL = {v: ("robust, all five" if v == C.ROBUST_VARIANT else ("RiskMetrics, daily 5y" if v == C.EWMA_VARIANT else f"{v[0]}, {v[1].replace('_', ' ')}")) for v in VARIANTS}
+returns_d_eval = P.returns_d.loc[eval_days]
+assert list(returns_d_eval.columns) == list(weights.columns) and returns_d_eval.notna().all().all()
+t0 = time.time()
+Sigmas = {v: {} for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,)}
+for i, month in enumerate(months):
+    for v in CV.EVALUATION_VARIANTS + (C.EWMA_VARIANT,):
+        Sigmas[v][month], _, _ = CV.estimate(*v, month, P)
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+Sigmas[C.ROBUST_VARIANT] = {m: [Sigmas[v][m] for v in CV.EVALUATION_VARIANTS] for m in months}
+D_VARIANT, D_SET = C.DAILY_D_VARIANT, C.DAILY_D_SET
+D_LABEL = f"{D_VARIANT[0]}, {D_VARIANT[1].replace('_', ' ')}"
+assert D_VARIANT not in VARIANTS and D_LABEL == "sample, daily 5y" and D_SET in SETS
+Sigmas[D_VARIANT] = {month: CV.estimate(*D_VARIANT, month, P)[0] for month in months}
+print(f"{len(months)} months of covariances for the seven variants and the fifteenth path in {time.time() - t0:.0f}s")
+paths = {}
+t0 = time.time()
+for v in VARIANTS:
+    for cs, names in SETS.items():
+        t1 = time.time()
+        paths[(v, cs)] = E.run_path(months, Sigmas[v], weights, returns_m, names, tilt_mask,
+                                    mandate_mask if "exclusion" in names else None, robust=(v == C.ROBUST_VARIANT), keep_weights=True)
+        print(f"{LABEL[v]:>24}  {cs:<13} {time.time() - t1:5.0f}s  inaccurate {int((paths[(v, cs)]['status'] != 'optimal').sum()):3d}")
+t1 = time.time()
+path_d = E.run_path(months, Sigmas[D_VARIANT], weights, returns_m, SETS[D_SET], tilt_mask, mandate_mask if "exclusion" in SETS[D_SET] else None, robust=False, keep_weights=True)
+print(f"{D_LABEL:>24}  {D_SET:<13} {time.time() - t1:5.0f}s  inaccurate {int((path_d['status'] != 'optimal').sum()):3d}  (family D, added 18 November 2026)")
+print(f"{len(paths)} paths and the fifteenth in {time.time() - t0:.0f}s")
+# notebook 10's six minimum-variance portfolios, with their weights
+YEARS = {"daily_3y": C.EXT_COV_DAILY_WINDOW_YEARS, "daily_5y": C.EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY[1], "daily_5y_ewma": C.EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY[1]}
+def sample_estimate(freq, month):
+    X = CV.daily_window(P.excess_d, month, YEARS[freq]).to_numpy()
+    S = CV.ewma_cov(X, C.EXT_COV_EWMA_HALFLIFE_DAYS) if freq.endswith("ewma") else CV.sample_cov(X)
+    return S * C.DAILY_TO_MONTHLY_SCALE
+t0 = time.time()
+gmv_w = {(v, side): [] for v in C.DAILY_C_VARIANTS for side in C.DAILY_C_SIDES}
+gmv_ret = {(v, side): [] for v in C.DAILY_C_VARIANTS for side in C.DAILY_C_SIDES}
+for month in months:
+    r = P.excess_m.loc[month].to_numpy()
+    for v in C.DAILY_C_VARIANTS:
+        S = sample_estimate(v[1], month)
+        for side, w in (("unconstrained", CV.min_variance_unconstrained(S)), ("long-only", CV.min_variance_long_only(S))):
+            gmv_w[(v, side)].append(w)
+            gmv_ret[(v, side)].append(float(w @ r))
+gmv_w = {k: pd.DataFrame(np.vstack(x), index=months, columns=weights.columns) for k, x in gmv_w.items()}
+gmv_ret = {k: pd.Series(x, index=months) for k, x in gmv_ret.items()}
+print(f"{len(gmv_w)} minimum-variance portfolios in {time.time() - t0:.0f}s")
+"""),
+    md("""
+## Gate D0: the rebuilt paths against the committed monthly records
+
+The rule for reruns: the quadratic programs' cells to the last digit of the committed table, the robust path's within 1e-8; the minimum-variance portfolios' realised volatilities within 0.001 percentage points of the committed table. A failure stops the notebook.
+"""),
+    code("""
+committed_dir = f"results/{vintage}"
+active_path = f"{committed_dir}/active_returns_{vintage}.csv" if os.path.exists(f"{committed_dir}/active_returns_{vintage}.csv") else f"{C.OUTPUT_DIR}/active_returns_{vintage}.csv"
+committed = pd.read_csv(active_path, index_col=0)
+committed.index = pd.PeriodIndex(committed.index, freq="M")
+d0_rows = []
+for (v, cs), path in paths.items():
+    col = f"{LABEL[v]} | {cs}"
+    new = path["active_return"].round(10)
+    old = committed[col].reindex(months)
+    gap = float((new - old).abs().max())
+    cone = v == C.ROBUST_VARIANT
+    ok = gap <= (C.EVAL_RERUN_CONE_MAX_DIFFERENCE + 1e-14 if cone else 0.0)
+    d0_rows.append({"path": col, "program": "cone" if cone else "quadratic", "largest gap to the committed record": gap, "D0": "holds" if ok else "FAILS",
+                    "inaccurate months": int((path["status"] != "optimal").sum())})
+d0 = pd.DataFrame(d0_rows).set_index("path")
+print(d0.to_string(float_format=lambda x: f"{x:.2e}"))
+cov_path = f"{committed_dir}/covariance_estimators_{vintage}.csv" if os.path.exists(f"{committed_dir}/covariance_estimators_{vintage}.csv") else f"{C.OUTPUT_DIR}/covariance_estimators_{vintage}.csv"
+table10 = pd.read_csv(cov_path).set_index(["estimator", "data"])
+COLUMN = {"long-only": "GMV long-only vol %", "unconstrained": "GMV unconstrained vol %"}
+d0c = pd.DataFrame([{"portfolio": f"{v[0]}, {v[1]}, {side}", "rebuilt vol %": 100 * CV.annualised_vol(gmv_ret[(v, side)]), "committed vol %": table10.loc[v, COLUMN[side]]}
+                    for v in C.DAILY_C_VARIANTS for side in C.DAILY_C_SIDES]).set_index("portfolio")
+d0c["gap"] = d0c["rebuilt vol %"] - d0c["committed vol %"]
+d0c["D0"] = np.where(d0c["gap"].abs() <= C.PAIRED_C_REPRODUCTION_TOL, "holds", "FAILS")
+print(d0c.to_string(float_format=lambda x: f"{x:.6f}"))
+d0_ok = bool((d0["D0"] == "holds").all() and (d0c["D0"] == "holds").all())
+print(f"gate D0: the fourteen paths reproduce the committed records under the rule for reruns in {int((d0['D0'] == 'holds').sum())} of 14 (quadratic to the last digit, the robust path within {C.EVAL_RERUN_CONE_MAX_DIFFERENCE:.0e}); "
+      f"the six portfolios within {C.PAIRED_C_REPRODUCTION_TOL} points in {int((d0c['D0'] == 'holds').sum())} of 6: {'holds' if d0_ok else 'FAILS'}")
+assert d0_ok, "gate D0 fails: the notebook stops here and reports"
+"""),
+    md("""
+## The daily series, and gate D1
+
+Each path's daily returns from its monthly weights, drifting within the month with no trade; the benchmark the same way from its weights of the month; the daily active return their difference. For each path the month's active return compounded from the days is set against the committed monthly one: a correlation of at least 0.995 and a realised tracking error within 1 basis point a year, the largest monthly gap beside, and the benchmark's own compounded return against its monthly one. A failure stops the notebook.
+"""),
+    code("""
+t0 = time.time()
+bench_daily = DY.daily_returns_of_path(weights.loc[months], returns_d_eval)
+bench_monthly = BM.combination_return(returns_m, weights).loc[months]
+daily_active = {}
+d1_rows = []
+for (v, cs), path in paths.items():
+    col = f"{LABEL[v]} | {cs}"
+    W = pd.DataFrame(np.vstack(path["weights"].to_list()), index=months, columns=weights.columns)
+    port_daily = DY.daily_returns_of_path(W, returns_d_eval)
+    daily_active[col] = port_daily - bench_daily
+    out = DY.reconcile(port_daily, bench_daily, committed[col].reindex(months))
+    d1_rows.append({"path": col, **out})
+D_COL = f"{D_LABEL} | {D_SET}"
+W_d = pd.DataFrame(np.vstack(path_d["weights"].to_list()), index=months, columns=weights.columns)
+port_daily_d = DY.daily_returns_of_path(W_d, returns_d_eval)
+daily_active_d = (port_daily_d - bench_daily).rename(D_COL)
+out_d = DY.reconcile(port_daily_d, bench_daily, path_d["active_return"].reindex(months))   # against its own monthly record of this run: the path has no committed one
+d1_rows.append({"path": D_COL, **out_d})
+d1 = pd.DataFrame(d1_rows).set_index("path")
+d1["te_compounded_bp"] = 1e4 * d1["te_compounded"]; d1["te_committed_bp"] = 1e4 * d1["te_committed"]; d1["te_gap_bp"] = 1e4 * d1["te_gap"]
+d1["largest_monthly_gap_bp"] = 1e4 * d1["largest_monthly_gap"]
+d1["D1"] = np.where((d1["correlation"] >= C.DAILY_D1_CORRELATION_MIN) & (d1["te_gap"].abs() <= C.DAILY_D1_TE_GAP_MAX), "holds", "FAILS")
+show_d1 = ["months", "correlation", "te_compounded_bp", "te_committed_bp", "te_gap_bp", "largest_monthly_gap_bp", "month_of_largest_gap", "D1"]
+print(d1[show_d1].to_string(float_format=lambda x: f"{x:.4f}"))
+# the benchmark's own return: its compounded daily return against French's monthly return with the same weights
+bench_comp = DY.compounded_by_month(bench_daily).reindex(months)
+bench_gap = (bench_comp - bench_monthly).abs()
+bench_row = {"correlation": float(np.corrcoef(bench_comp, bench_monthly)[0, 1]),
+             "sd compounded, % a year": 100 * float(np.std(bench_comp, ddof=1) * np.sqrt(12)), "sd monthly, % a year": 100 * float(np.std(bench_monthly, ddof=1) * np.sqrt(12)),
+             "largest monthly gap, bp": 1e4 * float(bench_gap.max()), "month of largest gap": str(bench_gap.idxmax()), "mean absolute gap, bp": 1e4 * float(bench_gap.mean())}
+print("the benchmark's own return, compounded from its drifting daily series against its monthly return: " + "; ".join(f"{k} {v:.4f}" if isinstance(v, float) else f"{k} {v}" for k, v in bench_row.items()))
+# the minimum-variance portfolios' own daily returns
+daily_gmv = {}
+for (v, side), W in gmv_w.items():
+    daily_gmv[f"{v[0]}, {v[1]} | {side}"] = DY.daily_returns_of_path(W, returns_d_eval)
+fourteen = d1.drop(index=D_COL)
+d1_ok = bool((fourteen["D1"] == "holds").all())
+d1_d_ok = d1.loc[D_COL, "D1"] == "holds"
+print(f"gate D1: correlation at least {C.DAILY_D1_CORRELATION_MIN} and tracking error within {1e4 * C.DAILY_D1_TE_GAP_MAX:.0f} bp a year in {int((fourteen['D1'] == 'holds').sum())} of 14 paths "
+      f"(correlations {fourteen['correlation'].min():.5f} to {fourteen['correlation'].max():.5f}, gaps {fourteen['te_gap_bp'].min():+.3f} to {fourteen['te_gap_bp'].max():+.3f} bp, the largest monthly gap {fourteen['largest_monthly_gap_bp'].max():.2f} bp): {'holds' if d1_ok else 'FAILS'}; ED1 {'MET' if d1_ok else 'NOT MET'}; "
+      f"the fifteenth path, family D's, against its own monthly record: correlation {d1.loc[D_COL, 'correlation']:.5f}, gap {d1.loc[D_COL, 'te_gap_bp']:+.3f} bp, {'holds' if d1_d_ok else 'FAILS'}; {time.time() - t0:.0f}s")
+assert d1_ok and d1_d_ok, "gate D1 fails: the notebook stops here and reports; no daily test runs on a series that does not reconcile"
+"""),
+    md("""
+## The tables of part (b), written to `outputs/`
+
+The daily active returns of the fourteen paths, the benchmark's own daily return (a table of its own, added 19 November 2026 before this run, so that gate D1 can be recomputed from the committed tables), the daily returns of the six minimum-variance portfolios, the reconciliation of D1 with D0's result beside it, and, in tables of their own, the fifteenth path's monthly records and daily active returns (family D, added 18 November 2026).
+"""),
+    code("""
+daily_active_table = pd.DataFrame(daily_active)
+daily_active_table.index.name = "day"
+daily_active_table.to_csv(f"{C.OUTPUT_DIR}/daily_active_returns_{vintage}.csv", float_format="%.10f")
+bench_daily.rename("benchmark").to_frame().rename_axis("day").to_csv(f"{C.OUTPUT_DIR}/daily_benchmark_returns_{vintage}.csv", float_format="%.10f")
+daily_gmv_table = pd.DataFrame(daily_gmv)
+daily_gmv_table.index.name = "day"
+daily_gmv_table.to_csv(f"{C.OUTPUT_DIR}/daily_minimum_variance_returns_{vintage}.csv", float_format="%.10f")
+path_d_monthly = path_d.drop(columns=["weights"]).copy()
+path_d_monthly.insert(0, "set", D_SET)
+path_d_monthly.insert(0, "variant", D_LABEL)
+path_d_monthly.to_csv(f"{C.OUTPUT_DIR}/path_d_monthly_records_{vintage}.csv", float_format="%.10f")
+daily_active_d.to_frame().rename_axis("day").to_csv(f"{C.OUTPUT_DIR}/path_d_daily_active_returns_{vintage}.csv", float_format="%.10f")
+recon = d1[show_d1].join(d0[["program", "largest gap to the committed record", "D0", "inaccurate months"]])
+recon.loc[D_COL, ["program", "D0", "inaccurate months"]] = ["quadratic", "no committed record (family D, added 18 November 2026)", int((path_d["status"] != "optimal").sum())]
+recon.loc["benchmark"] = {**{c: np.nan for c in recon.columns}, "months": len(months), "correlation": bench_row["correlation"], "largest_monthly_gap_bp": bench_row["largest monthly gap, bp"], "month_of_largest_gap": bench_row["month of largest gap"], "D1": "reported", "program": "benchmark", "D0": "reported"}
+recon.to_csv(f"{C.OUTPUT_DIR}/daily_reconciliation_{vintage}.csv", float_format="%.10f")
+d0c.to_csv(f"{C.OUTPUT_DIR}/daily_reconciliation_minimum_variance_{vintage}.csv", float_format="%.10f")
+assert daily_active_table.shape == (n_days, 14) and daily_gmv_table.shape == (n_days, 6) and len(daily_active_d) == n_days and len(path_d_monthly) == 566 and len(bench_daily) == n_days
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("daily_") or f.startswith("path_d_")))
+print(f"active returns reconciled against: {active_path}, SHA-256 {hashlib.sha256(open(active_path, 'rb').read()).hexdigest()[:16]}")
+"""),
+    md("""
+## Verdicts and results, parts (a) and (b)
 
 | Expectation | Result | Verdict |
 |---|---|---|
 | Count first | 11,888 trading days from 1979-07-02 to 2026-08-31 in 566 months, 47 blocks of 252 | holds |
+| D0. The rebuilt paths against the committed records | the fourteen paths reproduce the committed monthly records under the rule for reruns in 14 of 14: the twelve quadratic-program paths to the last digit, the two robust paths within 1e-8 (3.2e-9 and 1.8e-9), no inaccurate month; the six minimum-variance portfolios of notebook 10 within 0.001 percentage points in 6 of 6, to 1e-6 | holds |
+| D1. The compounded daily series against the monthly records | correlations of 0.99985 to 0.99993 over the 566 months in 14 of 14 paths, the compounded tracking error 0.11 to 0.22 basis points a year above the committed one, the largest monthly gap 4.16 basis points; the benchmark's own compounded return against its monthly return at a correlation of 1.0000, 15.47 against 15.45 per cent a year, the largest monthly gap 19.5 basis points in 1998-10, the mean absolute gap 0.79; the fifteenth path, family D's, against its own monthly record at 0.99989 with a gap of 0.17 | holds |
+| ED1. Gate D1 holds for all fourteen paths | 14 of 14 | MET |
 | P3. Size check on clustered daily data | 89 of 3,000 simulated pairs rejected at 5%, 2.97% (standard error 0.31 points), at most 6.5%; under 3.5%, so at P3's setting, a correlation of 0.99 with one common GARCH(1,1) variance on 11,888 days, the test rejects less often than its level; 3.13% of the intervals exclude zero; the differences spread 0.165 basis points a year against a mean standard error of 0.150, a median of 0.1364 and a median critical value of 2.090. On the first 500 pairs, the run of 19 November made before the count was raised from 500 to 3,000: 15 of 500, 3.0%, 3.4% of the intervals, a spread of 0.163 against 0.150, 0.1358 and 2.091 | MET |
 | The three windows of family D | RiskMetrics over five years with a half-life of 252 days: a mean observation age of 323 days against 379 for the flat three-year window and 631 for the flat five-year one; an effective number of observations of 683 against 756 and 1,261; 90.3% of its weight in the last 756 days (means over the 566 evaluation months, whose windows hold 750 to 762 and 1,254 to 1,266 trading days) | reported |
 
@@ -6255,7 +6437,9 @@ print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if (f.startswith("p
 
 **The three windows of family D, reported.** Computed from the weights and the windows' lengths, as means over the 566 evaluation months: RiskMetrics' five-year window with a half-life of 252 days has a mean observation age of 323 days against 379 for the flat three-year window and 631 for the flat five-year one, an effective number of observations of 683 against 756 and 1,261, and 90.3% of its weight in the last 756 days. The comparison of family A therefore sets RiskMetrics against a window, the flat three-year one, whose weights lie on nearly the same data, and family D, RiskMetrics against the sample covariance on five years, is the comparison on one window, the two estimators differing only in how they weigh it. The table is `daily_window_weights`.
 
-Parts (b) and (c) follow in their own commits, with their results written here when they run.
+**D0 and D1 hold, part (b).** The fourteen paths rebuilt from the modules with their weights kept reproduce the committed monthly records under the rule for reruns: the twelve quadratic-program paths to the last digit and the two robust paths within 1e-8 (3.2e-9 and 1.8e-9), with no inaccurate month; the six minimum-variance portfolios of notebook 10 reproduce the committed volatilities to 1e-6 percentage points. The month's active return compounded from the daily series matches the committed monthly active return at correlations of 0.99985 to 0.99993 over the 566 months, with the compounded tracking error 0.11 to 0.22 basis points a year above the committed one, which is the gap French's daily and monthly files leave, and a largest monthly gap of 4.16 basis points; the benchmark's own compounded return correlates at 1.0000 with its monthly return, with a largest monthly gap of 19.5 basis points in October 1998 and a mean absolute gap of 0.79. ED1 is met. The fifteenth path, the sample covariance on five years of daily returns under the mandate (family D), reconciles against its own monthly record at 0.99989 with a gap of 0.17 basis points; its records are `path_d_monthly_records` and `path_d_daily_active_returns`, in tables of their own. No daily test is run in this part.
+
+Part (c), the daily test, follows in its own commit after (a) and (b) are committed and pushed, with its results written here when it runs.
 """),
 ]
 
