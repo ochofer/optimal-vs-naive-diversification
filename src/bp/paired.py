@@ -7,10 +7,9 @@ their portfolios' realised volatilities.
     the variance. Wilmott, 2011(55), 86-89.
 
 Added on 18 November 2026, after every recorded run of the study, and
-labelled so wherever it is used: notebook 12 had judged one
-path against another by the standard error of a single tracking error, while
-two paths that share their months and whose active returns move together have
-a difference far less noisy than either figure. The module repeats the
+labelled so wherever it is used. Two paths that share their months and whose
+active returns move together have a difference far less noisy than either
+figure. The module repeats the
 structure of Signal Evaluation's test of two Sharpe ratios (Ledoit and Wolf
 2008) with the variance in place of the Sharpe ratio.
 
