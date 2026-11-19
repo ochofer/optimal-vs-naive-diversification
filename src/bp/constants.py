@@ -864,3 +864,47 @@ PAIRED_COMPARISONS_E = (
 # the Jobson-Korkie statistic), so that each figure resolves to a committed
 # file. The study's convention stays two-sided.
 REPLICATION_VS_1N_DATE = "2026-11-18"
+# Added 19 November 2026 by the design after the referee's review of the
+# corrections at a1592f5, in no verdict, and labelled so wherever the figures
+# appear. The referee's own recomputation of that day produced every figure
+# these settings lead to before this code ran, so none is an expectation, and
+# the text says of each that its outcome was known from the referee's run.
+# The additions below go into notebook 17, each computed from the committed
+# records with no path rerun and with EVAL_BOOTSTRAP_DRAWS, EVAL_BOOTSTRAP_SEED
+# and EVAL_BOOTSTRAP_LEVEL as they are, so that every earlier table stays byte
+# for byte.
+# (1) The block length. The study fixes the bootstrap's block at
+# EVAL_BOOTSTRAP_BLOCK_MONTHS, the bias band's, where Ledoit and Wolf (2008,
+# Algorithm 3.1) calibrate it from the data. The rows of the families in
+# PAIRED_BLOCK_FAMILIES_FURTHER are reported again at each length in
+# PAIRED_BLOCK_LENGTHS_FURTHER, same seed and draws, in a table of their own,
+# so that a reader sees what the choice does.
+PAIRED_ADDITIONS_DATE = "2026-11-19"
+PAIRED_BLOCK_LENGTHS_FURTHER = (3, 6, 24)         # months, beside the committed rows at EVAL_BOOTSTRAP_BLOCK_MONTHS
+PAIRED_BLOCK_FAMILIES_FURTHER = ("A", "B", "E")
+# (2) Holm's correction, by the function that gives A its column: across the
+# seven rows of B, as a column of the paired table, and across the nine rows
+# of the families in PAIRED_HOLM_JOINT_FAMILIES together, as one sentence.
+PAIRED_HOLM_FAMILIES_FURTHER = ("B",)
+PAIRED_HOLM_JOINT_FAMILIES = ("A", "E")
+# (3) The size check again, with no verdict and P1's verdict as recorded on
+# its seed: on each seed in PAIRED_SIZE_FURTHER_SEEDS at PAIRED_SIZE_CORRELATION,
+# and on PAIRED_SIZE_SEED at each correlation in PAIRED_SIZE_FURTHER_CORRELATIONS,
+# two correlations of rows the text reads (the factor model, the component
+# model and the robust portfolio correlate with the sample covariance's path
+# at 0.93, the monthly covariance's at 0.81), PAIRED_SIZE_PAIRS pairs each with
+# the other settings of P1; every rate with the standard error of a share, the
+# square root of rate times (1 minus rate) over the pairs.
+PAIRED_SIZE_FURTHER_SEEDS = (20261119, 20261120, 20261121)   # the date of the referee's review as a number, and the two integers after it
+PAIRED_SIZE_FURTHER_CORRELATIONS = (0.93, 0.81)
+# (4) The years before 2000 and from 2000. The bias statistic under the 21
+# rule (evaluation.bias_statistic) for each variant under EVAL_BIAS_SPLIT_SET,
+# from the committed active returns and forecast tracking errors, on the months
+# before EVAL_BIAS_SPLIT_MONTH and on the months from it, each with the band of
+# evaluation.block_bootstrap_band (blocks of EVAL_BOOTSTRAP_BLOCK_MONTHS, the
+# draws, seed and level above, the two periods resampled independently), and
+# the band of the difference, before less from, from the same resampled
+# statistics paired draw by draw. The sentence that the daily estimators'
+# understatement comes from the years before 2000 rests on this table.
+EVAL_BIAS_SPLIT_MONTH = "2000-01"                 # the first month of the second period
+EVAL_BIAS_SPLIT_SET = "C3"

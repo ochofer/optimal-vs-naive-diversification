@@ -132,3 +132,13 @@ def test_the_constants_name_the_comparisons_and_the_settings():
     assert len({frozenset(pair) for pair in C.PAIRED_COMPARISONS_E}) == 3
     assert C.PAIRED_REFERENCE not in {v for pair in C.PAIRED_COMPARISONS_E for v in pair}
     assert C.REPLICATION_VS_1N_DATE == "2026-11-18"
+    # the additions of 19 November 2026 after the referee's review of the corrections: block lengths, Holm for B and across A with E,
+    # the further size checks, the bias statistic before 2000 and from 2000
+    assert C.PAIRED_ADDITIONS_DATE == "2026-11-19"
+    assert C.PAIRED_BLOCK_LENGTHS_FURTHER == (3, 6, 24) and C.EVAL_BOOTSTRAP_BLOCK_MONTHS not in C.PAIRED_BLOCK_LENGTHS_FURTHER
+    assert C.PAIRED_BLOCK_FAMILIES_FURTHER == ("A", "B", "E")
+    assert C.PAIRED_HOLM_FAMILIES_FURTHER == ("B",) and C.PAIRED_HOLM_JOINT_FAMILIES == ("A", "E")
+    assert len(C.PAIRED_SIZE_FURTHER_SEEDS) == 3 and C.PAIRED_SIZE_SEED not in C.PAIRED_SIZE_FURTHER_SEEDS
+    assert len(set(C.PAIRED_SIZE_FURTHER_SEEDS)) == 3
+    assert C.PAIRED_SIZE_FURTHER_CORRELATIONS == (0.93, 0.81) and all(0 < r < C.PAIRED_SIZE_CORRELATION for r in C.PAIRED_SIZE_FURTHER_CORRELATIONS)
+    assert C.EVAL_BIAS_SPLIT_MONTH == "2000-01" and C.EVAL_BIAS_SPLIT_SET == "C3"
