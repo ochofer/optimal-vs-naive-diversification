@@ -234,8 +234,11 @@ def _statistics_of_draws(a, b, block, delta_log_hat, delta_sd_hat, scale):
 def _bootstrap_statistics(r1, r2, delta_log_hat, delta_sd_hat, scale, block, draws, rng, chunk: int | None = None):
     """The studentised statistics of both differences on the same resamples: shape (draws,) each. The
     indices of every draw are drawn once; with `chunk` the statistics are computed `chunk` draws at a
-    time, so that long daily series fit in memory, and each draw's statistic is the same number either
-    way, because every operation runs row by row (added 18 November 2026 for the daily series)."""
+    time, so that long daily series fit in memory. Every operation runs row by row, and at the chunk the
+    daily test uses the results equal the unchunked ones in the recorded environment; a draw computed
+    alone need not give the bits it gives among many, because the order in which numpy adds the elements
+    of a row can depend on the shape of the array the row sits in, so the test allows 1e-12 at a chunk
+    of one draw. The monthly test is not chunked (added 18 November 2026 for the daily series)."""
     t = len(r1)
     idx = circular_block_indices(t, block, draws, rng)
     if chunk is None or chunk >= draws:
@@ -355,27 +358,49 @@ def simulate_garch_pair(days: int, sd: float, rho: float, dof: int, garch: tuple
     return sd * e1, sd * e2
 
 
+def _daily_pair_test(job):
+    """One pair of the daily size check: the test on the pair with its own bootstrap seed."""
+    r1, r2, seed_sequence, block, draws, level, periods, ddof, chunk = job
+    out = test(r1, r2, block=block, draws=draws, level=level, seed=np.random.default_rng(seed_sequence),
+               periods=periods, ddof=ddof, chunk=chunk)
+    return out["p_value"], out["excludes_zero"], out["difference"], out["se"], out["critical"]
+
+
 def size_check_daily(pairs: int, days: int, sd: float, rho: float, dof: int, garch: tuple[float, float, float], seed: int,
                      block: int = 252, draws: int = 2000, level: float = 0.95, periods: int = 252, ddof: int = 1,
-                     chunk: int | None = 200) -> dict:
+                     chunk: int | None = 200, workers: int | None = None, batch: int = 100) -> dict:
     """The size check on simulated daily pairs with clustered volatility (simulate_garch_pair), otherwise as
     size_check: the share of pairs with equal variances whose p-value falls below 1 - level, the share of
     intervals excluding zero, the counts, each pair's p-value, difference, standard error and critical
-    value (the critical values added 19 November 2026, so that the size table can report their median)."""
+    value (the critical values added 19 November 2026, so that the size table can report their median).
+    The pairs are drawn in sequence from one generator and each pair's bootstrap seed is spawned in
+    sequence, so the first k pairs of a run of n are the pairs of a run of k (tests/test_daily.py). With
+    `workers` above one the tests of the pairs run in that many processes, `batch` pairs at a time, the
+    data still drawn in sequence; each pair's figures are those of the one-process run (added 20
+    November 2026, so that the three runs of 3,000 pairs fit a sitting)."""
     root = np.random.SeedSequence(seed)
     data_seed, boot_seed = root.spawn(2)
     data_rng = np.random.default_rng(data_seed)
-    boot_rngs = [np.random.default_rng(s) for s in boot_seed.spawn(pairs)]
-    p_values, excludes, differences, ses, crits = [], [], [], [], []
-    for k in range(pairs):
-        r1, r2 = simulate_garch_pair(days, sd, rho, dof, garch, data_rng)
-        out = test(r1, r2, block=block, draws=draws, level=level, seed=boot_rngs[k], periods=periods, ddof=ddof, chunk=chunk)
-        p_values.append(out["p_value"])
-        excludes.append(out["excludes_zero"])
-        differences.append(out["difference"])
-        ses.append(out["se"])
-        crits.append(out["critical"])
-    p_values, excludes = np.array(p_values), np.array(excludes)
+    boot_seqs = boot_seed.spawn(pairs)
+    results = []
+    pool = None
+    if workers and workers > 1:
+        import multiprocessing
+        pool = multiprocessing.get_context("fork").Pool(workers)
+    try:
+        for start in range(0, pairs, batch):
+            jobs = []
+            for k in range(start, min(start + batch, pairs)):
+                r1, r2 = simulate_garch_pair(days, sd, rho, dof, garch, data_rng)
+                jobs.append((r1, r2, boot_seqs[k], block, draws, level, periods, ddof, chunk))
+            results.extend(pool.map(_daily_pair_test, jobs, chunksize=1) if pool else [_daily_pair_test(j) for j in jobs])
+    finally:
+        if pool:
+            pool.close()
+            pool.join()
+    p_values = np.array([r[0] for r in results])
+    excludes = np.array([r[1] for r in results])
+    differences, ses, crits = [r[2] for r in results], [r[3] for r in results], [r[4] for r in results]
     rejected = p_values < 1 - level
     return {"rate": float(rejected.mean()), "rejected": int(rejected.sum()),
             "rate_interval": float(excludes.mean()), "rejected_interval": int(excludes.sum()), "pairs": pairs,

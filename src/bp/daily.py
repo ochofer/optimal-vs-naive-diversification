@@ -1,8 +1,9 @@
 """
-The daily measurement of tracking error: a path's daily returns from the
-weights the study set for each month, drifting with the industries' daily
-returns within the month and traded only at the month's turn, as the design
-of 18 November 2026 fixes it (constants.py, section 9).
+The daily measurement of tracking error, planned on 18 November 2026 and
+committed on 19: a path's daily returns from the weights the study set for each
+month, drifting with the industries' daily returns within the month and traded
+only at the month's turn, as the plan of 18 November 2026 fixes it
+(constants.py, section 9).
 
 Within a month a portfolio's weights are those the study set for the month,
 in force from the month's first trading day; each day's portfolio return is
@@ -26,6 +27,14 @@ window by the weights it puts on the days, the mean age of an observation,
 the effective number of observations and the share of the weight in the most
 recent days, for a flat window and for the exponentially weighted one.
 
+read_interval, a setting of 20 November 2026 made before part (c) ran, takes a
+row's difference, RiskMetrics less the sample covariance, with its interval and
+the reference figure, and the pair of the paper's figures the row is read
+against, and returns the reading: the four readings of constants.DAILY_READINGS
+where the paper reports a gain, the three of DAILY_READINGS_UNCONSTRAINED where
+it reports none, and the window clause where the row's sample covariance is not
+on the paper's window. Part (c) writes no reading by hand.
+
 The module depends on numpy and pandas alone.
 """
 from __future__ import annotations
@@ -33,7 +42,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-__all__ = ["drift_daily", "daily_returns_of_path", "compounded_by_month", "reconcile", "window_weight_statistics"]
+__all__ = ["drift_daily", "daily_returns_of_path", "compounded_by_month", "reconcile", "window_weight_statistics", "read_interval"]
 
 
 def drift_daily(w0: np.ndarray, returns: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -87,13 +96,16 @@ def compounded_by_month(daily: pd.Series) -> pd.Series:
     return (1.0 + daily).groupby(month_of_day).prod() - 1.0
 
 
-def reconcile(daily_portfolio: pd.Series, daily_benchmark: pd.Series, committed_active: pd.Series, periods: int = 12) -> dict:
+def reconcile(daily_portfolio: pd.Series, daily_benchmark: pd.Series | None, committed_active: pd.Series, periods: int = 12) -> dict:
     """Gate D1 for one path: the month's active return compounded from the daily series (the portfolio's
     compounded return less the benchmark's) against the committed monthly active return over the same
     months. Returns the correlation of the two monthly series, the realised tracking error of each
     (per year, n minus 1), their gap, the largest absolute monthly gap and the month it falls in, and
-    the number of months."""
-    comp = compounded_by_month(daily_portfolio) - compounded_by_month(daily_benchmark)
+    the number of months. With `daily_benchmark` None the series is a portfolio's own return against its
+    monthly return, the form family C's six series take (added 20 November 2026)."""
+    comp = compounded_by_month(daily_portfolio)
+    if daily_benchmark is not None:
+        comp = comp - compounded_by_month(daily_benchmark)
     committed = committed_active.copy()
     committed.index = pd.PeriodIndex(committed.index, freq="M")
     comp = comp.reindex(committed.index)
@@ -125,3 +137,36 @@ def window_weight_statistics(days: int, halflife: float | None = None, recent_da
         w = w / w.sum()
     return {"days": days, "halflife": halflife, "mean age": float(w @ age), "effective number": float(1.0 / (w ** 2).sum()),
             "share in recent days": float(w[age <= recent_days].sum()), "recent days": int(recent_days)}
+
+
+def read_interval(difference: float, lower: float, upper: float, reference: float, paper_pair: tuple[float, float],
+                  window_years: int, readings: dict, readings_unconstrained: dict, window_clause: str,
+                  paper_window_years: int = 5) -> dict:
+    """The reading of one RiskMetrics row, a setting of 20 November 2026 made before part (c) ran.
+
+    `difference`, `lower` and `upper` are RiskMetrics less the sample covariance and its interval, in the
+    row's units; `reference` is the sample covariance's figure in the same units; `paper_pair` is
+    (RiskMetrics, sample covariance) in the paper's table for the portfolio the row is read against. The
+    published gain is the pair's gap as a share of the paper's sample-covariance figure, and on this
+    row's level it is that share times `reference`. Where the pair has RiskMetrics above the sample
+    covariance there is no published gain, and the row has three readings. Where the row's sample
+    covariance is not on the paper's window the window clause is added. Returns the reading's key, the
+    sentence, the published share and the published gain on this level (None where the paper reports
+    no gain)."""
+    rm, sample = paper_pair
+    share = (sample - rm) / sample if sample > rm else None
+    gain_here = None if share is None else share * reference
+    if upper < 0:
+        key = "below"
+    elif lower > 0:
+        key = "above"
+    elif share is None:
+        key = "includes_zero"
+    elif lower > -gain_here:
+        key = "excludes_gain"      # a gain as large as the published one would be a difference of -gain_here, which lies below the interval
+    else:
+        key = "includes_gain"
+    sentence = (readings_unconstrained if share is None else readings)[key]
+    if window_years != paper_window_years:
+        sentence = sentence + "; " + window_clause
+    return {"key": key, "sentence": sentence, "published_share": share, "published_gain_here": gain_here}

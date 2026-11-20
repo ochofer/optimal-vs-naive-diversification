@@ -919,13 +919,15 @@ EVAL_BIAS_SPLIT_SET = "C3"
 # trading days. The expectations and the readings of this section were written
 # on 18 November 2026, before any daily figure of the study was computed, and
 # the daily test of (c) runs only after (a) and (b) are committed and pushed.
-# The repository's history cannot show that. It shows that (a) and (b) were
-# committed and pushed before the daily test of (c) ran. Two things were seen
+# The repository's history cannot show that. It will show that (a) and (b) were
+# committed before the commit that carries (c)'s results. Two things were seen
 # before that commit: the fifteenth path's monthly tracking error, in the reconciliation
 # table of (b), and the daily tracking errors of the fourteen paths, printed on
 # 19 November 2026 during the check of gate D1; no constant, expectation or
-# reading was changed after either. Every row of the daily comparisons is
-# reported with no verdict. No version 1 or module A table changes.
+# reading was changed after either. ED3 is an expectation about the sign of two
+# daily differences whose point estimates follow from the figures printed that
+# day. Every row of the daily comparisons is reported with no verdict. No
+# version 1 or module A table changes.
 # The order: (a) these constants, the code (paired.py's chunked bootstrap,
 # daily.py), the tests and P3 on made-up data; (b) the gates D0 and D1 with
 # their tables; (c) the daily test, its table and the text. Family D, below,
@@ -935,7 +937,7 @@ EVAL_BIAS_SPLIT_SET = "C3"
 DAILY_TEST_DATE = "2026-11-18"
 DAILY_PERIODS = 252                               # trading days a year, the annualisation of a daily series, a constant
 DAILY_BLOCK = 252                                 # the bootstrap's block in trading days: one year at both frequencies, so the count of blocks is the same, 47
-DAILY_CHUNK_DRAWS = 200                           # the bootstrap's draws computed this many at a time, so that 2,000 draws of about 11,900 days fit in memory; the indices are drawn once and every result is the same to the last digit (tests/test_paired.py)
+DAILY_CHUNK_DRAWS = 200                           # the bootstrap's draws computed this many at a time, so that 2,000 draws of about 11,900 days fit in memory; the indices are drawn once, and at this chunk every result equals the unchunked one in the recorded environment; the monthly test is not chunked (tests/test_paired.py)
 DAILY_FIRST_MONTH = COV_EVAL_START                # the first trading day of July 1979 is the first day of the daily series; the last is the last trading day of EXT_SAMPLE_END
 DAILY_PATH_SETS = ATTRIBUTION_SETS                # the fourteen paths: the seven variants under the mandate's C3 and under the tilt alone, rebuilt from the modules with their weights kept, as notebook 13 rebuilds them
 DAILY_C_VARIANTS = (("sample", "daily_5y_ewma"), ("sample", "daily_5y"), ("sample", "daily_3y"))   # notebook 10's minimum-variance portfolios, unconstrained and long-only, six series of the portfolio's own daily return
@@ -977,7 +979,7 @@ DAILY_SIZE_RATE_LOW = 0.035                       # a share under this is stated
 # same two figures on monthly returns and the ratio of the monthly to the daily variance of each series.
 # Expectations, fixed before the run:
 DAILY_ED1 = "gate D1 holds for all fourteen paths"                       # from the arithmetic of the gate: the gap of French's monthly returns to his daily ones compounded is well under a basis point a month on an active return whose monthly standard deviation is about 25
-DAILY_ED2_SE_RATIO_MAX = 0.5                      # ED2: for RiskMetrics against the sample covariance under the mandate, the standard error of the daily difference is at most half the monthly one (0.91 basis points); about 21 times the observations would give a factor of 4.6 if days behaved like months, and fat tails and clustering take part of it away
+DAILY_ED2_SE_RATIO_MAX = 0.5                      # ED2: for RiskMetrics against the sample covariance under the mandate, the standard error of the daily difference is at most half the monthly one of 0.91 basis points, that is, at most 0.455; about 21 times the observations would give a factor of 4.6 if days behaved like months, and fat tails and clustering take part of it away
 DAILY_ED3_VARIANTS = (("factor", "daily 3y"), ("pca", "daily 3y"))     # ED3: the factor model and principal components realise a higher daily tracking error than the sample covariance, each with an interval above zero and a Holm value below 0.05; both are so on months (+8.79 and +6.83 basis points, Holm 0.003 and 0.025), and a difference of that size should not depend on the horizon
 DAILY_ED3_HOLM_MAX = 0.05
 # No expectation on the RiskMetrics rows; their readings are fixed instead. With the difference RiskMetrics
@@ -1039,3 +1041,55 @@ DAILY_WINDOWS_DESCRIBED = (                       # (label, years of daily retur
     ("flat, daily 5y", EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY[1], None),
 )
 DAILY_RECENT_DAYS = 756                           # the last three years of trading days, the flat three-year window's length
+
+# Settings of 20 November 2026, before part (c) ran and before any daily comparison
+# was made (the daily tracking errors of the fourteen paths had been printed on
+# 19 November, as the opening of this section says): what each reading of the
+# RiskMetrics rows is read against, the size check at the correlations of the
+# other rows, and the reconciliation of family C's six daily series.
+DAILY_SETTINGS_DATE = "2026-11-20"
+# What each reading is read against. The published version (Table 3, Panel B)
+# sets "the published size" in every row; the working paper's gain is printed
+# beside it with no reading. Under the mandate, A's RiskMetrics row and D's first
+# row on months and on days are read against the capped pair, 13.00 against
+# 13.36, a gain of 2.69 per cent of the reference figure here. C's two long-only
+# rows against the long-only pair, 11.31 against 12.24, 7.6 per cent. C's two
+# unconstrained rows: the paper has RiskMetrics above the sample covariance
+# there, 11.36 against 10.91, so there is no published gain to exclude or
+# include, and the rows have the three readings of DAILY_READINGS_UNCONSTRAINED.
+# The rows against three years of data, A's and two of C's, are read against the
+# same pairs, and each reading names the window as a difference from the paper,
+# which estimates on one window of five years. daily.read_interval takes a row
+# and its interval and returns the reading; part (c) calls it and writes no
+# reading by hand (tests/test_daily.py checks every reading on made-up intervals).
+DAILY_READING_VERSION = "published version, Table 3 Panel B"
+DAILY_PAPER_WINDOW_YEARS = 5                      # the paper estimates every covariance on one window of five years
+DAILY_READING_ROWS = (                            # (family, series 1, series 2, frequency or side, the paper's portfolio the row is read against, years of this row's sample-covariance window)
+    ("A", "RiskMetrics, daily 5y", "sample, daily 3y", "daily", "with the cap", 3),
+    ("D", "RiskMetrics, daily 5y", "sample, daily 5y", "monthly", "with the cap", 5),
+    ("D", "RiskMetrics, daily 5y", "sample, daily 5y", "daily", "with the cap", 5),
+    ("C", "sample, daily_5y_ewma", "sample, daily_5y", "unconstrained", "unconstrained", 5),
+    ("C", "sample, daily_5y_ewma", "sample, daily_5y", "long-only", "long-only", 5),
+    ("C", "sample, daily_5y_ewma", "sample, daily_3y", "unconstrained", "unconstrained", 3),
+    ("C", "sample, daily_5y_ewma", "sample, daily_3y", "long-only", "long-only", 3),
+)
+DAILY_READINGS_UNCONSTRAINED = {                  # for a row whose published pair has RiskMetrics above the sample covariance
+    "below": "a gain from RiskMetrics is found, where the paper reports none without constraints",
+    "includes_zero": "no difference is found, and the paper reports no gain without constraints",
+    "above": DAILY_READINGS["above"],
+}
+DAILY_WINDOW_CLAUSE = ("the paper estimates every covariance on one window of five years, and this row sets "
+                       "RiskMetrics' five-year window against the sample covariance on three")
+# P3 at the correlations of the other rows (ED3's pairs correlate at 0.93 on months, B's seven at 0.94 to
+# 0.97, the monthly covariance's at 0.81): two more runs of the size check, DAILY_SIZE_PAIRS pairs each,
+# with P3's other settings, its seed, its criterion (at most DAILY_SIZE_RATE_MAX) and its rule of reading
+# (under DAILY_SIZE_RATE_LOW stated as rejecting less often than its level at that setting); each sentence
+# names its setting. Set before part (c) ran.
+DAILY_SIZE_FURTHER_CORRELATIONS = (0.93, 0.81)
+# The six daily series of family C, notebook 10's minimum-variance portfolios, reconciled as gate D1
+# reconciles the paths: the month's return compounded from the daily series against the monthly return of
+# the rebuilt portfolio of the same run (the portfolios have no committed monthly return; their realised
+# volatilities reproduce the committed table, gate D0), the correlation, the two volatilities and their
+# gap, the largest monthly gap and its month, in a table, reported with no band. Added on 20 November
+# 2026 after the series were built.
+DAILY_C_RECONCILIATION_DATE = "2026-11-20"

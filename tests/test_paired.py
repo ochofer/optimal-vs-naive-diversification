@@ -103,11 +103,19 @@ def test_holm_by_hand():
     assert np.allclose(P.holm([0.5, 0.9]), [1.0, 1.0])
 
 
-def test_chunked_bootstrap_equals_unchunked_to_the_last_digit():
+def test_chunked_bootstrap_equals_unchunked_at_the_chunks_used_and_within_1e_12_at_one_draw():
+    # the daily test uses chunks of 200 draws and the monthly test is not chunked; a draw computed alone
+    # need not give the bits it gives among many, so a chunk of one is held to 1e-12
     r1, r2 = _pair(600, 8)
     whole = P.test(r1, r2, draws=301, seed=4)
-    for chunk in (1, 7, 100, 301, 1000):
+    for chunk in (7, 100, 200, 301, 1000):
         assert P.test(r1, r2, draws=301, seed=4, chunk=chunk) == whole
+    one = P.test(r1, r2, draws=301, seed=4, chunk=1)
+    for key, value in whole.items():
+        if isinstance(value, float):
+            assert abs(one[key] - value) <= 1e-12, key
+        else:
+            assert one[key] == value, key
 
 
 def test_the_detectable_difference_and_the_chance_follow_the_normal_formulas():

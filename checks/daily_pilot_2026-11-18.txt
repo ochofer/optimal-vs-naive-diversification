@@ -1,0 +1,9 @@
+The pilot of 18 November 2026 on made-up data, run again on 20 November 2026 from the repository's root
+with src/bp/paired.py at f7d4299, numpy 2.5.3, Python 3.13.18:
+python3 checks/daily_pilot_2026-11-18.py 252 400 999 0.06 0.92
+block 252 alpha 0.06 beta 0.92: pairs 400 draws 999 | rejected 0.028 | interval excludes zero 0.028 | mean se 0.155 bp | sd of differences 0.153 bp | mean critical 2.18 | secs 272
+python3 checks/daily_pilot_2026-11-18.py 63 400 999 0.06 0.92
+block 63 alpha 0.06 beta 0.92: pairs 400 draws 999 | rejected 0.037 | interval excludes zero 0.037 | mean se 0.155 bp | sd of differences 0.153 bp | mean critical 2.09 | secs 282
+The script was written and run on 18 November 2026, before the block of the daily test was fixed at 252 days;
+it entered the repository on 20 November 2026, and the history cannot show the earlier date. On 400 pairs a
+share of 0.028 has a standard error of 0.008, so the two shares are not told apart.

@@ -1,7 +1,8 @@
 """The daily construction of a path's returns: on a made-up month the compounded daily return of a drifting
 portfolio equals the weights times the compounded industry returns, the drifted weights sum to one every
 day, the series re-anchors at each month's weights, the reconciliation of gate D1 reads as expected, the
-GARCH pair of the size check has the variance and correlation it is given, and the constants of section 9."""
+GARCH pair of the size check has the variance and correlation it is given, the first k pairs of a longer run are
+the run of k pairs, the reading of a RiskMetrics row comes by code for every reading, and the constants of section 9."""
 from __future__ import annotations
 
 import pathlib
@@ -77,6 +78,18 @@ def test_the_reconciliation_reads_a_perfect_match_and_a_known_gap():
     shifted = committed + 0.0001
     out2 = D.reconcile(port, bench, shifted)
     assert out2["largest_monthly_gap"] == pytest.approx(0.0001) and out2["correlation"] == pytest.approx(1.0) and abs(out2["te_gap"]) < 1e-12
+    # a committed series equal to the compounded one times 1.1: the correlation stays 1, the compounded
+    # tracking error is a tenth below the committed one, and the largest gap is a tenth of the largest
+    # compounded month, in that month (added 20 November 2026)
+    scaled = committed * 1.1
+    out3 = D.reconcile(port, bench, scaled)
+    assert out3["correlation"] == pytest.approx(1.0)
+    assert out3["te_gap"] == pytest.approx(-0.1 * out3["te_compounded"]) and out3["te_committed"] == pytest.approx(1.1 * out3["te_compounded"])
+    assert out3["largest_monthly_gap"] == pytest.approx(0.1 * committed.abs().max())
+    assert out3["month_of_largest_gap"] == str(committed.abs().idxmax())
+    # a portfolio's own return against its monthly return, family C's form: no benchmark
+    own = D.reconcile(port, None, D.compounded_by_month(port) * 1.1)
+    assert own["correlation"] == pytest.approx(1.0) and own["te_gap"] == pytest.approx(-0.1 * own["te_compounded"])
 
 
 def test_the_garch_pair_has_the_variance_and_correlation_it_is_given():
@@ -100,6 +113,78 @@ def test_the_daily_size_check_runs_and_reports_its_counts():
     assert len(out["critical_values"]) == 4 and (out["critical_values"] > 0).all()   # the per-pair critical values, for the size table's median (19 November 2026)
     assert out["rejected"] == int((out["p_values"] < 0.05).sum())
     assert out["rejected_interval"] == int(out["excludes_interval"].sum()) and len(out["excludes_interval"]) == out["pairs"]   # per-pair flags, for the first-pairs row of P3
+
+
+def test_the_first_k_pairs_of_a_longer_run_are_the_run_of_k_pairs_and_workers_change_nothing():
+    # the property the size table's first row rests on: the pairs are drawn in sequence from one generator
+    # and each bootstrap seed is spawned in sequence (added 20 November 2026)
+    kw = dict(days=400, sd=0.0005, rho=0.99, dof=5, garch=C.DAILY_SIZE_GARCH, seed=11, block=252, draws=99, periods=252, chunk=40)
+    short = P.size_check_daily(pairs=3, **kw)
+    longer = P.size_check_daily(pairs=7, **kw)
+    for key in ("p_values", "excludes_interval", "differences", "standard_errors", "critical_values"):
+        assert np.array_equal(short[key], longer[key][:3]), key
+    parallel = P.size_check_daily(pairs=7, workers=2, batch=3, **kw)
+    for key in ("p_values", "excludes_interval", "differences", "standard_errors", "critical_values"):
+        assert np.array_equal(parallel[key], longer[key]), key
+    assert parallel["rejected"] == longer["rejected"] and parallel["rejected_interval"] == longer["rejected_interval"]
+
+
+def test_read_interval_gives_every_reading_on_made_up_intervals():
+    # the setting of 20 November 2026: what each reading is read against, by code and never by hand
+    kw = dict(readings=C.DAILY_READINGS, readings_unconstrained=C.DAILY_READINGS_UNCONSTRAINED, window_clause=C.DAILY_WINDOW_CLAUSE,
+              paper_window_years=C.DAILY_PAPER_WINDOW_YEARS)
+    cap = C.PAIRED_PAPER_FIGURES[C.DAILY_READING_VERSION]["with the cap"]           # 13.00 against 13.36: a published gain of 2.69 per cent
+    assert cap == (13.00, 13.36)
+    ref = 84.65
+    gain = (13.36 - 13.00) / 13.36 * ref                                              # 2.28 basis points on this level
+    below = D.read_interval(-3.0, -5.0, -1.0, ref, cap, 5, **kw)
+    assert below["key"] == "below" and below["sentence"] == C.DAILY_READINGS["below"] and below["published_gain_here"] == pytest.approx(gain)
+    excludes = D.read_interval(-0.4, -1.5, 0.7, ref, cap, 5, **kw)                   # includes zero, lower end above -2.28
+    assert excludes["key"] == "excludes_gain" and excludes["sentence"] == C.DAILY_READINGS["excludes_gain"]
+    includes = D.read_interval(-0.4, -2.3, 1.5, ref, cap, 5, **kw)                   # includes zero and a gain of the published size
+    assert includes["key"] == "includes_gain" and includes["sentence"] == C.DAILY_READINGS["includes_gain"]
+    above = D.read_interval(2.0, 0.5, 3.5, ref, cap, 5, **kw)
+    assert above["key"] == "above" and above["sentence"] == C.DAILY_READINGS["above"]
+    # a row whose sample covariance is on three years names the window as a difference from the paper
+    three = D.read_interval(-0.4, -2.3, 1.5, ref, cap, 3, **kw)
+    assert three["key"] == "includes_gain" and three["sentence"] == C.DAILY_READINGS["includes_gain"] + "; " + C.DAILY_WINDOW_CLAUSE
+    # the unconstrained pair has RiskMetrics above the sample covariance: no published gain, three readings
+    unc = C.PAIRED_PAPER_FIGURES[C.DAILY_READING_VERSION]["unconstrained"]
+    assert unc == (11.36, 10.91)
+    u_below = D.read_interval(-0.3, -0.8, -0.1, 11.9, unc, 5, **kw)
+    assert u_below["key"] == "below" and u_below["sentence"] == C.DAILY_READINGS_UNCONSTRAINED["below"] and u_below["published_share"] is None
+    u_zero = D.read_interval(-0.3, -0.8, 0.3, 11.9, unc, 5, **kw)
+    assert u_zero["key"] == "includes_zero" and u_zero["sentence"] == C.DAILY_READINGS_UNCONSTRAINED["includes_zero"]
+    u_above = D.read_interval(0.3, 0.1, 0.5, 11.9, unc, 3, **kw)
+    assert u_above["key"] == "above" and u_above["sentence"] == C.DAILY_READINGS["above"] + "; " + C.DAILY_WINDOW_CLAUSE
+    # the long-only pair: 11.31 against 12.24, 7.6 per cent of the level
+    lo = C.PAIRED_PAPER_FIGURES[C.DAILY_READING_VERSION]["long-only"]
+    assert D.read_interval(-0.1, -0.5, 0.3, 12.06, lo, 5, **kw)["published_share"] == pytest.approx((12.24 - 11.31) / 12.24)
+
+
+def test_the_pilot_of_18_november_printed_the_two_shares_the_text_quotes():
+    # checks/daily_pilot_2026-11-18.py, written and run on 18 November 2026 before the block was fixed, entered the
+    # repository on 20 November with its two printed lines; the text quotes 2.8 and 3.7 per cent
+    root = pathlib.Path(__file__).resolve().parents[1]
+    script = root / "checks" / "daily_pilot_2026-11-18.py"
+    lines = (root / "checks" / "daily_pilot_2026-11-18.txt").read_text().splitlines()
+    assert script.exists() and len(script.read_text().splitlines()) == 48
+    rows = {int(l.split()[1]): l for l in lines if l.startswith("block ")}
+    assert set(rows) == {252, 63}
+    assert "rejected 0.028 " in rows[252] and "rejected 0.037 " in rows[63]
+    assert "pairs 400 draws 999" in rows[252] and "pairs 400 draws 999" in rows[63]
+    assert "mean se 0.155 bp | sd of differences 0.153 bp" in rows[252] and "mean se 0.155 bp | sd of differences 0.153 bp" in rows[63]
+    # on 400 pairs a share of 0.028 has a standard error of 0.008, so the two shares are not told apart
+    assert np.sqrt(0.028 * 0.972 / 400) == pytest.approx(0.0082, abs=0.0002) and abs(0.037 - 0.028) < 2 * 0.0082
+
+
+def test_the_settings_of_20_november():
+    assert C.DAILY_SETTINGS_DATE == "2026-11-20" and C.DAILY_READING_VERSION == "published version, Table 3 Panel B"
+    assert C.DAILY_PAPER_WINDOW_YEARS == 5 and len(C.DAILY_READING_ROWS) == 7
+    assert [r[4] for r in C.DAILY_READING_ROWS] == ["with the cap", "with the cap", "with the cap", "unconstrained", "long-only", "unconstrained", "long-only"]
+    assert [r[5] for r in C.DAILY_READING_ROWS] == [3, 5, 5, 5, 5, 3, 3]
+    assert set(C.DAILY_READINGS_UNCONSTRAINED) == {"below", "includes_zero", "above"} and C.DAILY_READINGS_UNCONSTRAINED["above"] == C.DAILY_READINGS["above"]
+    assert C.DAILY_SIZE_FURTHER_CORRELATIONS == (0.93, 0.81) and C.DAILY_C_RECONCILIATION_DATE == "2026-11-20"
 
 
 def test_the_constants_of_the_daily_measurement():
