@@ -1,0 +1,4 @@
+expectation,set,daily,monthly,ratio,criterion,verdict
+ED2,2026-11-18,0.1720857769,0.9100586200,0.1890930684,ratio at most 0.5,MET
+"ED3, factor, daily 3y",2026-11-18,4.1423875264,8.7947535900,,interval above zero and Holm p-value below 0.05,MET
+"ED3, pca, daily 3y",2026-11-18,3.4138080949,6.8274168300,,interval above zero and Holm p-value below 0.05,MET

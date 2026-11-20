@@ -6500,7 +6500,194 @@ print(f"active returns reconciled against: {active_path}, SHA-256 {hashlib.sha25
 
 **The six daily series of family C, reconciled (`DAILY_C_RECONCILIATION_DATE`, added on 20 November 2026 after the series were built; no band).** Each series' months, compounded from its days, against the weights times the industries' monthly total returns of the same month, the same kind of return as the daily series (the portfolios' record under gate D0 is on excess returns and is not touched): correlations of 0.99989 to 0.99996 over the 566 months; the volatility from the compounded series is 0.011 to 0.016 percentage points a year above the one from the monthly total returns (11.67 against 11.66 for RiskMetrics unconstrained, 12.17 against 12.16 for the sample covariance on three years long-only); the largest monthly gap is 38 to 83 basis points, in June 2018 for five of the six series and in November 2008 for the sample covariance on five years long-only, the unconstrained series' largest gaps (83, 58 and 44) above the long-only ones' (76, 47 and 38). The table is `daily_reconciliation_minimum_variance_series`.
 
-Part (c), the daily test, follows in its own commit after (a) and (b) are committed and pushed, with its results written here when it runs.
+Part (c), the daily test, follows.
+"""),
+    md("""
+## Part (c): the daily test
+
+Part (c) runs the comparisons fixed in part (a) on the daily series of part (b). Parts (a) and (b) were committed on 19 November 2026 and their settings of 20 November 2026 on that day, and both were pushed on 20 November 2026, before this part ran; the readings of the RiskMetrics rows were fixed on 18 November 2026, and what each is read against on 20 November 2026 (`DAILY_READINGS`, `DAILY_READING_ROWS`), before it ran too.
+
+- A daily: the six variants against the sample covariance on three years of daily data under the mandate, Holm's correction across the six.
+- B daily: the mandate against the tilt alone for each of the seven variants, no correction.
+- C daily: notebook 10's four comparisons of RiskMetrics with the sample covariance on five and on three years, unconstrained and long-only, on the portfolios' own daily total returns.
+- D, on months and on days: RiskMetrics against the sample covariance on five years, the comparison on one window, and the sample covariance on five years against the one on three, no correction.
+
+The test is notebook 17's, with 252 periods a year, blocks of 252 trading days, 2,000 draws in chunks of 200, and the seed and the level of notebook 12's bootstrap; D's two rows on months use notebook 17's blocks of twelve months. Every row is reported with no verdict. Beside each daily row, also with no verdict, stand the same two figures on monthly returns and each series' variance ratio, its annualised variance on months over its annualised variance on days: the committed monthly active returns for the fourteen paths, the fifteenth path's of part (b), and for family C the portfolios' monthly total returns, the same kind of return as their daily series. Returns with no dependence from one day to the next give a variance ratio of one. The daily tracking error asks the monthly question at the paper's horizon, and its level is a different number.
+"""),
+    code("""
+t0 = time.time()
+assert d0_ok and d1_ok and d1_d_ok, "part (c) runs only on series that passed gates D0 and D1"
+assert len(C.PAIRED_COMPARISONS_A) == 6 and len(C.PAIRED_COMPARISONS_B) == 7 and len(C.PAIRED_COMPARISONS_C) == 4 and len(C.DAILY_COMPARISONS_D) == 2
+MONTHLY = dict(block=C.EVAL_BOOTSTRAP_BLOCK_MONTHS, draws=C.EVAL_BOOTSTRAP_DRAWS, level=C.EVAL_BOOTSTRAP_LEVEL, periods=C.PAIRED_PERIODS)
+# Every series by its name: the fourteen paths' and the fifteenth path's daily active returns, the six minimum-variance portfolios'
+# daily total returns; beside them the same series on months: the committed monthly active returns of the fourteen paths, the
+# fifteenth path's monthly active returns of this run, and the six portfolios' monthly total returns (gmv_total), the same kind
+# of return as their daily series.
+daily_series = {**daily_active, D_COL: daily_active_d, **daily_gmv}
+monthly_series = {**{c: committed[c].reindex(months) for c in daily_active}, D_COL: path_d["active_return"].reindex(months),
+                  **{f"{v[0]}, {v[1]} | {side}": gmv_total[(v, side)] for (v, side) in gmv_total}}
+KIND = {**{c: "active" for c in daily_active}, D_COL: "active", **{c: "total" for c in daily_gmv}}
+assert set(daily_series) == set(monthly_series) and len(daily_series) == 21
+
+def annual_sd(x, periods):
+    return float(np.std(np.asarray(x, dtype=float), ddof=1) * np.sqrt(periods))
+
+def run_c(comparison, label, name1, name2, frequency, unit, scale, constraint):
+    if frequency == "daily":
+        s1, s2, settings = daily_series[name1], daily_series[name2], SETTINGS
+        assert len(s1) == len(s2) == n_days and (s1.index == s2.index).all()
+    else:
+        s1, s2, settings = monthly_series[name1], monthly_series[name2], MONTHLY
+        assert len(s1) == len(s2) == len(months) and (s1.index == s2.index).all()
+    out = PT.test(s1.to_numpy(), s2.to_numpy(), seed=C.EVAL_BOOTSTRAP_SEED, **settings)
+    detectable = PT.detectable_difference(out["se"], out["critical"], C.PAIRED_DETECTABLE_POWER)
+    row = {"comparison": comparison, "label": label, "series 1": name1, "series 2": name2, "frequency": frequency, "constraint set": constraint,
+           "observations": out["months"], "unit": unit, "sd 1": scale * out["sd1"], "sd 2": scale * out["sd2"], "difference": scale * out["difference"],
+           "standard error": scale * out["se"], "critical value": out["critical"], "lower": scale * out["lower"], "upper": scale * out["upper"],
+           "detectable difference": scale * detectable, "detectable difference, share of sd 2": detectable / out["sd2"],
+           "correlation": out["correlation"], "p-value": out["p_value"], "Holm p-value": np.nan,
+           "log-variance difference": out["log_difference"], "its standard error": out["se_log"],
+           "block": out["block"], "draws": out["draws"], "level": out["level"], "periods": out["periods"], "seed": C.EVAL_BOOTSTRAP_SEED,
+           "monthly returns": np.nan, "monthly sd 1": np.nan, "monthly sd 2": np.nan, "variance ratio 1": np.nan, "variance ratio 2": np.nan}
+    if frequency == "daily":
+        # beside the row, with no verdict: the same two figures on monthly returns, and each series' variance on months over its variance on days, both annualised
+        m1, m2 = annual_sd(monthly_series[name1], C.PAIRED_PERIODS), annual_sd(monthly_series[name2], C.PAIRED_PERIODS)
+        assert KIND[name1] == KIND[name2]
+        row.update({"monthly returns": KIND[name1], "monthly sd 1": scale * m1, "monthly sd 2": scale * m2,
+                    "variance ratio 1": (m1 / out["sd1"]) ** 2, "variance ratio 2": (m2 / out["sd2"]) ** 2})
+    return row
+
+REF = f"{C.PAIRED_REFERENCE[0]}, {C.PAIRED_REFERENCE[1]} | C3"
+rows = []
+for v in C.PAIRED_COMPARISONS_A:
+    name = f"{v[0]}, {v[1]} | C3"
+    rows.append(run_c("A", f"{v[0]}, {v[1]} against {REF.split(' | ')[0]}", name, REF, "daily", "bp a year", 1e4, "C3"))
+for r, h in zip(rows, PT.holm([r["p-value"] for r in rows])):      # Holm across the six of A
+    r["Holm p-value"] = float(h)
+for v in C.PAIRED_COMPARISONS_B:                                      # no correction
+    a, b = (f"{v[0]}, {v[1]} | {s}" for s in C.PAIRED_COMPARISON_B_SETS)
+    rows.append(run_c("B", f"{v[0]}, {v[1]}: mandate against tilt alone", a, b, "daily", "bp a year", 1e4, f"{C.PAIRED_COMPARISON_B_SETS[0]} against {C.PAIRED_COMPARISON_B_SETS[1]}"))
+for v1, v2, side in C.PAIRED_COMPARISONS_C:                           # no correction; the portfolios' own daily total returns
+    rows.append(run_c("C", f"{v1[0]}, {v1[1]} against {v2[0]}, {v2[1]}, {side}", f"{v1[0]}, {v1[1]} | {side}", f"{v2[0]}, {v2[1]} | {side}", "daily", "% a year", 100, side))
+for s1, s2 in C.DAILY_COMPARISONS_D:                                  # family D, added 18 November 2026: on months and on days, no correction
+    for frequency in C.DAILY_D_FREQUENCIES:
+        rows.append(run_c("D", f"{s1[0]}, {s1[1]} against {s2[0]}, {s2[1]}, on {'months' if frequency == 'monthly' else 'days'}",
+                          f"{s1[0]}, {s1[1]} | {C.DAILY_D_SET}", f"{s2[0]}, {s2[1]} | {C.DAILY_D_SET}", frequency, "bp a year", 1e4, C.DAILY_D_SET))
+daily_tests = pd.DataFrame(rows)
+assert len(daily_tests) == 21 and list(daily_tests["comparison"].value_counts().sort_index()) == [6, 7, 4, 4]
+show = ["comparison", "label", "frequency", "sd 1", "sd 2", "difference", "standard error", "critical value", "lower", "upper", "detectable difference",
+        "correlation", "p-value", "Holm p-value", "monthly sd 1", "monthly sd 2", "variance ratio 1", "variance ratio 2"]
+print(daily_tests[show].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+print(f"the test on days: blocks of {SETTINGS['block']} days, {SETTINGS['draws']:,} draws in chunks of {SETTINGS['chunk']}, seed {C.EVAL_BOOTSTRAP_SEED}, level {SETTINGS['level']:.0%}, {SETTINGS['periods']} periods a year; "
+      f"family D on months with blocks of {MONTHLY['block']} months; the detectable difference (critical value + {PT.normal_quantile(C.PAIRED_DETECTABLE_POWER):.3f}) times the standard error; {time.time() - t0:.0f}s")
+"""),
+    md("""
+## The readings of the RiskMetrics rows
+
+The seven rows of `DAILY_READING_ROWS` are read by `daily.read_interval` against the published version's pairs (Table 3, Panel B), and no reading is written by hand: A's RiskMetrics row and D's first row on months and on days against the capped pair, C's two long-only rows against the long-only pair, and C's two unconstrained rows with the three readings for a portfolio on which the paper reports no gain. The working paper's gain is printed beside each row with no reading. Each reading names the setting: 49 industries here and about 500 stocks there, a tracking mandate here and a minimum-variance portfolio there.
+"""),
+    code("""
+assert C.DAILY_READING_VERSION in C.PAIRED_PAPER_FIGURES and len(C.DAILY_READING_ROWS) == 7
+WORKING = [k for k in C.PAIRED_PAPER_FIGURES if k != C.DAILY_READING_VERSION]
+assert len(WORKING) == 1
+SETTING_CLAUSE = {
+    "A": "49 industries under a tracking mandate here, about 500 stocks in a weight-capped minimum-variance portfolio there",
+    "D": "49 industries under a tracking mandate here, about 500 stocks in a weight-capped minimum-variance portfolio there",
+    "C": "49 industries here, about 500 stocks there, a minimum-variance portfolio in both",
+}
+reading_rows = []
+for family, s1, s2, which, portfolio, years in C.DAILY_READING_ROWS:
+    if family == "C":
+        name1, name2, frequency = f"{s1} | {which}", f"{s2} | {which}", "daily"
+    else:
+        name1, name2, frequency = f"{s1} | C3", f"{s2} | C3", which
+    match = daily_tests[(daily_tests["comparison"] == family) & (daily_tests["series 1"] == name1) & (daily_tests["series 2"] == name2) & (daily_tests["frequency"] == frequency)]
+    assert len(match) == 1, (family, name1, name2, frequency)
+    r = match.iloc[0]
+    out = DY.read_interval(r["difference"], r["lower"], r["upper"], r["sd 2"], C.PAIRED_PAPER_FIGURES[C.DAILY_READING_VERSION][portfolio], years,
+                           C.DAILY_READINGS, C.DAILY_READINGS_UNCONSTRAINED, C.DAILY_WINDOW_CLAUSE, C.DAILY_PAPER_WINDOW_YEARS)
+    rm_w, sample_w = C.PAIRED_PAPER_FIGURES[WORKING[0]][portfolio]
+    share_w = (sample_w - rm_w) / sample_w if sample_w > rm_w else np.nan
+    reading_rows.append({"comparison": family, "label": r["label"], "series 1": name1, "series 2": name2, "frequency": frequency, "unit": r["unit"],
+                         "difference": r["difference"], "lower": r["lower"], "upper": r["upper"], "reference": r["sd 2"], "detectable difference": r["detectable difference"],
+                         "paper's portfolio": portfolio, "version read against": C.DAILY_READING_VERSION,
+                         "published share": out["published_share"] if out["published_share"] is not None else np.nan,
+                         "published gain on this level": out["published_gain_here"] if out["published_gain_here"] is not None else np.nan,
+                         "working paper's share, no reading": share_w, "working paper's gain on this level, no reading": share_w * r["sd 2"],
+                         "window years": years, "reading": out["key"], "sentence": out["sentence"], "setting": SETTING_CLAUSE[family]})
+readings = pd.DataFrame(reading_rows)
+for _, q in readings.iterrows():
+    unit_word = "bp" if q["unit"].startswith("bp") else "points"
+    published = (f"the published gain {q['published share']:.2%} of the reference, {q['published gain on this level']:.2f} {unit_word} on {q['reference']:.2f}"
+                 if np.isfinite(q["published share"]) else f"no published gain, the paper having RiskMetrics above the sample covariance for this portfolio")
+    ws, wg = q["working paper's share, no reading"], q["working paper's gain on this level, no reading"]
+    working = (f"; the working paper's gain {ws:.2%}, {wg:.2f} {unit_word} on this level, printed with no reading" if np.isfinite(ws)
+               else "; the working paper has no gain for this portfolio, printed with no reading")
+    print(f"{q['label']} ({q['comparison']}, {q['frequency']}): difference {q['difference']:+.2f} {q['unit']}, interval {q['lower']:+.2f} to {q['upper']:+.2f}, "
+          f"detectable difference {q['detectable difference']:.2f}; {published}{working}. Reading: {q['sentence']}. Setting: {q['setting']}.")
+"""),
+    md("""
+## ED2 and ED3
+
+Both were fixed on 18 November 2026 in part (a) (`DAILY_ED2_SE_RATIO_MAX`, `DAILY_ED3_VARIANTS`, `DAILY_ED3_HOLM_MAX`). ED2 sets the standard error of the daily difference of RiskMetrics against the sample covariance under the mandate against the monthly one in the committed `paired_tests` table. ED3 asks of the factor model's and the principal-component model's daily rows in A an interval above zero and a Holm value below 0.05.
+"""),
+    code("""
+monthly_table = pd.read_csv(f"{committed_dir}/paired_tests_{vintage}.csv")
+rm_month = monthly_table[(monthly_table["comparison"] == "A") & (monthly_table["series 1"] == f"RiskMetrics, daily 5y | C3") & (monthly_table["series 2"] == REF)]
+assert len(rm_month) == 1
+rm_day = daily_tests[(daily_tests["comparison"] == "A") & (daily_tests["series 1"] == "RiskMetrics, daily 5y | C3")].iloc[0]
+se_month, se_day = float(rm_month["standard error"].iloc[0]), float(rm_day["standard error"])
+ed2 = se_day <= C.DAILY_ED2_SE_RATIO_MAX * se_month
+print(f"ED2: for RiskMetrics against the sample covariance under the mandate the standard error of the daily difference is {se_day:.3f} bp a year against {se_month:.3f} on months "
+      f"(paired_tests_{vintage}.csv), a ratio of {se_day / se_month:.3f}, at most {C.DAILY_ED2_SE_RATIO_MAX} required, that is at most {C.DAILY_ED2_SE_RATIO_MAX * se_month:.3f}: {'MET' if ed2 else 'NOT MET'}")
+ed3 = {}
+for v in C.DAILY_ED3_VARIANTS:
+    r = daily_tests[(daily_tests["comparison"] == "A") & (daily_tests["series 1"] == f"{v[0]}, {v[1]} | C3")].iloc[0]
+    ed3[v] = bool(r["lower"] > 0 and r["Holm p-value"] < C.DAILY_ED3_HOLM_MAX)
+    print(f"ED3, {v[0]}, {v[1]}: daily difference {r['difference']:+.2f} bp a year, interval {r['lower']:+.2f} to {r['upper']:+.2f}, Holm p-value {r['Holm p-value']:.4f}; "
+          f"an interval above zero and a Holm value below {C.DAILY_ED3_HOLM_MAX} required: {'MET' if ed3[v] else 'NOT MET'}")
+print(f"ED3: {'MET' if all(ed3.values()) else 'NOT MET'} ({sum(ed3.values())} of {len(ed3)})")
+expectations_c = pd.DataFrame([
+    {"expectation": "ED2", "set": C.DAILY_TEST_DATE, "daily": se_day, "monthly": se_month, "ratio": se_day / se_month, "criterion": f"ratio at most {C.DAILY_ED2_SE_RATIO_MAX}", "verdict": "MET" if ed2 else "NOT MET"},
+    *[{"expectation": f"ED3, {v[0]}, {v[1]}", "set": C.DAILY_TEST_DATE, "daily": float(daily_tests[(daily_tests["comparison"] == "A") & (daily_tests["series 1"] == f"{v[0]}, {v[1]} | C3")]["difference"].iloc[0]),
+       "monthly": float(monthly_table[(monthly_table["comparison"] == "A") & (monthly_table["series 1"] == f"{v[0]}, {v[1]} | C3")]["difference"].iloc[0]),
+       "ratio": np.nan, "criterion": f"interval above zero and Holm p-value below {C.DAILY_ED3_HOLM_MAX}", "verdict": "MET" if ed3[v] else "NOT MET"} for v in C.DAILY_ED3_VARIANTS],
+])
+"""),
+    md("""
+## The tables of part (c), written to `outputs/`
+
+The daily paired table, 21 rows (A six, B seven, C four, D four), the seven readings with the published and the working paper's gains, and the verdicts of ED2 and ED3.
+"""),
+    code("""
+daily_tests.to_csv(f"{C.OUTPUT_DIR}/paired_tests_daily_{vintage}.csv", index=False, float_format="%.10f")
+readings.to_csv(f"{C.OUTPUT_DIR}/paired_daily_readings_{vintage}.csv", index=False, float_format="%.10f")
+expectations_c.to_csv(f"{C.OUTPUT_DIR}/paired_daily_expectations_{vintage}.csv", index=False, float_format="%.10f")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("paired_tests_daily") or f.startswith("paired_daily")))
+"""),
+    md("""
+## Verdicts and results, part (c)
+
+| Expectation | Result | Verdict |
+|---|---|---|
+| ED2. For RiskMetrics against the sample covariance under the mandate, the standard error of the daily difference at most half the monthly one | 0.172 basis points a year on days against 0.910 on months (`paired_tests`), a ratio of 0.189, at most 0.5 required, that is at most 0.455 | MET |
+| ED3. The factor model and the principal-component model realise a higher daily tracking error than the sample covariance, each with an interval above zero and a Holm value below 0.05 | the factor model plus 4.14 basis points a year (interval plus 2.72 to plus 5.57, Holm 0.003); the principal-component model plus 3.41 (plus 2.43 to plus 4.40, Holm 0.003) | MET, MET |
+
+**The comparisons on days, reported with no verdict (`paired_tests_daily`).** On daily active returns the fourteen paths realise 68.9 to 87.2 basis points a year of tracking error, against 79.7 to 95.8 on months; the sample covariance on three years under the mandate realises 74.46 on days and 84.65 on months. A, each variant against it under the mandate, Holm's correction across the six: RiskMetrics minus 0.59 (minus 0.95 to minus 0.23, Holm 0.014), shrinkage minus 0.15 (minus 0.29 to minus 0.01, Holm 0.035), the principal-component model plus 3.41 and the factor model plus 4.14 (Holm 0.003 each), the monthly covariance plus 12.74 (plus 11.03 to plus 14.44, Holm 0.003) and the robust portfolio plus 2.05 (plus 0.86 to plus 3.24, Holm 0.0075). The standard errors of A's six differences are 0.063 to 0.756 basis points on days against 0.169 to 7.876 on months. B, the mandate against the tilt alone: plus 4.61 to plus 5.57 for the seven variants, every interval above zero, the lowest lower end plus 3.54; B on days carries no Holm column, as fixed on 18 November 2026, and each of its seven p-values is 1 in 2,001. C, in percentage points of volatility a year on the portfolios' own daily total returns: RiskMetrics against the sample covariance on five years minus 0.58 unconstrained (minus 0.70 to minus 0.46) and minus 0.37 long-only (minus 0.48 to minus 0.26), against three years minus 0.28 unconstrained (minus 0.38 to minus 0.18) and minus 0.20 long-only (minus 0.26 to minus 0.14). D under the mandate: RiskMetrics against the sample covariance on five years minus 0.21 basis points on months (minus 4.31 to plus 3.89) and minus 0.37 on days (minus 0.88 to plus 0.14); the sample covariance on five years against the one on three minus 0.17 on months (minus 3.11 to plus 2.78) and minus 0.22 on days (minus 0.67 to plus 0.24). All 17 intervals of A, B and C exclude zero, and none of D's four does. P3 found that at correlations of 0.99, 0.93 and 0.81 the test rejects less often than its level, so an interval that excludes zero stands, and an interval that includes zero is weaker evidence of no difference than a test of exact size would give.
+
+**The readings of the seven RiskMetrics rows (`paired_daily_readings`), as `daily.read_interval` returns them.**
+
+- A on days, against the capped pair (13.00 against 13.36, a published gain of 2.69% of the level, 2.01 basis points on 74.46): RiskMetrics minus 0.59 (minus 0.95 to minus 0.23), detectable difference 0.51. "A gain from RiskMetrics is found, of the size and interval stated, and set beside the paper's; the paper estimates every covariance on one window of five years, and this row sets RiskMetrics' five-year window against the sample covariance on three." The working paper's gain, 1.09 basis points on this level, stands beside it with no reading.
+- D on months, against the capped pair (2.28 basis points on 84.49): minus 0.21 (minus 4.31 to plus 3.89), detectable difference 5.73. "Daily data do not settle it either, at the detectable difference stated." The working paper's gain, 1.24, with no reading. This row is on months; its sentence is the one fixed on 20 November 2026 for the RiskMetrics rows, written for the rows on days.
+- D on days, against the capped pair (2.00 basis points on 74.24): minus 0.37 (minus 0.88 to plus 0.14), detectable difference 0.72. "No gain is found, and a gain as large as the published one is excluded here." The working paper's gain, 1.09, with no reading.
+- C, five years, unconstrained (the paper has RiskMetrics above the sample covariance there, 11.36 against 10.91): minus 0.58 percentage points (minus 0.70 to minus 0.46) on 11.46. "A gain from RiskMetrics is found, where the paper reports none without constraints."
+- C, five years, long-only, against the long-only pair (11.31 against 12.24, 7.60% of the level, 0.94 points on 12.42): minus 0.37 (minus 0.48 to minus 0.26). "A gain from RiskMetrics is found, of the size and interval stated, and set beside the paper's." The working paper's gain, 0.50 points, with no reading.
+- C, three years, unconstrained: minus 0.28 (minus 0.38 to minus 0.18) on 11.16. "A gain from RiskMetrics is found, where the paper reports none without constraints; the paper estimates every covariance on one window of five years, and this row sets RiskMetrics' five-year window against the sample covariance on three."
+- C, three years, long-only (0.93 points on 12.25): minus 0.20 (minus 0.26 to minus 0.14). "A gain from RiskMetrics is found, of the size and interval stated, and set beside the paper's; the paper estimates every covariance on one window of five years, and this row sets RiskMetrics' five-year window against the sample covariance on three." The working paper's gain, 0.49 points, with no reading.
+
+The setting differs in every row: 49 industries here and about 500 stocks there; in A and D a tracking mandate here and a weight-capped minimum-variance portfolio there, in C a minimum-variance portfolio in both.
+
+**The daily figure is a different number.** Each path's variance on months, annualised, is 1.21 to 1.46 times its annualised variance on days, so the daily tracking errors sit 9% to 17% below the monthly ones; the six minimum-variance portfolios' total returns give ratios of 0.94 to 1.15. Returns with no dependence from one day to the next give one. The daily test asks the monthly question at the paper's horizon, on a figure of a different level.
 """),
 ]
 
