@@ -81,3 +81,40 @@ def by_period(att: pd.DataFrame, labels: pd.Series, names: tuple = C.ATTRIBUTION
     each factor, the factor total, the residual and the active return."""
     cols = [f"contribution {n}" for n in names] + ["factor total", "residual", "active return"]
     return PERIODS_PER_YEAR * att[cols].groupby(labels.loc[att.index]).mean()
+
+
+def newey_west_se(x, lags: int) -> float:
+    """The Newey-West (1987) standard error of the mean of x: the long-run variance of x, its variance plus
+    twice its autocovariances to `lags` weighted by 1 - j / (lags + 1), each divided by the number of
+    observations, over the number of observations, under the square root. Added on 24 November 2026, after
+    every result was known: the monthly contributions are serially correlated, and the standard error of
+    summarise() takes the months as independent."""
+    x = np.asarray(x, dtype=float)
+    t = len(x)
+    u = x - x.mean()
+    s = float(u @ u) / t
+    for j in range(1, lags + 1):
+        s += 2.0 * (1.0 - j / (lags + 1.0)) * float(u[j:] @ u[:-j]) / t
+    return float(np.sqrt(max(s, 0.0) / t))
+
+
+def newey_west(att: pd.DataFrame, lags: int, columns: list | None = None, names: tuple = C.ATTRIBUTION_FACTORS) -> dict:
+    """For each factor's contribution, the factor total, the residual and the active return (or the given
+    columns): the mean per year, the standard error per year of summarise() (months taken as independent),
+    the Newey-West standard error per year with `lags` lags, the first-order autocorrelation of the monthly
+    series, and the two ratios of the mean to the standard errors."""
+    cols = columns if columns is not None else [f"contribution {n}" for n in names] + ["factor total", "residual", "active return"]
+    out = {}
+    for col in cols:
+        x = att[col].to_numpy(dtype=float)
+        t = len(x)
+        mean = PERIODS_PER_YEAR * float(x.mean())
+        se_iid = PERIODS_PER_YEAR * float(x.std(ddof=1)) / np.sqrt(t)
+        se_nw = PERIODS_PER_YEAR * newey_west_se(x, lags)
+        out[f"{col} (per year)"] = mean
+        out[f"{col} (standard error)"] = se_iid
+        out[f"{col} (Newey-West standard error)"] = se_nw
+        out[f"{col} (first-order autocorrelation)"] = float(np.corrcoef(x[1:], x[:-1])[0, 1])
+        out[f"{col} (t, independent months)"] = mean / se_iid
+        out[f"{col} (t, Newey-West)"] = mean / se_nw
+    return out

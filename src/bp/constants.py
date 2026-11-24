@@ -336,7 +336,7 @@ EXT_COV_FREQUENCIES = ("monthly_120", "daily_3y")
 EXT_COV_DAILY_WINDOW_YEARS = 3
 EXT_COV_DAILY_WINDOW_YEARS_SENSITIVITY = (1, 5)   # reported for the sample estimator only, no verdict
 DAILY_TO_MONTHLY_SCALE = 21                        # 252 trading days a year divided by 12
-EXT_COV_EWMA_HALFLIFE_DAYS = 252                   # the recency-weighted sensitivity: a half-life of one year of trading days, the RiskMetrics setting of Dom, Howard, Jansen and Lohre (2025, section 3.3.2); 126 until 3 October 2026, changed on reading that paper, before notebook 10's code
+EXT_COV_EWMA_HALFLIFE_DAYS = 252                   # the recency-weighted sensitivity: a half-life of 252 trading days, close to the decay of 0.99734 in Dom, Howard, Jansen and Lohre (2025, section 3.3.2), about 260 days; 126 until 3 October 2026, changed on reading that paper, before notebook 10's code
 
 # Covariance estimators. The shrinkage target follows Dom, Howard, Jansen and
 # Lohre, the paper the study takes as its reference: their linear shrinkage
@@ -1093,3 +1093,45 @@ DAILY_SIZE_FURTHER_CORRELATIONS = (0.93, 0.81)
 # gap, the largest monthly gap and its month, in a table, reported with no band. Added on 20 November
 # 2026 after the series were built.
 DAILY_C_RECONCILIATION_DATE = "2026-11-20"
+
+# ---------------------------------------------------------------------------
+# 10. Two further standard errors, added 24 November 2026
+# ---------------------------------------------------------------------------
+# Added on 24 November 2026, after every result of notebooks 13, 16, 17 and 18
+# was known, and labelled so wherever they are used. They change no committed
+# table; each is reported beside the standard error it supplements.
+#
+# (1) Notebook 18, the daily tests: a standard error from batch means. The
+# kernel of paired.standard_errors chooses its bandwidth from the data, 8 to 13
+# days on the daily series, while the variances of two paths can drift apart
+# over months, so its standard error can be too small; the size check P3
+# cannot show this, because its simulated pairs share one variance. Beside each
+# of the 21 rows of the daily table: the study's statistic with a standard
+# error from batch means of BATCH_MEANS_BLOCK_DAYS trading days (paired.
+# batch_means), its p-value from Student's t with the number of blocks less
+# one degrees of freedom, Holm's correction within family A and within family
+# B (the families notebook 17 corrects), and the same at the further block
+# lengths; family D's two rows on months use blocks of the same span in months.
+# Beside each row, the number of calendar years in which the difference has the
+# sign of the whole period. A's RiskMetrics row keeps the reading
+# daily.read_interval gives on the study's interval; beside it, the reading the
+# same rule returns on the batch-means interval.
+BATCH_MEANS_DATE = "2026-11-24"
+BATCH_MEANS_BLOCK_DAYS = 252                      # one year of trading days, the bootstrap's block
+BATCH_MEANS_BLOCK_DAYS_FURTHER = (63, 126, 504)
+BATCH_MEANS_MONTHS_OF = {63: 3, 126: 6, 252: 12, 504: 24}    # the same spans in months, for family D's rows on months
+BATCH_MEANS_HOLM_FAMILIES = ("A", "B")
+#
+# (2) Notebooks 13 and 16, the factor attribution: a Newey-West standard error.
+# The monthly contributions are serially correlated (the factor total's
+# first-order autocorrelation is 0.16 to 0.32 on notebook 13's fourteen paths
+# and 0.12 to 0.30 on notebook 16's nineteen), and the standard error of
+# attribution.summarise takes the months as independent. Beside it, for every
+# factor contribution, the factor total, the residual and the active return,
+# and in notebook 13 for the cost of the exclusions and the beta constraint
+# against the tilt alone: the Newey-West standard error with
+# ATTRIBUTION_NEWEY_WEST_LAGS lags (attribution.newey_west). Notebook 13 also
+# writes the monthly attribution of all fourteen paths, so that every count can
+# be checked.
+ATTRIBUTION_NEWEY_WEST_DATE = "2026-11-24"
+ATTRIBUTION_NEWEY_WEST_LAGS = 6                   # 0.75 times the cube root of 566 months, 6.2, rounded down

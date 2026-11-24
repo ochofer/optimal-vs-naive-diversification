@@ -1,0 +1,1009 @@
+comparison,label,frequency,year,periods,difference,sign of the whole period
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1979,127,-1.2238861241,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1980,253,3.0429910979,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1981,253,0.7884302858,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1982,253,-1.1719060433,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1983,253,-2.1369109261,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1984,253,-0.6919666895,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1985,252,-0.9132479352,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1986,253,0.1792753909,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1987,253,0.2597663947,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1988,253,0.4130670962,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1989,252,-0.5858696090,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1990,253,-7.2823076252,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1991,253,-0.9017470903,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1992,254,-1.1947756610,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1993,253,-2.6391551250,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1994,252,0.2254025576,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1995,252,0.1623978508,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1996,254,0.3784659599,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1997,253,0.7642635814,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1998,252,-0.5212054799,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,1999,252,0.5860573243,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2000,252,0.5221863007,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2001,248,-0.1833447830,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2002,252,-0.3328578283,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2003,252,-2.3190173472,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2004,252,0.4687095556,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2005,252,-3.7010523444,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2006,251,0.8955676392,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2007,251,-2.5157715893,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2008,253,-2.0534275502,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2009,252,-0.4801230818,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2010,252,-0.8087533647,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2011,252,-1.5615901135,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2012,250,1.9030010586,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2013,252,-0.2462916106,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2014,252,-1.3425873405,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2015,252,-0.5132397298,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2016,252,0.6167622027,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2017,251,-0.7349829250,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2018,251,-0.6381916501,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2019,252,-1.2526594059,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2020,253,-0.5170880055,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2021,252,0.0630620660,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2022,251,-2.4293626707,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2023,250,1.4544139473,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2024,252,-1.7154273986,True
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2025,250,0.6580375597,False
+A,"RiskMetrics, daily 5y against sample, daily 3y",daily,2026,166,-2.5940254140,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1979,127,0.3907462819,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1980,253,0.1680006394,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1981,253,-0.0113969988,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1982,253,-0.1327861982,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1983,253,-0.2300168843,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1984,253,-0.0596384973,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1985,252,-0.2473596027,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1986,253,-0.1729177387,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1987,253,-0.0999238775,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1988,253,-1.3192744672,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1989,252,-1.4229123456,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1990,253,2.2551054963,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1991,253,-0.5417581118,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1992,254,-0.1522940906,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1993,253,-0.0869479607,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1994,252,-0.1395816759,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1995,252,-0.2061027964,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1996,254,-0.1868137899,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1997,253,-0.2522945844,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1998,252,0.5827979650,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,1999,252,-0.7655487029,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2000,252,-0.2053330184,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2001,248,0.2358581069,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2002,252,-0.2216486721,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2003,252,-0.4844134989,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2004,252,0.1432344461,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2005,252,-0.1240171334,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2006,251,-0.0122682346,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2007,251,-0.2779466951,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2008,253,-0.1218419972,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2009,252,-1.5785980320,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2010,252,-0.8314646497,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2011,252,-0.4944755818,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2012,250,-0.4253870605,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2013,252,-0.4102113925,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2014,252,0.2784584539,False
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2015,252,-0.0579153698,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2016,252,-0.2652882115,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2017,251,-0.5204866631,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2018,251,-0.3341711345,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2019,252,-0.2848528666,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2020,253,-0.2082588817,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2021,252,-0.4760163764,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2022,251,-0.3066350157,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2023,250,-0.3944102925,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2024,252,-0.2818298059,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2025,250,-0.1569612084,True
+A,"ledoit_wolf, daily 3y against sample, daily 3y",daily,2026,166,0.6854998836,False
+A,"pca, daily 3y against sample, daily 3y",daily,1979,127,12.4755299773,True
+A,"pca, daily 3y against sample, daily 3y",daily,1980,253,7.6435454060,True
+A,"pca, daily 3y against sample, daily 3y",daily,1981,253,9.0305029433,True
+A,"pca, daily 3y against sample, daily 3y",daily,1982,253,4.9754768229,True
+A,"pca, daily 3y against sample, daily 3y",daily,1983,253,3.4701072458,True
+A,"pca, daily 3y against sample, daily 3y",daily,1984,253,9.6209827224,True
+A,"pca, daily 3y against sample, daily 3y",daily,1985,252,1.4054176205,True
+A,"pca, daily 3y against sample, daily 3y",daily,1986,253,2.3016721391,True
+A,"pca, daily 3y against sample, daily 3y",daily,1987,253,-6.4291959845,False
+A,"pca, daily 3y against sample, daily 3y",daily,1988,253,-2.5089708263,False
+A,"pca, daily 3y against sample, daily 3y",daily,1989,252,-0.5843222244,False
+A,"pca, daily 3y against sample, daily 3y",daily,1990,253,11.7930827019,True
+A,"pca, daily 3y against sample, daily 3y",daily,1991,253,-2.7246558497,False
+A,"pca, daily 3y against sample, daily 3y",daily,1992,254,0.0887649741,True
+A,"pca, daily 3y against sample, daily 3y",daily,1993,253,4.0497150588,True
+A,"pca, daily 3y against sample, daily 3y",daily,1994,252,0.6641996911,True
+A,"pca, daily 3y against sample, daily 3y",daily,1995,252,0.0031189354,True
+A,"pca, daily 3y against sample, daily 3y",daily,1996,254,1.5138352132,True
+A,"pca, daily 3y against sample, daily 3y",daily,1997,253,3.5019075497,True
+A,"pca, daily 3y against sample, daily 3y",daily,1998,252,1.6739698045,True
+A,"pca, daily 3y against sample, daily 3y",daily,1999,252,1.3286109557,True
+A,"pca, daily 3y against sample, daily 3y",daily,2000,252,4.2816071140,True
+A,"pca, daily 3y against sample, daily 3y",daily,2001,248,11.2998307775,True
+A,"pca, daily 3y against sample, daily 3y",daily,2002,252,1.5663101679,True
+A,"pca, daily 3y against sample, daily 3y",daily,2003,252,-3.7013682951,False
+A,"pca, daily 3y against sample, daily 3y",daily,2004,252,4.6916931765,True
+A,"pca, daily 3y against sample, daily 3y",daily,2005,252,3.7922107714,True
+A,"pca, daily 3y against sample, daily 3y",daily,2006,251,5.4314401185,True
+A,"pca, daily 3y against sample, daily 3y",daily,2007,251,3.4966906486,True
+A,"pca, daily 3y against sample, daily 3y",daily,2008,253,5.3480738609,True
+A,"pca, daily 3y against sample, daily 3y",daily,2009,252,6.3597997131,True
+A,"pca, daily 3y against sample, daily 3y",daily,2010,252,1.5172007636,True
+A,"pca, daily 3y against sample, daily 3y",daily,2011,252,4.0119192113,True
+A,"pca, daily 3y against sample, daily 3y",daily,2012,250,0.4468342132,True
+A,"pca, daily 3y against sample, daily 3y",daily,2013,252,-0.6374960308,False
+A,"pca, daily 3y against sample, daily 3y",daily,2014,252,6.8719628009,True
+A,"pca, daily 3y against sample, daily 3y",daily,2015,252,5.4307342272,True
+A,"pca, daily 3y against sample, daily 3y",daily,2016,252,2.1259173880,True
+A,"pca, daily 3y against sample, daily 3y",daily,2017,251,-0.7026658885,False
+A,"pca, daily 3y against sample, daily 3y",daily,2018,251,1.6963338281,True
+A,"pca, daily 3y against sample, daily 3y",daily,2019,252,-2.9570315503,False
+A,"pca, daily 3y against sample, daily 3y",daily,2020,253,-0.2928053979,False
+A,"pca, daily 3y against sample, daily 3y",daily,2021,252,1.0695640766,True
+A,"pca, daily 3y against sample, daily 3y",daily,2022,251,3.2883257453,True
+A,"pca, daily 3y against sample, daily 3y",daily,2023,250,3.8549950727,True
+A,"pca, daily 3y against sample, daily 3y",daily,2024,252,0.3251494741,True
+A,"pca, daily 3y against sample, daily 3y",daily,2025,250,-0.3035332771,False
+A,"pca, daily 3y against sample, daily 3y",daily,2026,166,10.8118490636,True
+A,"factor, daily 3y against sample, daily 3y",daily,1979,127,14.5860236311,True
+A,"factor, daily 3y against sample, daily 3y",daily,1980,253,2.9507841870,True
+A,"factor, daily 3y against sample, daily 3y",daily,1981,253,10.0830422097,True
+A,"factor, daily 3y against sample, daily 3y",daily,1982,253,27.3956471070,True
+A,"factor, daily 3y against sample, daily 3y",daily,1983,253,8.7641904661,True
+A,"factor, daily 3y against sample, daily 3y",daily,1984,253,4.9748497906,True
+A,"factor, daily 3y against sample, daily 3y",daily,1985,252,-0.5728323027,False
+A,"factor, daily 3y against sample, daily 3y",daily,1986,253,-0.0187615312,False
+A,"factor, daily 3y against sample, daily 3y",daily,1987,253,-6.2105747083,False
+A,"factor, daily 3y against sample, daily 3y",daily,1988,253,-1.0439024238,False
+A,"factor, daily 3y against sample, daily 3y",daily,1989,252,1.0592994992,True
+A,"factor, daily 3y against sample, daily 3y",daily,1990,253,2.2235936576,True
+A,"factor, daily 3y against sample, daily 3y",daily,1991,253,-1.0987532842,False
+A,"factor, daily 3y against sample, daily 3y",daily,1992,254,1.0798816950,True
+A,"factor, daily 3y against sample, daily 3y",daily,1993,253,2.8138602289,True
+A,"factor, daily 3y against sample, daily 3y",daily,1994,252,-0.1121209729,False
+A,"factor, daily 3y against sample, daily 3y",daily,1995,252,2.1140804453,True
+A,"factor, daily 3y against sample, daily 3y",daily,1996,254,1.0817702450,True
+A,"factor, daily 3y against sample, daily 3y",daily,1997,253,0.8216404111,True
+A,"factor, daily 3y against sample, daily 3y",daily,1998,252,4.7805796545,True
+A,"factor, daily 3y against sample, daily 3y",daily,1999,252,-0.4616282891,False
+A,"factor, daily 3y against sample, daily 3y",daily,2000,252,7.6305381624,True
+A,"factor, daily 3y against sample, daily 3y",daily,2001,248,11.6542537839,True
+A,"factor, daily 3y against sample, daily 3y",daily,2002,252,0.3458424595,True
+A,"factor, daily 3y against sample, daily 3y",daily,2003,252,-4.7036036157,False
+A,"factor, daily 3y against sample, daily 3y",daily,2004,252,6.9567191091,True
+A,"factor, daily 3y against sample, daily 3y",daily,2005,252,8.6848732158,True
+A,"factor, daily 3y against sample, daily 3y",daily,2006,251,10.1021257082,True
+A,"factor, daily 3y against sample, daily 3y",daily,2007,251,5.3720267237,True
+A,"factor, daily 3y against sample, daily 3y",daily,2008,253,3.3535239834,True
+A,"factor, daily 3y against sample, daily 3y",daily,2009,252,1.3764631830,True
+A,"factor, daily 3y against sample, daily 3y",daily,2010,252,-0.7671264053,False
+A,"factor, daily 3y against sample, daily 3y",daily,2011,252,4.8628979096,True
+A,"factor, daily 3y against sample, daily 3y",daily,2012,250,1.7882957559,True
+A,"factor, daily 3y against sample, daily 3y",daily,2013,252,1.6546235381,True
+A,"factor, daily 3y against sample, daily 3y",daily,2014,252,9.4876197512,True
+A,"factor, daily 3y against sample, daily 3y",daily,2015,252,6.3690976324,True
+A,"factor, daily 3y against sample, daily 3y",daily,2016,252,3.1114597004,True
+A,"factor, daily 3y against sample, daily 3y",daily,2017,251,-1.1289073210,False
+A,"factor, daily 3y against sample, daily 3y",daily,2018,251,2.1150882761,True
+A,"factor, daily 3y against sample, daily 3y",daily,2019,252,-0.1968137872,False
+A,"factor, daily 3y against sample, daily 3y",daily,2020,253,0.6196148354,True
+A,"factor, daily 3y against sample, daily 3y",daily,2021,252,0.9555138074,True
+A,"factor, daily 3y against sample, daily 3y",daily,2022,251,4.9311927065,True
+A,"factor, daily 3y against sample, daily 3y",daily,2023,250,1.2901485469,True
+A,"factor, daily 3y against sample, daily 3y",daily,2024,252,-0.0211850561,False
+A,"factor, daily 3y against sample, daily 3y",daily,2025,250,3.6288235035,True
+A,"factor, daily 3y against sample, daily 3y",daily,2026,166,11.3949271712,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1979,127,26.2996955270,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1980,253,33.8683967069,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1981,253,23.5057158160,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1982,253,3.5215638927,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1983,253,11.1385630538,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1984,253,6.0581954533,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1985,252,9.9019216471,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1986,253,11.5374114005,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1987,253,14.6372630716,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1988,253,19.3984549593,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1989,252,11.0273646190,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1990,253,6.7277980781,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1991,253,9.5080603258,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1992,254,13.3621812319,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1993,253,16.7049951137,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1994,252,15.4740524524,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1995,252,16.3081556713,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1996,254,15.6713883746,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1997,253,20.1605106958,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1998,252,23.0088474793,True
+A,"sample, monthly 120 against sample, daily 3y",daily,1999,252,21.5641897232,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2000,252,22.8094069299,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2001,248,21.0276563047,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2002,252,18.0412868508,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2003,252,13.7007539345,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2004,252,12.5494478182,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2005,252,4.4782339181,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2006,251,6.7048459913,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2007,251,9.4651601087,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2008,253,22.5972236218,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2009,252,9.7198119034,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2010,252,11.9065338494,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2011,252,11.6785333615,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2012,250,19.2706824635,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2013,252,16.9424117470,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2014,252,5.1978175418,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2015,252,6.1534635745,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2016,252,3.7365995991,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2017,251,2.9435262430,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2018,251,6.5226335116,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2019,252,1.5748042413,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2020,253,-0.7980236539,False
+A,"sample, monthly 120 against sample, daily 3y",daily,2021,252,3.0235056401,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2022,251,2.1296913679,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2023,250,4.7178761844,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2024,252,6.0259901876,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2025,250,6.5798981379,True
+A,"sample, monthly 120 against sample, daily 3y",daily,2026,166,6.8901722922,True
+A,"robust, all five against sample, daily 3y",daily,1979,127,12.1036218977,True
+A,"robust, all five against sample, daily 3y",daily,1980,253,14.9739451043,True
+A,"robust, all five against sample, daily 3y",daily,1981,253,10.4759063965,True
+A,"robust, all five against sample, daily 3y",daily,1982,253,5.2116421287,True
+A,"robust, all five against sample, daily 3y",daily,1983,253,-0.6463562094,False
+A,"robust, all five against sample, daily 3y",daily,1984,253,1.0854580289,True
+A,"robust, all five against sample, daily 3y",daily,1985,252,0.8897822660,True
+A,"robust, all five against sample, daily 3y",daily,1986,253,4.8749649974,True
+A,"robust, all five against sample, daily 3y",daily,1987,253,2.5906014088,True
+A,"robust, all five against sample, daily 3y",daily,1988,253,2.6670787127,True
+A,"robust, all five against sample, daily 3y",daily,1989,252,0.8224871644,True
+A,"robust, all five against sample, daily 3y",daily,1990,253,0.0319452579,True
+A,"robust, all five against sample, daily 3y",daily,1991,253,0.4968406288,True
+A,"robust, all five against sample, daily 3y",daily,1992,254,0.9736778697,True
+A,"robust, all five against sample, daily 3y",daily,1993,253,2.8880196706,True
+A,"robust, all five against sample, daily 3y",daily,1994,252,1.1620328044,True
+A,"robust, all five against sample, daily 3y",daily,1995,252,1.3806235200,True
+A,"robust, all five against sample, daily 3y",daily,1996,254,2.4152219094,True
+A,"robust, all five against sample, daily 3y",daily,1997,253,0.8543879049,True
+A,"robust, all five against sample, daily 3y",daily,1998,252,0.3103944241,True
+A,"robust, all five against sample, daily 3y",daily,1999,252,-0.8703310726,False
+A,"robust, all five against sample, daily 3y",daily,2000,252,3.0212610738,True
+A,"robust, all five against sample, daily 3y",daily,2001,248,7.1112634687,True
+A,"robust, all five against sample, daily 3y",daily,2002,252,0.4011302174,True
+A,"robust, all five against sample, daily 3y",daily,2003,252,-4.2896046284,False
+A,"robust, all five against sample, daily 3y",daily,2004,252,2.3143394420,True
+A,"robust, all five against sample, daily 3y",daily,2005,252,1.8130111742,True
+A,"robust, all five against sample, daily 3y",daily,2006,251,1.5132638178,True
+A,"robust, all five against sample, daily 3y",daily,2007,251,-0.5753434922,False
+A,"robust, all five against sample, daily 3y",daily,2008,253,-3.9612441949,False
+A,"robust, all five against sample, daily 3y",daily,2009,252,-6.3427562649,False
+A,"robust, all five against sample, daily 3y",daily,2010,252,-2.5682490475,False
+A,"robust, all five against sample, daily 3y",daily,2011,252,-0.4077603179,False
+A,"robust, all five against sample, daily 3y",daily,2012,250,6.0841082954,True
+A,"robust, all five against sample, daily 3y",daily,2013,252,4.5489314644,True
+A,"robust, all five against sample, daily 3y",daily,2014,252,0.4635799830,True
+A,"robust, all five against sample, daily 3y",daily,2015,252,1.8593741925,True
+A,"robust, all five against sample, daily 3y",daily,2016,252,-1.5374613839,False
+A,"robust, all five against sample, daily 3y",daily,2017,251,-3.6397816811,False
+A,"robust, all five against sample, daily 3y",daily,2018,251,-0.7875837923,False
+A,"robust, all five against sample, daily 3y",daily,2019,252,-0.8050755284,False
+A,"robust, all five against sample, daily 3y",daily,2020,253,0.5367311850,True
+A,"robust, all five against sample, daily 3y",daily,2021,252,0.5189778316,True
+A,"robust, all five against sample, daily 3y",daily,2022,251,2.5370128185,True
+A,"robust, all five against sample, daily 3y",daily,2023,250,0.0327857361,True
+A,"robust, all five against sample, daily 3y",daily,2024,252,-1.7613706284,False
+A,"robust, all five against sample, daily 3y",daily,2025,250,1.5419856048,True
+A,"robust, all five against sample, daily 3y",daily,2026,166,6.6013910647,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1979,127,-0.9883585133,False
+B,"sample, daily 3y: mandate against tilt alone",daily,1980,253,2.3677490636,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1981,253,2.8407553469,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1982,253,5.9694670599,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1983,253,4.4392108591,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1984,253,6.4113658384,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1985,252,4.2872989192,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1986,253,2.9490128043,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1987,253,3.5095815781,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1988,253,4.4385980831,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1989,252,4.8118248170,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1990,253,6.4899994219,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1991,253,3.3896927576,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1992,254,5.2888255181,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1993,253,7.7679562612,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1994,252,4.3781877213,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1995,252,2.1044248298,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1996,254,9.7053940355,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1997,253,16.4777069939,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1998,252,8.5825573494,True
+B,"sample, daily 3y: mandate against tilt alone",daily,1999,252,10.7843500417,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2000,252,2.5978365408,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2001,248,7.1840337948,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2002,252,14.5151037773,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2003,252,8.4215235572,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2004,252,2.7262430565,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2005,252,5.8439217064,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2006,251,6.6701926770,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2007,251,3.7182067260,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2008,253,11.6623776689,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2009,252,10.3745452164,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2010,252,2.0403853794,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2011,252,6.6781921795,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2012,250,7.5312352404,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2013,252,5.1725770137,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2014,252,3.2150375036,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2015,252,0.7470847174,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2016,252,3.5229504900,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2017,251,3.2195705261,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2018,251,2.8650599738,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2019,252,5.1321583048,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2020,253,4.0198910888,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2021,252,0.3657889039,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2022,251,4.4641361737,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2023,250,2.2625682137,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2024,252,4.9005033685,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2025,250,2.7902615937,True
+B,"sample, daily 3y: mandate against tilt alone",daily,2026,166,4.3169049175,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1979,127,-0.8614167126,False
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1980,253,2.4492361759,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1981,253,3.0048206481,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1982,253,6.0724606770,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1983,253,4.5394574706,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1984,253,6.3929818899,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1985,252,4.2656312975,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1986,253,2.9863880614,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1987,253,3.3784071783,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1988,253,4.5182313433,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1989,252,4.7081285182,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1990,253,6.6731696148,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1991,253,3.4840412573,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1992,254,5.2144831788,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1993,253,7.6828201613,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1994,252,4.3515371776,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1995,252,2.0584540903,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1996,254,9.7127521104,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1997,253,16.3916147588,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1998,252,9.1898476746,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,1999,252,10.6524021204,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2000,252,2.3501910319,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2001,248,7.2103988869,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2002,252,14.5641537222,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2003,252,8.3265541783,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2004,252,2.8641561980,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2005,252,5.9455252025,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2006,251,6.6659641311,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2007,251,3.7181490206,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2008,253,11.7098679130,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2009,252,11.4892031920,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2010,252,1.9426255351,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2011,252,6.7821563361,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2012,250,7.3830293227,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2013,252,5.0843623313,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2014,252,3.3551561786,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2015,252,0.7524268070,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2016,252,3.4834686351,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2017,251,3.2523035705,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2018,251,2.9309388418,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2019,252,5.3150212043,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2020,253,4.0165877077,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2021,252,0.3676299853,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2022,251,4.7222704582,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2023,250,2.1573604599,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2024,252,4.8282570169,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2025,250,2.9071348493,True
+B,"ledoit_wolf, daily 3y: mandate against tilt alone",daily,2026,166,4.2391366150,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1979,127,0.6446388300,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1980,253,1.8007164810,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1981,253,5.0125429951,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1982,253,9.2929320091,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1983,253,5.7918097834,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1984,253,6.5996939595,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1985,252,3.0325146167,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1986,253,1.6149131370,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1987,253,2.1767350311,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1988,253,3.3679650134,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1989,252,3.2302384275,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1990,253,7.6796695536,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1991,253,4.1702490381,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1992,254,4.9648964562,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1993,253,5.9253663977,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1994,252,3.9418435153,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1995,252,1.6855015491,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1996,254,10.9930608535,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1997,253,14.1681272928,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1998,252,12.1311184059,True
+B,"factor, daily 3y: mandate against tilt alone",daily,1999,252,11.5263147623,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2000,252,2.5573444233,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2001,248,10.5183449427,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2002,252,14.9504720384,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2003,252,6.3778881819,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2004,252,3.1720593880,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2005,252,5.2443511670,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2006,251,6.7804370776,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2007,251,2.6119237380,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2008,253,12.4010440284,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2009,252,16.7519454659,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2010,252,2.6672080547,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2011,252,7.0511040668,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2012,250,5.5761892788,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2013,252,4.4275295773,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2014,252,3.4248642924,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2015,252,0.7788108984,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2016,252,2.7676830744,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2017,251,1.2803558843,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2018,251,3.1566930722,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2019,252,6.2421139494,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2020,253,4.4953787963,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2021,252,1.3422429970,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2022,251,6.1020379615,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2023,250,2.9414710456,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2024,252,4.2140963442,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2025,250,6.3460778746,True
+B,"factor, daily 3y: mandate against tilt alone",daily,2026,166,5.8434254902,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1979,127,0.1683517965,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1980,253,1.3728905214,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1981,253,4.8097244773,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1982,253,9.1795285528,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1983,253,5.7891803907,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1984,253,7.2972941382,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1985,252,4.4346012699,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1986,253,2.7912495377,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1987,253,1.2032153644,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1988,253,2.6878018626,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1989,252,3.9048267658,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1990,253,7.6153359583,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1991,253,3.8593810475,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1992,254,3.4687435396,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1993,253,5.6208196095,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1994,252,4.0868357076,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1995,252,1.4593995935,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1996,254,9.4063167169,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1997,253,16.2645638076,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1998,252,6.4448561194,True
+B,"pca, daily 3y: mandate against tilt alone",daily,1999,252,14.9597504765,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2000,252,2.6620493069,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2001,248,9.2187151501,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2002,252,15.3090852895,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2003,252,7.1264876369,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2004,252,3.6184120899,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2005,252,5.7092860583,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2006,251,7.0529304370,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2007,251,4.7247424120,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2008,253,13.7838770090,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2009,252,14.4870515646,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2010,252,2.7392701507,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2011,252,8.5551414067,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2012,250,7.1907171970,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2013,252,4.3426242794,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2014,252,3.9034052008,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2015,252,1.4936155641,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2016,252,5.1286464917,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2017,251,3.2666964365,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2018,251,4.1364485811,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2019,252,5.9502467883,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2020,253,3.5752847024,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2021,252,1.6235627879,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2022,251,6.6977877649,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2023,250,3.4578910290,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2024,252,4.4642971203,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2025,250,4.9641892899,True
+B,"pca, daily 3y: mandate against tilt alone",daily,2026,166,3.8760820646,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1979,127,6.1485447528,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1980,253,10.6836458908,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1981,253,8.0145566492,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1982,253,-0.4293247327,False
+B,"sample, monthly 120: mandate against tilt alone",daily,1983,253,2.0960213132,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1984,253,2.8590154573,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1985,252,0.8313181013,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1986,253,-10.5982472694,False
+B,"sample, monthly 120: mandate against tilt alone",daily,1987,253,-4.5178399962,False
+B,"sample, monthly 120: mandate against tilt alone",daily,1988,253,4.1399437869,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1989,252,8.2442353856,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1990,253,6.3890460109,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1991,253,1.1928072439,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1992,254,0.7072040980,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1993,253,1.4848279905,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1994,252,6.9170213697,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1995,252,5.9985386703,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1996,254,13.9634610982,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1997,253,18.7028247872,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1998,252,15.0082312020,True
+B,"sample, monthly 120: mandate against tilt alone",daily,1999,252,15.1450478560,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2000,252,11.6942713881,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2001,248,17.6051642395,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2002,252,26.4335655422,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2003,252,13.7100746084,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2004,252,6.1370353926,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2005,252,5.7608299506,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2006,251,6.3957601852,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2007,251,1.9438790376,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2008,253,7.5680667982,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2009,252,11.0781441309,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2010,252,4.6584727815,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2011,252,3.7936842278,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2012,250,4.9916036890,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2013,252,1.1512713565,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2014,252,1.6836597646,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2015,252,0.3938367328,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2016,252,2.9671486467,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2017,251,3.4504068271,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2018,251,3.1027257079,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2019,252,3.8634829963,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2020,253,0.8200190823,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2021,252,0.2819089347,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2022,251,5.9576822503,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2023,250,0.0101188312,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2024,252,2.3610892004,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2025,250,4.1336349740,True
+B,"sample, monthly 120: mandate against tilt alone",daily,2026,166,5.0144911143,True
+B,"robust, all five: mandate against tilt alone",daily,1979,127,-8.0476074526,False
+B,"robust, all five: mandate against tilt alone",daily,1980,253,-1.9262809149,False
+B,"robust, all five: mandate against tilt alone",daily,1981,253,4.6712094927,True
+B,"robust, all five: mandate against tilt alone",daily,1982,253,9.7387102835,True
+B,"robust, all five: mandate against tilt alone",daily,1983,253,5.5029680739,True
+B,"robust, all five: mandate against tilt alone",daily,1984,253,6.3857151305,True
+B,"robust, all five: mandate against tilt alone",daily,1985,252,2.8860807926,True
+B,"robust, all five: mandate against tilt alone",daily,1986,253,0.6419604676,True
+B,"robust, all five: mandate against tilt alone",daily,1987,253,-1.0620796057,False
+B,"robust, all five: mandate against tilt alone",daily,1988,253,5.1088678306,True
+B,"robust, all five: mandate against tilt alone",daily,1989,252,6.1244275356,True
+B,"robust, all five: mandate against tilt alone",daily,1990,253,7.1467097680,True
+B,"robust, all five: mandate against tilt alone",daily,1991,253,2.3257646837,True
+B,"robust, all five: mandate against tilt alone",daily,1992,254,4.0731786843,True
+B,"robust, all five: mandate against tilt alone",daily,1993,253,7.3895570278,True
+B,"robust, all five: mandate against tilt alone",daily,1994,252,4.3641453429,True
+B,"robust, all five: mandate against tilt alone",daily,1995,252,1.6890982253,True
+B,"robust, all five: mandate against tilt alone",daily,1996,254,9.5409098955,True
+B,"robust, all five: mandate against tilt alone",daily,1997,253,13.2307292291,True
+B,"robust, all five: mandate against tilt alone",daily,1998,252,8.5447148450,True
+B,"robust, all five: mandate against tilt alone",daily,1999,252,12.7182471846,True
+B,"robust, all five: mandate against tilt alone",daily,2000,252,2.6965294331,True
+B,"robust, all five: mandate against tilt alone",daily,2001,248,9.7697221378,True
+B,"robust, all five: mandate against tilt alone",daily,2002,252,15.9900008165,True
+B,"robust, all five: mandate against tilt alone",daily,2003,252,6.8081494892,True
+B,"robust, all five: mandate against tilt alone",daily,2004,252,3.1153271098,True
+B,"robust, all five: mandate against tilt alone",daily,2005,252,5.8723488401,True
+B,"robust, all five: mandate against tilt alone",daily,2006,251,5.9066611968,True
+B,"robust, all five: mandate against tilt alone",daily,2007,251,2.9784196179,True
+B,"robust, all five: mandate against tilt alone",daily,2008,253,12.3367660739,True
+B,"robust, all five: mandate against tilt alone",daily,2009,252,10.0908346290,True
+B,"robust, all five: mandate against tilt alone",daily,2010,252,1.5470384704,True
+B,"robust, all five: mandate against tilt alone",daily,2011,252,4.8184269333,True
+B,"robust, all five: mandate against tilt alone",daily,2012,250,7.9215630921,True
+B,"robust, all five: mandate against tilt alone",daily,2013,252,4.2116245290,True
+B,"robust, all five: mandate against tilt alone",daily,2014,252,1.8894159058,True
+B,"robust, all five: mandate against tilt alone",daily,2015,252,0.1378623326,True
+B,"robust, all five: mandate against tilt alone",daily,2016,252,2.6754458829,True
+B,"robust, all five: mandate against tilt alone",daily,2017,251,1.4509897436,True
+B,"robust, all five: mandate against tilt alone",daily,2018,251,3.5612735295,True
+B,"robust, all five: mandate against tilt alone",daily,2019,252,6.2741997480,True
+B,"robust, all five: mandate against tilt alone",daily,2020,253,5.4030303770,True
+B,"robust, all five: mandate against tilt alone",daily,2021,252,1.1607028422,True
+B,"robust, all five: mandate against tilt alone",daily,2022,251,5.0926296770,True
+B,"robust, all five: mandate against tilt alone",daily,2023,250,2.4669675165,True
+B,"robust, all five: mandate against tilt alone",daily,2024,252,3.6294971443,True
+B,"robust, all five: mandate against tilt alone",daily,2025,250,5.2856292761,True
+B,"robust, all five: mandate against tilt alone",daily,2026,166,3.5157154961,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1979,127,-1.0428256877,False
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1980,253,4.1074109597,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1981,253,3.3070326888,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1982,253,5.0823718423,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1983,253,3.6645540537,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1984,253,6.1269962829,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1985,252,3.3022462854,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1986,253,4.1155074442,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1987,253,2.7509390601,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1988,253,3.9611498517,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1989,252,5.2563178528,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1990,253,5.3958072159,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1991,253,3.6047244334,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1992,254,4.9243197730,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1993,253,6.0974237236,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1994,252,4.1921763807,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1995,252,2.9516862657,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1996,254,9.7766406882,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1997,253,17.1359018554,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1998,252,9.1821498204,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,1999,252,10.4831241845,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2000,252,2.0618952738,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2001,248,7.6435940646,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2002,252,15.7688365319,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2003,252,8.1762378316,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2004,252,3.6800526528,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2005,252,5.6129098927,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2006,251,6.4760756490,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2007,251,2.9708316740,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2008,253,10.8335507428,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2009,252,10.9720437197,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2010,252,2.1837208838,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2011,252,6.0604316285,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2012,250,8.5156504566,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2013,252,5.2776461219,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2014,252,3.1885457780,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2015,252,1.1414186456,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2016,252,3.0951265507,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2017,251,3.2583319028,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2018,251,2.7597771285,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2019,252,5.2026312109,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2020,253,4.0610545761,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2021,252,0.4755158123,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2022,251,3.8876942362,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2023,250,2.6821938896,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2024,252,4.1983223878,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2025,250,3.8168815576,True
+B,"RiskMetrics, daily 5y: mandate against tilt alone",daily,2026,166,4.1434109473,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1979,127,-0.3984973326,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1980,253,-0.7471959622,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1981,253,0.0197631621,False
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1982,253,-0.4905984593,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1983,253,-0.1227088241,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1984,253,-0.6074566858,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1985,252,-0.7923872090,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1986,253,-1.6303538187,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1987,253,-0.0990704162,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1988,253,0.5822813768,False
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1989,252,-0.3630152715,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1990,253,-0.6831092244,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1991,253,-0.8765279746,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1992,254,-0.9268595774,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1993,253,-0.3696658295,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1994,252,-0.8081865875,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1995,252,-0.2048931074,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1996,254,-0.2196228470,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1997,253,-0.4823193299,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1998,252,-0.0833683581,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,1999,252,-0.0166962541,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2000,252,-0.4631647097,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2001,248,-0.8284905182,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2002,252,-1.0951706142,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2003,252,-0.5799062037,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2004,252,-0.2880777115,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2005,252,-1.6786453092,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2006,251,-1.7744854926,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2007,251,-1.3457194072,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2008,253,-1.0327068475,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2009,252,1.1256518978,False
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2010,252,-0.0804061207,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2011,252,-0.6097064388,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2012,250,-0.5817155598,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2013,252,-0.4166747910,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2014,252,-0.3744067085,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2015,252,-0.5302149389,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2016,252,-0.5498240781,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2017,251,-0.4894533447,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2018,251,-0.5081455077,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2019,252,-0.4357646599,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2020,253,-1.7019615554,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2021,252,0.8656753643,False
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2022,251,-0.4499016880,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2023,250,-1.1575495149,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2024,252,-1.8688041891,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2025,250,-1.0789776471,True
+C,"sample, daily_5y_ewma against sample, daily_5y, unconstrained",daily,2026,166,-0.9121273079,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1979,127,0.1180434002,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1980,253,-0.3181581105,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1981,253,-0.3650929315,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1982,253,-0.5388719463,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1983,253,-0.0436492008,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1984,253,-0.2996047557,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1985,252,-0.2451678324,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1986,253,-0.7431511545,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1987,253,0.3407175927,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1988,253,0.3283916988,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1989,252,-0.2827482508,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1990,253,-0.9409775942,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1991,253,-0.3504910426,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1992,254,-0.2784914486,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1993,253,-0.0549236496,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1994,252,-0.7770849969,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1995,252,-0.2812212985,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1996,254,0.0011514850,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1997,253,-0.4562972850,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1998,252,-0.4979585645,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,1999,252,0.0181547668,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2000,252,-0.5747937970,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2001,248,-0.9248627847,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2002,252,-1.3294556722,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2003,252,-0.3062510173,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2004,252,0.0839163220,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2005,252,-1.3667333399,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2006,251,-2.0992367818,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2007,251,-1.4932394077,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2008,253,0.4270566569,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2009,252,-0.3450298406,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2010,252,0.0222072715,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2011,252,0.0078874531,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2012,250,0.0239658865,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2013,252,-0.2337412362,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2014,252,-0.4910557859,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2015,252,-0.1657043066,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2016,252,-0.2905890581,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2017,251,-0.2616829753,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2018,251,-0.2522220170,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2019,252,-0.3255884129,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2020,253,-0.9170391176,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2021,252,0.1326863861,False
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2022,251,-0.6196070428,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2023,250,-0.3796420187,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2024,252,-0.5881357893,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2025,250,-0.3093474868,True
+C,"sample, daily_5y_ewma against sample, daily_5y, long-only",daily,2026,166,-1.5189181888,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1979,127,-0.2322931397,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1980,253,-0.0624771272,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1981,253,0.0218731205,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1982,253,-0.8035694230,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1983,253,-0.0889134966,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1984,253,-0.2490124239,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1985,252,-0.2498333948,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1986,253,-0.1095577933,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1987,253,-0.5487766005,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1988,253,0.1902388422,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1989,252,-0.4855209022,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1990,253,-0.7193228306,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1991,253,0.2807803934,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1992,254,0.1835009815,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1993,253,-0.1752471298,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1994,252,-0.3411055938,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1995,252,0.0208528669,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1996,254,-0.2083615295,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1997,253,-0.1960782616,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1998,252,0.0077298521,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,1999,252,-0.1925963938,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2000,252,-0.4592051974,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2001,248,-0.4225130233,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2002,252,-0.2360668542,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2003,252,-0.1877956359,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2004,252,-0.4611465232,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2005,252,-0.7681090716,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2006,251,-0.1723605349,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2007,251,-0.3180929985,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2008,253,0.1786446439,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2009,252,0.3602744546,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2010,252,-0.3247572706,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2011,252,-0.4478029287,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2012,250,-0.1077857433,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2013,252,-0.6389108577,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2014,252,-0.3469596259,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2015,252,-0.1068515018,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2016,252,0.1478237143,False
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2017,251,-0.6712309753,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2018,251,-0.5423063781,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2019,252,-0.1368225034,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2020,253,-1.3040996713,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2021,252,-0.3552011626,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2022,251,-0.6215453517,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2023,250,-0.2480838220,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2024,252,-0.2318780557,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2025,250,-0.1219113375,True
+C,"sample, daily_5y_ewma against sample, daily_3y, unconstrained",daily,2026,166,-0.1438960147,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1979,127,-0.0609256862,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1980,253,-0.1861662138,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1981,253,-0.2319746082,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1982,253,-0.6914925871,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1983,253,-0.2237659173,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1984,253,-0.0010404566,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1985,252,-0.1826729414,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1986,253,-0.0680854968,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1987,253,-0.4187279796,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1988,253,0.1896775093,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1989,252,-0.4056669968,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1990,253,-1.0314444519,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1991,253,-0.0547018046,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1992,254,-0.0466366022,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1993,253,-0.0849361248,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1994,252,-0.4236689665,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1995,252,0.0355743362,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1996,254,-0.1293678631,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1997,253,-0.1068543046,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1998,252,-0.0980849854,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,1999,252,-0.1312097898,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2000,252,-0.4949395812,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2001,248,-0.3954679595,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2002,252,-0.0873123705,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2003,252,-0.0969294905,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2004,252,-0.2269523449,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2005,252,-0.9378731562,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2006,251,0.0717554776,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2007,251,-0.2469843222,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2008,253,0.0742246589,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2009,252,-0.1488472706,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2010,252,0.0165713498,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2011,252,0.0434613371,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2012,250,-0.0132045148,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2013,252,-0.0010195559,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2014,252,-0.1660290524,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2015,252,0.0019827016,False
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2016,252,-0.1272700881,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2017,251,-0.1894235917,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2018,251,-0.3066267033,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2019,252,-0.3656630396,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2020,253,-0.6146389521,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2021,252,-0.2999876938,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2022,251,-0.5044868671,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2023,250,-0.0809989581,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2024,252,-0.0623362766,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2025,250,-0.1400299569,True
+C,"sample, daily_5y_ewma against sample, daily_3y, long-only",daily,2026,166,-0.1376178655,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1979,6,6.1781837129,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1980,12,2.6711872992,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1981,12,-9.9386707849,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1982,12,9.3115138962,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1983,12,-16.0204661644,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1984,12,-6.5853212611,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1985,12,-7.1404607807,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1986,12,3.0843023544,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1987,12,2.4548428179,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1988,12,-9.5834581010,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1989,12,2.0750091477,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1990,12,-3.7166865284,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1991,12,15.4407923322,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1992,12,-7.9908013821,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1993,12,1.6287158943,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1994,12,-3.8464324304,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1995,12,-7.9879718487,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1996,12,-0.1709535302,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1997,12,4.0490103889,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1998,12,4.0631506432,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,1999,12,6.4473798090,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2000,12,5.3035324123,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2001,12,0.7957229243,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2002,12,-1.5069579495,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2003,12,1.2752460304,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2004,12,0.5194970136,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2005,12,1.4999334160,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2006,12,0.3535736913,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2007,12,-7.3286603792,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2008,12,-3.8379732144,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2009,12,16.4970549677,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2010,12,-2.5693247954,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2011,12,0.7938692739,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2012,12,-1.8259868001,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2013,12,1.9229827501,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2014,12,2.5031325754,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2015,12,9.1963510481,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2016,12,1.9801130606,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2017,12,7.5097647857,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2018,12,-8.3185303693,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2019,12,4.8830813063,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2020,12,0.0377938503,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2021,12,-1.2944829834,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2022,12,4.1731785076,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2023,12,-0.6125040053,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2024,12,0.0077349309,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2025,12,-1.9278550764,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on months",monthly,2026,8,2.5684904903,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1979,127,-5.3856621657,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1980,253,3.4535085159,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1981,253,0.7690036184,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1982,253,3.8882367316,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1983,253,-1.0646337243,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1984,253,-3.9078172983,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1985,252,-1.7001654686,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1986,253,1.2584693803,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1987,253,-0.7008792438,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1988,253,-0.0712549508,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1989,252,-0.3138162385,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1990,253,-9.4258769132,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1991,253,0.0848836419,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1992,254,0.3914520384,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1993,253,0.1685039408,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1994,252,-2.1427766974,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1995,252,-1.4309918093,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1996,254,-0.1723942127,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1997,253,0.8804378884,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1998,252,-1.4848469892,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,1999,252,1.7758135386,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2000,252,1.3928460947,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2001,248,-0.5421839119,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2002,252,-0.7073395480,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2003,252,-0.7713366135,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2004,252,-3.7329832899,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2005,252,-1.7248501616,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2006,251,-1.0291361594,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2007,251,2.7022404230,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2008,253,0.3431297126,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2009,252,0.4998118847,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2010,252,-1.2757122251,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2011,252,-0.7157258342,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2012,250,-2.7377647882,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2013,252,-3.7199091540,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2014,252,-1.1223041931,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2015,252,-1.0020618336,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2016,252,2.5449941720,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2017,251,1.1277052073,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2018,251,-1.5346592377,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2019,252,0.8808377450,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2020,253,-1.3667741186,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2021,252,0.1179529549,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2022,251,-1.4537711606,True
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2023,250,1.1034951066,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2024,252,0.0389756895,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2025,250,1.6194546434,False
+D,"RiskMetrics, daily 5y against sample, daily 5y, on days",daily,2026,166,-3.8923841945,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1979,6,-2.8124939666,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1980,12,2.9287106017,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1981,12,10.5865017970,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1982,12,-13.3157632600,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1983,12,3.1549982658,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1984,12,6.4463508791,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1985,12,1.9770134185,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1986,12,-5.2555642926,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1987,12,-2.1083105321,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1988,12,6.8980105911,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1989,12,-4.6383178425,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1990,12,-4.9090143139,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1991,12,-22.3816372564,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1992,12,8.4614593896,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1993,12,-1.8771043476,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1994,12,5.8130396663,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1995,12,6.7237836297,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1996,12,-0.1987349507,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1997,12,-2.2893439967,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1998,12,-2.2659095450,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,1999,12,-3.3663658596,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2000,12,-0.5104084305,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2001,12,-2.6513938365,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2002,12,1.9165971940,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2003,12,-1.8621296738,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2004,12,-2.0559115720,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2005,12,-3.0834555999,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2006,12,4.4747132731,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2007,12,7.8680158486,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2008,12,6.0163734422,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2009,12,-10.1222970420,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2010,12,0.4482195739,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2011,12,0.2330129027,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2012,12,3.4835322891,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2013,12,-1.7251215107,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2014,12,-3.6322031335,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2015,12,-4.9660915231,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2016,12,-4.1255010103,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2017,12,-7.0123045605,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2018,12,3.4158128265,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2019,12,-6.0465203000,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2020,12,4.8379173027,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2021,12,0.8361529935,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2022,12,1.1468926546,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2023,12,0.3865409432,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2024,12,-3.4262206254,True
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2025,12,0.4799974453,False
+D,"sample, daily 5y against sample, daily 3y, on months",monthly,2026,8,-3.7902536880,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1979,127,4.1617760416,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1980,253,-0.4105174180,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1981,253,0.0194266675,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1982,253,-5.0601427749,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1983,253,-1.0722772018,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1984,253,3.2158506087,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1985,252,0.7869175334,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1986,253,-1.0791939894,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1987,253,0.9606456385,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1988,253,0.4843220470,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1989,252,-0.2720533704,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1990,253,2.1435692880,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1991,253,-0.9866307322,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1992,254,-1.5862276994,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1993,253,-2.8076590658,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1994,252,2.3681792550,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1995,252,1.5933896601,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1996,254,0.5508601726,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1997,253,-0.1161743071,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1998,252,0.9636415094,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,1999,252,-1.1897562143,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2000,252,-0.8706597941,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2001,248,0.3588391289,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2002,252,0.3744817197,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2003,252,-1.5476807337,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2004,252,4.2016928455,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2005,252,-1.9762021828,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2006,251,1.9247037986,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2007,251,-5.2180120124,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2008,253,-2.3965572628,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2009,252,-0.9799349665,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2010,252,0.4669588604,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2011,252,-0.8458642793,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2012,250,4.6407658469,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2013,252,3.4736175433,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2014,252,-0.2202831473,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2015,252,0.4888221038,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2016,252,-1.9282319693,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2017,251,-1.8626881323,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2018,251,0.8964675876,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2019,252,-2.1334971509,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2020,253,0.8496861131,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2021,252,-0.0548908889,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2022,251,-0.9755915101,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2023,250,0.3509188408,False
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2024,252,-1.7544030881,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2025,250,-0.9614170837,True
+D,"sample, daily 5y against sample, daily 3y, on days",daily,2026,166,1.2983587804,False

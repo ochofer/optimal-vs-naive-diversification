@@ -50,6 +50,8 @@ Each file name ends in `_202608.csv`, left out below.
 | `attribution_summary` | 13 | Each path's mean active exposures and the six factor contributions with their standard errors, the residual and the factor share |
 | `attribution_by_decade` | 13 | The contributions and the residual by decade |
 | `attribution_mandate_cost` | 13 | The cost of the mandate against the tilt alone, split into the factors and the residual |
+| `attribution_newey_west`, `attribution_mandate_cost_newey_west` | 13 | The contributions, the factor total, the residual and the active return of each path, and the cost of the mandate against the tilt alone, each per year with the standard error that takes the months as independent, the Newey-West standard error with six lags and the first-order autocorrelation of the monthly series |
+| `attribution_monthly` | 13 | The monthly contributions, factor total, residual and active return of all fourteen paths |
 | `attribution_monthly_sample_C3` | 13 | The monthly exposures and contributions of the sample covariance under the mandate |
 | `attribution_betas_mean`, `attribution_betas_2026-08`, `attribution_benchmark_weights` | 13 | The industries' betas to the six factors and their benchmark weights, averaged and in August 2026 |
 | `factor_means_1979-07_to_2026-08` | 13 | Each factor's mean return and volatility a year |
@@ -65,6 +67,8 @@ Each file name ends in `_202608.csv`, left out below.
 | `paired_paper_gain` | 17 | The gain of RiskMetrics over the sample covariance that Dom, Howard, Jansen and Lohre (2025) report, in basis points on this study's level, with the chance that an interval here would exclude zero |
 | `bias_split_2000` | 17 | The bias statistic before January 2000 and from it, each with its band, and the band of the difference |
 | `paired_tests_daily` | 18 | The paired tests on daily active returns, beside the same comparisons on months |
+| `paired_tests_daily_batch_means` | 18 | Each row of `paired_tests_daily` with a standard error from batch means of 63, 126, 252 and 504 trading days (3, 6, 12 and 24 months for the rows on months), the interval and the p-value from Student's t, Holm's correction within A and within B, the number of calendar years in which the difference has the sign of the whole period, and for A's RiskMetrics row the reading on that interval |
+| `paired_daily_calendar_years` | 18 | The difference of the two tracking errors of each row in each calendar year |
 | `paired_daily_readings`, `paired_daily_expectations` | 18 | The RiskMetrics comparisons read against the published gains, and the two expectations on the daily tests with their verdicts |
 | `paired_size_check_daily` | 18 | The size check on simulated daily data with clustered volatility |
 | `daily_active_returns`, `daily_benchmark_returns`, `daily_minimum_variance_returns` | 18 | The daily returns of the paths, the benchmark and the minimum-variance portfolios |
@@ -92,3 +96,4 @@ Each file name ends in `_202608.csv`, left out below.
 | `factor_objective_exposure_bought` | 16 | The mean exposure per basis point of realised tracking error, by targeted factor |
 | `factor_objective_gap` | 16 | Each path's gap and gap per unit |
 | `factor_objective_attribution_verdict` | 16 | E4 with its verdict |
+| `factor_objective_attribution_newey_west` | 16 | The contributions, the targeted total, the factor total, the residual and the active return of each path per year, with the standard error that takes the months as independent, the Newey-West standard error with six lags and the first-order autocorrelation of the monthly series |

@@ -4,6 +4,7 @@ import pathlib
 
 import numpy as np
 import pandas as pd
+import pytest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
@@ -83,3 +84,39 @@ def test_by_period_averages_each_group():
     assert np.allclose(table["contribution Mkt-RF"], 12 * 0.005)
     assert np.allclose(table["residual"], 12 * 0.015)
     assert list(table.index) == ["first year", "second year"]
+
+
+# The Newey-West standard error, added on 24 November 2026 after the results of notebooks 13 and 16 were known.
+
+def test_newey_west_by_hand():
+    x = np.array([0.01, -0.02, 0.03, 0.00, -0.01, 0.02, 0.01, -0.03])
+    t = len(x)
+    u = x - x.mean()
+    g0, g1, g2 = u @ u / t, u[1:] @ u[:-1] / t, u[2:] @ u[:-2] / t
+    assert A.newey_west_se(x, 0) == pytest.approx(np.sqrt(g0 / t))
+    assert A.newey_west_se(x, 2) == pytest.approx(np.sqrt((g0 + 2 * (2 / 3) * g1 + 2 * (1 / 3) * g2) / t))
+
+
+def test_newey_west_is_larger_for_positively_correlated_months():
+    rng = np.random.default_rng(5)
+    e = rng.normal(size=20000)
+    ar = np.empty_like(e)
+    ar[0] = e[0]
+    for i in range(1, len(e)):
+        ar[i] = 0.3 * ar[i - 1] + e[i]
+    # for an AR(1) with coefficient 0.3 the long-run variance is 1 / (1 - 0.3)^2 times the innovations', against 1 / (1 - 0.09) for the variance
+    ratio = A.newey_west_se(ar, 6) / (ar.std() / np.sqrt(len(ar)))
+    assert 1.2 < ratio < np.sqrt((1 - 0.09) / (1 - 0.3) ** 2) + 0.05
+
+
+def test_newey_west_table_columns():
+    months = _months(60)
+    rng = np.random.default_rng(8)
+    att = pd.DataFrame({"factor total": rng.normal(size=60), "residual": rng.normal(size=60)}, index=months)
+    out = A.newey_west(att, 6, ["factor total", "residual"])
+    x = att["factor total"].to_numpy()
+    assert out["factor total (per year)"] == pytest.approx(12 * x.mean())
+    assert out["factor total (standard error)"] == pytest.approx(12 * x.std(ddof=1) / np.sqrt(60))
+    assert out["factor total (Newey-West standard error)"] == pytest.approx(12 * A.newey_west_se(x, 6))
+    assert out["factor total (t, Newey-West)"] == pytest.approx(out["factor total (per year)"] / out["factor total (Newey-West standard error)"])
+    assert C.ATTRIBUTION_NEWEY_WEST_LAGS == int(0.75 * 566 ** (1 / 3)) == 6

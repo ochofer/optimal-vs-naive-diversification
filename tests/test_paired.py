@@ -157,3 +157,53 @@ def test_the_constants_name_the_comparisons_and_the_settings():
     assert len(set(C.PAIRED_SIZE_FURTHER_SEEDS)) == 3
     assert C.PAIRED_SIZE_FURTHER_CORRELATIONS == (0.93, 0.81) and all(0 < r < C.PAIRED_SIZE_CORRELATION for r in C.PAIRED_SIZE_FURTHER_CORRELATIONS)
     assert C.EVAL_BIAS_SPLIT_MONTH == "2000-01" and C.EVAL_BIAS_SPLIT_SET == "C3"
+
+
+# Batch means, added on 24 November 2026 after the results of notebooks 17 and 18 were known.
+
+def test_student_t_matches_tabulated_values():
+    # values from a reference implementation of Student's t, to the digits shown
+    assert P.student_t_cdf(2.0, 10) == pytest.approx(0.9633059826146299, abs=1e-13)
+    assert P.student_t_cdf(-1.3, 46) == pytest.approx(0.10003875066734813, abs=1e-13)
+    assert P.student_t_cdf(0.0, 5) == 0.5
+    assert P.student_t_quantile(0.975, 46) == pytest.approx(2.012895598919429, abs=1e-9)
+    assert P.student_t_quantile(0.975, 22) == pytest.approx(2.0738730679040254, abs=1e-9)
+    # with many degrees of freedom the t is close to the normal
+    assert P.student_t_quantile(0.975, 100000) == pytest.approx(P.normal_quantile(0.975), abs=1e-4)
+
+
+def test_batch_means_with_blocks_of_one_is_the_standard_error_of_independent_periods():
+    r1, r2 = _pair(600, 11, scale2=1.05)
+    psi = P.influence_series(r1, r2)
+    assert abs(psi["sd"].mean()) < 1e-15 and abs(psi["log"].mean()) < 1e-15
+    out = P.batch_means(r1, r2, block=1)
+    assert out["blocks"] == 600 and out["left_out"] == 0
+    assert out["se"] == pytest.approx(psi["sd"].std(ddof=1) / np.sqrt(600))
+    assert out["se_log"] == pytest.approx(psi["log"].std(ddof=1) / np.sqrt(600))
+    assert out["difference"] == pytest.approx(P.sd_difference(r1, r2))
+    assert out["log_difference"] == pytest.approx(P.log_variance_difference(r1, r2))
+
+
+def test_batch_means_by_hand():
+    r1, r2 = _pair(250, 12)
+    out = P.batch_means(r1, r2, block=24, level=0.95)
+    assert out["blocks"] == 10 and out["left_out"] == 10
+    psi = P.influence_series(r1, r2)
+    means = psi["sd"][:240].reshape(10, 24).mean(axis=1)
+    se = means.std(ddof=1) / np.sqrt(10)
+    assert out["se"] == pytest.approx(se)
+    crit = P.student_t_quantile(0.975, 9)
+    assert out["critical"] == pytest.approx(crit)
+    assert out["lower"] == pytest.approx(out["difference"] - crit * se) and out["upper"] == pytest.approx(out["difference"] + crit * se)
+    t = out["log_difference"] / out["se_log"]
+    assert out["t"] == pytest.approx(t)
+    assert out["p_value"] == pytest.approx(2 * (1 - P.student_t_cdf(abs(t), 9)), abs=1e-12)
+    with pytest.raises(ValueError):
+        P.batch_means(r1, r2, block=200)
+
+
+def test_the_batch_means_constants():
+    assert C.BATCH_MEANS_BLOCK_DAYS == C.DAILY_BLOCK == 252
+    assert set(C.BATCH_MEANS_MONTHS_OF) == {C.BATCH_MEANS_BLOCK_DAYS, *C.BATCH_MEANS_BLOCK_DAYS_FURTHER}
+    assert all(C.BATCH_MEANS_MONTHS_OF[d] * 21 == d for d in C.BATCH_MEANS_MONTHS_OF)
+    assert C.BATCH_MEANS_HOLM_FAMILIES == ("A", "B")

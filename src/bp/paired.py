@@ -89,7 +89,8 @@ import numpy as np
 
 __all__ = ["log_variance_difference", "sd_difference", "standard_errors", "circular_block_indices", "test", "holm",
            "simulate_null_pair", "size_check", "simulate_garch_pair", "size_check_daily", "normal_cdf", "normal_quantile",
-           "detectable_difference", "chance_to_exclude_zero"]
+           "detectable_difference", "chance_to_exclude_zero", "influence_series", "batch_means", "student_t_cdf",
+           "student_t_quantile"]
 
 
 def _moments(r1: np.ndarray, r2: np.ndarray):
@@ -438,3 +439,116 @@ def chance_to_exclude_zero(gain: float, se: float, critical: float) -> float:
     """The approximate probability that the interval excludes zero when the true difference is `gain`:
     the normal probability of |gain| / se less the critical value."""
     return normal_cdf(abs(float(gain)) / float(se) - float(critical))
+
+
+# ---------------------------------------------------------------------------
+# A standard error from batch means, added on 24 November 2026 after every
+# result of notebooks 17 and 18 was known. The kernel above chooses its
+# bandwidth from the data, 8 to 13 days on the study's daily series, while the
+# variances of two paths can drift apart over months; batch means of a year
+# of observations keep any dependence shorter than a block inside the block.
+# ---------------------------------------------------------------------------
+
+def influence_series(r1, r2, periods: int = 12, ddof: int = 1) -> dict:
+    """The influence series of the two statistics: for each period, the gradient of the statistic at the
+    sample's four means times the period's four centred series (r1, r2, r1 squared and r2 squared, each
+    less its mean). Each series has mean zero, and the statistic less its true value is close to the
+    series' mean, so the standard error of the statistic is the standard error of that mean."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    mu1, mu2, g1, g2 = _moments(r1, r2)
+    v = np.column_stack([r1 - mu1, r2 - mu2, r1 ** 2 - g1, r2 ** 2 - g2])
+    scale = _scale(len(r1), periods, ddof)
+    return {"sd": v @ _gradient_sd(mu1, mu2, g1, g2, scale), "log": v @ _gradient_log(mu1, mu2, g1, g2)}
+
+
+def _betacf(a: float, b: float, x: float) -> float:
+    """The continued fraction of the incomplete beta function, by the modified Lentz method."""
+    tiny, qab, qap, qam = 1e-300, a + b, a + 1.0, a - 1.0
+    c, d = 1.0, 1.0 - qab * x / qap
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    h = d
+    for m in range(1, 1000):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < 1e-15:
+            return h
+    raise RuntimeError("the continued fraction did not converge")
+
+
+def _betainc(a: float, b: float, x: float) -> float:
+    """The regularised incomplete beta function I_x(a, b)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    front = math.exp(math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x))
+    if x < (a + 1.0) / (a + b + 2.0):
+        return front * _betacf(a, b, x) / a
+    return 1.0 - front * _betacf(b, a, 1.0 - x) / b
+
+
+def student_t_cdf(x: float, dof: int) -> float:
+    """The distribution function of Student's t with `dof` degrees of freedom, from the regularised
+    incomplete beta function."""
+    x, dof = float(x), float(dof)
+    tail = 0.5 * _betainc(dof / 2.0, 0.5, dof / (dof + x * x))
+    return 1.0 - tail if x >= 0 else tail
+
+
+def student_t_quantile(p: float, dof: int) -> float:
+    """The quantile of Student's t at p, by bisection on student_t_cdf to 1e-12."""
+    if not 0.0 < p < 1.0:
+        raise ValueError("p must lie strictly between 0 and 1")
+    lo, hi = -1e3, 1e3
+    while hi - lo > 1e-12:
+        mid = 0.5 * (lo + hi)
+        if student_t_cdf(mid, dof) < p:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def batch_means(r1, r2, block: int, periods: int = 12, ddof: int = 1, level: float = 0.95) -> dict:
+    """The study's two statistics with standard errors from batch means. The influence series is cut into
+    floor(T / block) consecutive blocks of `block` periods from the first period, the periods after the
+    last whole block left out of the blocks (not out of the statistic); the standard error is the
+    standard deviation of the blocks' means over the square root of the number of blocks. The p-value of
+    equal variances is that of the log-variance difference, the study's form, from Student's t with the
+    number of blocks less one degrees of freedom, two-sided; the interval of the standard-deviation
+    difference is the difference plus and minus the t quantile at (1 + level) / 2 times its standard
+    error. Returns the difference, its standard error, the interval, the log-variance difference and its
+    standard error, the t statistic, the p-value, the critical value, the number of blocks and the
+    periods left out of them."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    if r1.shape != r2.shape or r1.ndim != 1:
+        raise ValueError("two one-dimensional series over the same periods are needed")
+    t = len(r1)
+    blocks = t // block
+    if blocks < 2:
+        raise ValueError("at least two whole blocks are needed")
+    used = blocks * block
+    psi = influence_series(r1, r2, periods, ddof)
+    se = {k: float(psi[k][:used].reshape(blocks, block).mean(axis=1).std(ddof=1) / np.sqrt(blocks)) for k in psi}
+    mu1, mu2, g1, g2 = _moments(r1, r2)
+    d_sd = float(_delta_sd(mu1, mu2, g1, g2, _scale(t, periods, ddof)))
+    d_log = float(_delta_log(mu1, mu2, g1, g2))
+    t_stat = d_log / se["log"]
+    p_value = _betainc((blocks - 1) / 2.0, 0.5, (blocks - 1) / (blocks - 1 + t_stat ** 2))    # twice the upper tail, kept accurate far out
+    critical = student_t_quantile(0.5 + level / 2.0, blocks - 1)
+    return {"periods_in_sample": t, "block": block, "blocks": blocks, "left_out": t - used,
+            "difference": d_sd, "se": se["sd"], "lower": d_sd - critical * se["sd"], "upper": d_sd + critical * se["sd"],
+            "critical": critical, "log_difference": d_log, "se_log": se["log"], "t": t_stat, "p_value": p_value,
+            "excludes_zero": bool(abs(d_sd) > critical * se["sd"]), "level": level, "periods": periods, "ddof": ddof}
