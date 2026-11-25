@@ -224,7 +224,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div class="ch-kpi"><div class="ch-kpi__label">Realised tracking error</div><div class="ch-kpi__value">84.7 to 93.4</div><div class="ch-kpi__ref">bp a year, the four daily estimators under the mandate, simulated, before fees</div></div>
 <div class="ch-kpi"><div class="ch-kpi__label">Bias statistic</div><div class="ch-kpi__value">1.22 to 1.61</div><div class="ch-kpi__ref">The five estimators under the mandate, July 1979 to August 2026. It is 1 for an accurate forecast and above 1 when the realised active return is more volatile than forecast (Figure 5)</div></div>
 <div class="ch-kpi"><div class="ch-kpi__label">Active return</div><div class="ch-kpi__value">−6.9 to −1.0</div><div class="ch-kpi__ref">bp a year under the mandate, before costs, not statistically significant at the 5 per cent level on any path</div></div>
-<div class="ch-kpi"><div class="ch-kpi__label">Replication</div><div class="ch-kpi__value">29 of 30</div><div class="ch-kpi__ref">Sharpe ratios inside the band of 0.03 fixed before the code, four datasets; 26 of 27 with the value-weighted market, one series in all four datasets, counted once</div></div>
+<div class="ch-kpi"><div class="ch-kpi__label">Replication</div><div class="ch-kpi__value">29 of 30</div><div class="ch-kpi__ref">Sharpe ratios inside the band of 0.03, its width fixed before the code, four datasets; 26 of 27 with the value-weighted market, one series in all four datasets, counted once</div></div>
 </div>
 <nav class="ch-map ch-map--summary" aria-label="The study in three parts">
 <a class="ch-map__piece" href="#replication"><span class="ch-map__n">1</span><span class="ch-map__name">Replication</span><span class="ch-map__sub">The paper's Sharpe ratios and turnover, recomputed</span></a>
@@ -250,7 +250,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div class="ch-fact"><dt>Costs</dt><dd>Gross of fees, trading cost at 50 basis points per unit of one-way turnover where stated</dd></div>
 <div class="ch-fact"><dt>Replication</dt><dd>DeMiguel, Garlappi and Uppal (2009), four datasets, July 1973 to November 2004 out of sample, run forward to August 2026</dd></div>
 <div class="ch-fact"><dt>Factor exposure</dt><dd>The factor objective at a budget of 75, 100 or 150 bp of forecast tracking error, four targeted factors</dd></div>
-<div class="ch-fact"><dt>Written in advance</dt><dd>Every band, setting and expectation is in <code>src/bp/constants.py</code> with the date it was written, before the code that tests it ran</dd></div>
+<div class="ch-fact"><dt>Written in advance</dt><dd>Every band, setting and expectation is in <code>src/bp/constants.py</code> with the date it was written: the expectations and the bands' widths before the code that tests them ran, the Sharpe ratio band's reach after notebook 02's first run</dd></div>
 </dl></aside>
 </div>
 
@@ -280,7 +280,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <a class="ch-map__piece" href="#factor"><span class="ch-map__n">3</span><span class="ch-map__name">Factor exposure</span><span class="ch-map__sub">The exposure to four factors obtained by spending a budget of tracking error</span></a>
 </nav>
 <p class="ch-view-lead">Whether the paper's Sharpe ratios and turnover figures reproduce, and how the rules have done since.</p>
-<p class="lead">DeMiguel, Garlappi and Uppal (2009) asked whether optimised portfolios beat 1/N out of sample and found that none of their optimising rules did so reliably. Their Tables 3 and 5 are rebuilt here on four of the five datasets the paper takes from French's library, against bands fixed before the code ran, and the comparison is run forward to August 2026.</p>
+<p class="lead">DeMiguel, Garlappi and Uppal (2009) asked whether optimised portfolios beat 1/N out of sample and found that none of their optimising rules did so reliably. Their Tables 3 and 5 are rebuilt here on four of the five datasets the paper takes from French's library, against bands whose widths were fixed before the code ran, and the comparison is run forward to August 2026.</p>
 
 <figure class="fig" data-key="rep" data-kind="figure" id="figure-2">
 <h2>Figure 2 | The replication beside the paper, July 1973 to November 2004</h2>
@@ -565,7 +565,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <dt>Sharpe ratio</dt><dd>the mean monthly excess return, i.e., the return minus the one-month Treasury bill rate, divided by its standard deviation.</dd>
 <dt>Turnover</dt><dd>the sum of absolute weight changes at a rebalance. One-way turnover is half of it.</dd>
 <dt>Turnover cap</dt><dd>the limit on one-way turnover, 2 per cent a month under the mandate.</dd>
-<dt>Band</dt><dd>an interval, fixed before the code ran, within which a replicated number counts as matching the published one. A cell with a band receives a verdict, pass or miss.</dd>
+<dt>Band</dt><dd>an interval, its width fixed before the code ran, within which a replicated number counts as matching the published one. A cell with a band receives a verdict, pass or miss.</dd>
 <dt>Vintage</dt><dd>the version of French's files, named by the CRSP database they were built from.</dd>
 <dt>Jobson-Korkie test</dt><dd>the test of whether two Sharpe ratios differ, with Memmel's correction, as the paper uses it.</dd>
 <dt>Cap-weighted</dt><dd>weighted by market capitalisation, i.e., each company's share price times its shares outstanding.</dd>

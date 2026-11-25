@@ -57,7 +57,7 @@ One idea per notebook, run in order: the replication in 01 to 07, the mandate in
 
 - **1/N**: the rule that holds every asset at the same weight and rebalances to it each month.
 - **Sharpe ratio**: the mean monthly excess return divided by its standard deviation.
-- **Band**: the distance from a published figure within which a replicated figure counts as a match, fixed before the code ran.
+- **Band**: the distance from a published figure within which a replicated figure counts as a match, its width fixed before the code ran.
 - **Tracking error**: the standard deviation of the monthly difference between the portfolio's return and the benchmark's, times the square root of 12. It is forecast before the month and realised after it.
 - **Active return**: the portfolio's return minus the benchmark's.
 - **Mandate**: the rules the portfolio obeys, set out under Findings.

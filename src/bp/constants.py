@@ -1103,8 +1103,9 @@ DAILY_C_RECONCILIATION_DATE = "2026-11-20"
 #
 # (1) Notebook 18, the daily tests: a standard error from batch means. The
 # kernel of paired.standard_errors chooses its bandwidth from the data, 8 to 13
-# days on the daily series, while the variances of two paths can drift apart
-# over months, so its standard error can be too small; the size check P3
+# days, and 1 to 5 on the minimum-variance portfolios' rows on the daily
+# series, while the variances of two paths can drift apart over months, so
+# its standard error can be too small; the size check P3
 # cannot show this, because its simulated pairs share one variance. Beside each
 # of the 21 rows of the daily table: the study's statistic with a standard
 # error from batch means of BATCH_MEANS_BLOCK_DAYS trading days (paired.

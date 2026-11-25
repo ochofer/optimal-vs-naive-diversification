@@ -444,8 +444,9 @@ def chance_to_exclude_zero(gain: float, se: float, critical: float) -> float:
 # ---------------------------------------------------------------------------
 # A standard error from batch means, added on 24 November 2026 after every
 # result of notebooks 17 and 18 was known. The kernel above chooses its
-# bandwidth from the data, 8 to 13 days on the study's daily series, while the
-# variances of two paths can drift apart over months; batch means of a year
+# bandwidth from the data, 8 to 13 days, and 1 to 5 on the minimum-variance
+# portfolios' rows on the study's daily series, while the variances of two
+# paths can drift apart over months; batch means of a year
 # of observations keep any dependence shorter than a block inside the block.
 # ---------------------------------------------------------------------------
 
