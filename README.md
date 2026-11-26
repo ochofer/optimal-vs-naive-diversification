@@ -52,6 +52,7 @@ One idea per notebook, run in order: the replication in 01 to 07, the mandate in
 | 16 `factor_objective_attribution` | Splits the factor objective's active return into factor contributions and a residual, and judges the seventh expectation |
 | 17 `paired_tests` | Compares the realised tracking errors of two paths with the paired variance test of Ledoit and Wolf (2011) |
 | 18 `daily_tracking_error` | Measures every path's tracking error on daily returns and repeats the paired tests on them |
+| 19 `structured_models` | Gives the two structured models back the residual covariance between industries, and runs the four daily estimators on shorter windows |
 
 ## Terms
 

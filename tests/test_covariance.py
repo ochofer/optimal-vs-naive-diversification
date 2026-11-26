@@ -180,3 +180,71 @@ def test_estimate_dispatch_matches_the_estimators_and_scales_daily_windows():
     S_lw, k, _ = CV.estimate("ledoit_wolf", "daily_3y", month, P)
     assert 0 <= k <= 1 and S_lw.shape == (4, 4)
     assert len(CV.EVALUATION_VARIANTS) == 5 and len(CV.ALL_VARIANTS) * 4 == 28 == C.EXT_SPEC_COUNT
+
+
+def test_window_in_months_counts_as_the_window_in_years_does():
+    days = pd.period_range("2000-01-03", "2003-12-31", freq="D")
+    ed = pd.DataFrame(np.arange(len(days) * 2, dtype=float).reshape(-1, 2), index=days, columns=["a", "b"])
+    ed.iloc[5, 1] = np.nan
+    month = pd.Period("2003-07", "M")
+    assert CV.daily_window_months(ed, month, 36).equals(CV.daily_window(ed, month, 3))
+    assert CV.daily_window_months(ed, month, 12).equals(CV.daily_window(ed, month, 1))
+    w3 = CV.daily_window_months(ed, month, 3)
+    assert str(w3.index[0]) == "2003-04-01" and str(w3.index[-1]) == "2003-06-30"
+
+
+def _factor_data(T=400, N=8, K=3, seed=11):
+    rng = np.random.default_rng(seed)
+    F = rng.normal(0, 0.01, size=(T, K))
+    B = rng.normal(0.8, 0.4, size=(N, K))
+    common = rng.normal(0, 0.004, size=(T, 1))           # residual co-movement the factors leave out
+    X = F @ B.T + common @ np.ones((1, N)) * 0.5 + rng.normal(0, 0.006, size=(T, N))
+    return X, F
+
+
+def test_residual_covariances_have_the_models_own_diagonals():
+    X, F = _factor_data()
+    T, K = F.shape
+    est, B = CV.factor_cov(X, F)
+    S_e = CV.factor_residual_cov(X, F)
+    Sigma_F = np.cov(F, rowvar=False, ddof=1)
+    assert np.allclose(np.diag(S_e), np.diag(est - B @ Sigma_F @ B.T), rtol=1e-12, atol=0.0)
+    market = X.mean(axis=1)
+    pc, _ = CV.pca_cov(X, C.PCA_N_COMPONENTS, market=market)
+    R = CV.pca_residual_cov(X, C.PCA_N_COMPONENTS, market)
+    A = np.column_stack([np.ones(T), market])
+    coef = np.linalg.lstsq(A, X, rcond=None)[0]
+    target = np.cov(X - A @ coef, rowvar=False, ddof=2)
+    base = np.outer(coef[1], coef[1]) * market.var(ddof=1)
+    common = target - R                                    # the first n_components - 1 principal components of the target
+    assert np.linalg.matrix_rank(common, tol=1e-12 * np.abs(target).max()) == C.PCA_N_COMPONENTS - 1
+    assert np.allclose(pc, base + common + np.diag(np.diag(R)), rtol=1e-12, atol=1e-18)   # no floor binds here
+    assert np.allclose(R, R.T) and (np.diag(R) > 0).all()
+
+
+def test_blended_covariance_runs_from_the_structured_model_to_the_sample_covariance():
+    X, F = _factor_data()
+    T, K = F.shape
+    est, _ = CV.factor_cov(X, F)
+    S_e = CV.factor_residual_cov(X, F)
+    S = CV.sample_cov(X)
+    assert np.array_equal(CV.blended_cov(est, S_e, 0.0), est)
+    half = CV.blended_cov(est, S_e, 0.5)
+    assert np.allclose(np.diag(half), np.diag(est), rtol=0.0, atol=0.0)       # the diagonal never moves
+    one = CV.blended_cov(est, S_e, 1.0)
+    # at 1 the factor model is B Sigma_F B' + S_e; with the residuals on the sample covariance's denominator it is the sample covariance
+    rescaled = one - S_e + S_e * (T - K - 1) / (T - 1)
+    assert np.allclose(rescaled, S, rtol=1e-10, atol=1e-16)
+    market = X.mean(axis=1)
+    pc, _ = CV.pca_cov(X, C.PCA_N_COMPONENTS, market=market)
+    R = CV.pca_residual_cov(X, C.PCA_N_COMPONENTS, market)
+    one_pc = CV.blended_cov(pc, R, 1.0)
+    m = np.asarray(market)
+    coef = np.linalg.lstsq(np.column_stack([np.ones(T), m]), X, rcond=None)[0]
+    resid = X - np.column_stack([np.ones(T), m]) @ coef
+    target = np.cov(resid, rowvar=False, ddof=2)
+    rescaled_pc = one_pc - target + target * (T - 2) / (T - 1)
+    assert np.allclose(rescaled_pc, S, rtol=1e-10, atol=1e-16)
+    # the off-diagonal moves in proportion to the share
+    q = CV.blended_cov(est, S_e, 0.25) - est
+    assert np.allclose(4 * q, one - est, rtol=1e-12, atol=1e-18)

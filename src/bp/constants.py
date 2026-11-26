@@ -1136,3 +1136,33 @@ BATCH_MEANS_HOLM_FAMILIES = ("A", "B")
 # be checked.
 ATTRIBUTION_NEWEY_WEST_DATE = "2026-11-24"
 ATTRIBUTION_NEWEY_WEST_LAGS = 6                   # 0.75 times the cube root of 566 months, 6.2, rounded down
+
+# ---------------------------------------------------------------------------
+# 11. The residual covariance given back, and shorter windows (notebook 19)
+# ---------------------------------------------------------------------------
+# Set on 26 November 2026, after the study's results were known. Notebook 19 asks
+# why the two structured models realise more tracking error under the mandate
+# than the daily sample covariance. It is an analysis run after the results,
+# with no expectation and no verdict, and it changes no committed table.
+#
+# (1) The share of the residual covariance between industries given back to the
+# six-factor model and the principal-component model on three years of daily
+# returns: B Sigma_F B' + D + share (S_e - D), where S_e is the covariance of the
+# model's residuals with the model's own denominator and D its diagonal
+# (covariance.factor_residual_cov, covariance.pca_residual_cov,
+# covariance.blended_cov). At 0 each model is the study's; at 1 each is the
+# sample covariance but for the residuals' denominator.
+#
+# (2) The windows of the four daily estimators, in calendar months before the
+# month, counted as covariance.daily_window counts its years
+# (covariance.daily_window_months); 36 months is the study's three years.
+#
+# Every path is run under the mandate, C3, with the study's optimiser, and every
+# pair is tested with notebook 18's paired test on days and notebook 17's on
+# months. Holm's correction runs within each part and each frequency: the ten
+# rows of (1), each path against the daily sample covariance on three years, and
+# the fifteen rows of (2), each estimator against the sample covariance on the
+# same window and the sample covariance on each shorter window against three years.
+STRUCTURED_ADDITIONS_DATE = "2026-11-26"
+RESIDUAL_COV_SHARES = (0.0, 0.25, 0.5, 0.75, 1.0)
+SHORT_WINDOW_MONTHS = (3, 6, 12, 36)

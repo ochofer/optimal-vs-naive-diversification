@@ -76,6 +76,14 @@ Each file name ends in `_202608.csv`, left out below.
 | `daily_window_weights` | 18 | The three daily covariance windows described by the mean age and the effective number of their observations |
 | `path_d_monthly_records`, `path_d_daily_active_returns` | 18 | The sample covariance on five years of daily returns under the mandate, the path the daily tests add |
 
+## Why the structured models lose
+
+| File | Notebook | What it holds |
+|---|---|---|
+| `structured_models_paths` | 19 | The realised tracking error on months and on days, the mean forecast, the turnover and the holdings of 26 paths under the mandate: the two structured models given back 0, 0.25, 0.5, 0.75 and all of the residual covariance between industries, and the four daily estimators on 3, 6, 12 and 36 months of daily returns |
+| `structured_models_paired_tests` | 19 | The paired tests of those paths on days and on months, with Holm's correction within each part and each frequency |
+| `structured_models_shrinkage` | 19 | Shrinkage's intensity over the months on each window, with the number of days the window holds |
+
 ## The factor objective
 
 | File | Notebook | What it holds |

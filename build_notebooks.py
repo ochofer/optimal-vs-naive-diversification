@@ -6868,7 +6868,329 @@ The setting differs in every row: 49 industries here and about 500 stocks there;
 """),
 ]
 
+
+# ---------------------------------------------------------------------------
+# 19: why the structured models lose, added after the study's results were known
+# ---------------------------------------------------------------------------
+
+NB19 = [
+    md("""
+# 19. Why the structured models lose: the residual covariance given back, and shorter estimation windows
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Basis point | one hundredth of a percentage point, so 10 basis points is 0.1% |
+| Factor | a return series that moves many assets at once, for example the return of the whole market |
+| Cap-weighted | weighted by market capitalisation, the number of a firm's shares times their price; a cap-weighted index of industries gives each industry the share of the total that its firms' market capitalisation amounts to |
+| Benchmark | the index the portfolio tracks, the cap-weighted combination of the 49 industries built in notebook 08, its weights set each month |
+| Beta | how much an asset moves with the factor |
+| Active return | the portfolio's return less the benchmark's, over a month or over a day |
+| Tracking error | the standard deviation of the active return, stated per year: times the square root of 12 on months, of 252 on trading days; in basis points |
+| Path | the month-by-month sequence of portfolios of one specification, each built on the data before its month |
+| Turnover | the fraction of the portfolio bought and sold at a rebalance, summed over the assets |
+| Mandate | the constraint set C3 of notebook 12: long-only, every untilted industry within 2 percentage points of its benchmark weight, turnover capped at 2% a month, Coal, Oil and Utilities at no more than half their benchmark weight, the market beta restored to the benchmark's, Smoke and Guns excluded |
+| Covariance matrix | the table of all variances and covariances of a set of assets, 49 by 49 here, with 1,225 different numbers: 49 variances and 1,176 covariances |
+| Covariance estimator | a method for estimating the covariance matrix from a window of data; notebook 10 built four |
+| Window | the span of past daily returns an estimator is computed from, here 3, 6, 12 or 36 calendar months before the month, counted as the study counts its three years |
+| Sample covariance | the covariance matrix computed directly from the window, every number estimated on its own |
+| Shrinkage | Ledoit-Wolf shrinkage: the sample covariance pulled part of the way towards a target with the same average variance and no covariances; the shrinkage intensity is the fraction of the way it is pulled, computed from the data, larger when the sample covariance is noisier |
+| Structured model | the six-factor model or the principal-component model of notebook 10, which describe the covariance by six or five common sources of movement plus each industry's own variance |
+| Six-factor model | each industry's daily return regressed on the six factors (market, size, value, profitability, investment, momentum); the estimate is B Sigma_F B' + D, the factors' covariance carried through the industries' betas B plus the diagonal D of the residuals' variances |
+| Principal component | a combination of the assets, with one weight per asset, chosen so that it explains as much of the assets' total variance as a single combination can (notebook 09) |
+| Principal-component model | each industry's daily return regressed on the benchmark's; the residuals' covariance described by its first four principal components plus the diagonal of what they leave |
+| Residual | the part of an industry's return a structured model does not explain |
+| Residual covariance between industries | the covariances of the residuals of two different industries, the off-diagonal of S_e, the residuals' covariance matrix; both structured models set it to zero |
+| Share of the residual covariance | lambda in B Sigma_F B' + D + lambda (S_e - D): the structured estimate given back that share of the residual covariance between industries, 0 the structured model, 1 the sample covariance but for the residuals' denominator |
+| Paired | said of two series measured on the same days, so that their difference is less noisy than either of them |
+| Variance test | the test of Ledoit and Wolf (2011) of whether two paired series have the same variance, notebook 17's test on months and notebook 18's on days |
+| Seed | the number that fixes the random numbers a bootstrap uses; the same seed gives the same random numbers |
+| Draw | one resample of the days or the months, produced from the seed |
+| p-value | the probability of a difference this large if the two variances were equal |
+| Interval | the range of differences of the two tracking errors consistent with the data at the 95% level |
+| Detectable difference | the difference the test would find statistically significant at the 5% level about four times in five |
+| Holm's correction | the step-down adjustment of a family of p-values that keeps the chance of any false rejection in the family at or below the level |
+| Verdict | MET or NOT MET for an expectation; this notebook has no expectation and its rows carry none |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**The problem, stated the way practitioners state it.** Under the mandate the six-factor model and the principal-component model realise 8.8 and 6.8 basis points a year more tracking error on months than the daily sample covariance (notebook 17), and 4.1 and 3.4 more on days (notebook 18), while shrinkage realises about the same as the sample covariance. Both structured models assume that the residuals of different industries are uncorrelated, and under the mandate the six factors explain only 14 to 25 per cent of the active return's variance (notebook 13), so most of the active return's variance lies in the residuals, where the assumption applies. A structured model trades that assumption against estimation error: it estimates far fewer numbers than the 1,225 of the sample covariance. Three years of daily returns hold about 756 days, about 30 returns of the 49 industries for each of the 1,225 numbers. This notebook asks whether the gap is the cost of the assumption, set against the estimation error it saves.
+
+**What this notebook does.** It was set on 26 November 2026, after the study's results were known (`STRUCTURED_ADDITIONS_DATE`, `constants.py`, section 11). It is an analysis run after the results, with no expectation and no verdict, and it changes no committed table. It asks the question in two ways.
+
+1. The residual covariance given back. On the study's three years of daily returns, each structured model gets back a share of the residual covariance between industries, B Sigma_F B' + D + lambda (S_e - D) with lambda 0, 0.25, 0.5, 0.75 and 1 (`RESIDUAL_COV_SHARES`), where S_e is the covariance of the model's residuals with the model's own denominator, T - 7 for the six-factor model and T - 2 for the principal-component model, so that its diagonal is the model's own D. At 0 each model is the study's. At 1 each is the sample covariance but for that denominator: the residual part is scaled by (T - 1) / (T - 7) or (T - 1) / (T - 2), about 1.008 and 1.001. Ten paths.
+2. Shorter windows. The four daily estimators, the sample covariance, shrinkage and the two structured models, on 3, 6, 12 and 36 calendar months of daily returns before the month (`SHORT_WINDOW_MONTHS`), counted as `covariance.daily_window` counts its years, so that 36 months is the study's window. Sixteen paths.
+
+Every path runs under the mandate with the study's optimiser, over the 566 months from 1979-07 to 2026-08, and its daily active returns are built as notebook 18 builds them, the month's weights drifting with the industries' daily returns until the month's last day. Each pair is tested with notebook 18's paired test on days and notebook 17's on months: in part 1 each path against the daily sample covariance on three years; in part 2 each estimator against the sample covariance on the same window, and the sample covariance on each shorter window against three years. Holm's correction runs within each part and each frequency, across its ten rows and its fifteen.
+
+Two checks come before any comparison, and the notebook stops if either fails: at lambda 0 and on 36 months the paths reproduce the study's committed monthly active returns (notebook 12) to the last digit and its daily active returns (notebook 18) to 1e-10, and the estimates on 36 months equal `covariance.estimate`'s for the study's variants in every month. Shrinkage's median intensity on 36 months is checked against notebook 10's committed figure.
+
+Running time: about seven minutes, most of it the 26 paths.
+"""),
+    md("""
+## Modules
+
+`constants`, `french_loader`, `benchmark`, `rules`, `covariance`, `optimiser` and `evaluation` are those of notebooks 12 and 18, needed to rebuild the paths; `paired` is notebook 17's test and `daily` notebook 18's daily returns. `covariance` holds what this notebook adds: `daily_window_months`, the window in calendar months; `factor_residual_cov` and `pca_residual_cov`, the residual covariances of the two structured models with their own denominators; and `blended_cov`, a structured estimate given back a share of the residual covariance between assets. Their tests are in `tests/test_covariance.py`.
+"""),
+    code("""
+import importlib.util, subprocess, sys
+if importlib.util.find_spec("cvxpy") is None:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "cvxpy"])
+import os
+os.makedirs("src/bp", exist_ok=True)
+open("src/bp/__init__.py", "w").close()
+"""),
+    writefile("constants.py"),
+    writefile("french_loader.py"),
+    writefile("benchmark.py"),
+    writefile("rules.py"),
+    writefile("covariance.py"),
+    writefile("optimiser.py"),
+    writefile("evaluation.py"),
+    writefile("paired.py"),
+    writefile("daily.py"),
+    md("""
+## The data, the evaluation and the study's records
+
+French's eight files, as notebook 18 reads them; the 566 evaluation months and their trading days; the benchmark's daily return; the committed monthly active returns of notebook 12 and daily active returns of notebook 18, against which the study's own paths are checked.
+"""),
+    code("""
+import sys
+sys.path.insert(0, "src")
+import time
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import covariance as CV
+from bp import optimiser as O
+from bp import evaluation as E
+from bp import paired as PT
+from bp import daily as DY
+
+pd.set_option("display.width", 250)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 40)
+
+provenance = [fl.download(key) for key in ("ind49", "factors3", "factors5", "momentum", "ind49_daily", "factors3_daily", "factors5_daily", "momentum_daily")]
+fl.write_provenance(provenance)
+vintage = provenance[0]["vintage_line"].split("the ")[1].split(" ")[0]
+assert len({r["vintage_line"].split("the ")[1].split(" ")[0] for r in provenance}) == 1, "the eight files are of one vintage"
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+assert len(months) == 566 and str(months[0]) == "1979-07" and str(months[-1]) == C.EXT_SAMPLE_END
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+names = C.CONSTRAINT_SETS["C3"]
+month_of_day = P.returns_d.index.asfreq("M")
+eval_days = P.returns_d.index[(month_of_day >= months[0]) & (month_of_day <= months[-1])]
+returns_d_eval = P.returns_d.loc[eval_days]
+assert returns_d_eval.notna().all().all() and list(returns_d_eval.columns) == list(weights.columns)
+bench_daily = DY.daily_returns_of_path(weights.loc[months], returns_d_eval)
+committed_dir = f"results/{vintage}"
+def committed_file(stem):
+    path = f"{committed_dir}/{stem}_{vintage}.csv"
+    return path if os.path.exists(path) else f"{C.OUTPUT_DIR}/{stem}_{vintage}.csv"
+committed_m = pd.read_csv(committed_file("active_returns"), index_col=0)
+committed_m.index = pd.PeriodIndex(committed_m.index, freq="M")
+committed_d = pd.read_csv(committed_file("daily_active_returns"), index_col=0)
+SHARES, WINDOWS = C.RESIDUAL_COV_SHARES, C.SHORT_WINDOW_MONTHS
+STRUCTURED = ("factor", "pca")
+ESTIMATORS = C.COV_ESTIMATORS
+assert SHARES == (0.0, 0.25, 0.5, 0.75, 1.0) and WINDOWS == (3, 6, 12, 36) and 12 * C.EXT_COV_DAILY_WINDOW_YEARS == WINDOWS[-1]
+assert ESTIMATORS == ("sample", "ledoit_wolf", "factor", "pca")
+SCALE = C.DAILY_TO_MONTHLY_SCALE
+DAILY = dict(block=C.DAILY_BLOCK, draws=C.EVAL_BOOTSTRAP_DRAWS, level=C.EVAL_BOOTSTRAP_LEVEL, periods=C.DAILY_PERIODS, chunk=C.DAILY_CHUNK_DRAWS)
+MONTHLY = dict(block=C.EVAL_BOOTSTRAP_BLOCK_MONTHS, draws=C.EVAL_BOOTSTRAP_DRAWS, level=C.EVAL_BOOTSTRAP_LEVEL, periods=C.PAIRED_PERIODS)
+print(f"{len(months)} evaluation months {months[0]} to {months[-1]}, {len(eval_days):,} trading days; the mandate {names}; CRSP vintage {vintage}")
+print(f"shares of the residual covariance {SHARES}; windows of {WINDOWS} calendar months; set on {C.STRUCTURED_ADDITIONS_DATE}, after the study's results were known")
+"""),
+    md("""
+## The covariances, month by month
+
+For each of the 566 months and each window, the four daily estimates from the trading days of the window, each scaled to a month by `DAILY_TO_MONTHLY_SCALE` as the study scales them, with shrinkage's intensity and the number of days. On 36 months, the residual covariances of the two structured models as well, and every estimate is checked against `covariance.estimate` for the study's variant.
+"""),
+    code("""
+t0 = time.time()
+base = {(e, w): {} for e in ESTIMATORS for w in WINDOWS}
+residual = {e: {} for e in STRUCTURED}
+intensity = {w: {} for w in WINDOWS}
+days_in_window = {w: {} for w in WINDOWS}
+for i, month in enumerate(months):
+    for w in WINDOWS:
+        X = CV.daily_window_months(P.excess_d, month, w)
+        F, mk, Xv = P.factors_d.loc[X.index].to_numpy(), P.bench_d.loc[X.index].to_numpy(), X.to_numpy()
+        days_in_window[w][month] = len(X)
+        base[("sample", w)][month] = CV.sample_cov(Xv) * SCALE
+        S_lw, k = CV.lw_scaled_identity(Xv)
+        base[("ledoit_wolf", w)][month] = S_lw * SCALE
+        intensity[w][month] = k
+        base[("factor", w)][month] = CV.factor_cov(Xv, F)[0] * SCALE
+        base[("pca", w)][month] = CV.pca_cov(Xv, C.PCA_N_COMPONENTS, market=mk)[0] * SCALE
+        if w == 12 * C.EXT_COV_DAILY_WINDOW_YEARS:
+            assert X.equals(CV.daily_window(P.excess_d, month, C.EXT_COV_DAILY_WINDOW_YEARS))
+            for e in ESTIMATORS:
+                assert np.array_equal(CV.estimate(e, "daily_3y", month, P)[0], base[(e, w)][month]), (e, month)
+            residual["factor"][month] = CV.factor_residual_cov(Xv, F) * SCALE
+            residual["pca"][month] = CV.pca_residual_cov(Xv, C.PCA_N_COMPONENTS, mk) * SCALE
+    if i % 100 == 0:
+        print(f"{month}: {time.time() - t0:.0f}s")
+print(f"covariances of {len(months)} months in {time.time() - t0:.0f}s; on 36 months every estimate equals covariance.estimate's for the study's variant")
+"""),
+    md("""
+## The 26 paths, and the check against the study's
+
+Each path is run with `evaluation.run_path` under the mandate, its weights kept, and its daily active returns built from them as in notebook 18. The paths at lambda 0 and the four on 36 months are the study's own: each must reproduce the committed monthly active returns to the last digit and the committed daily ones to 1e-10, or the notebook stops.
+"""),
+    code("""
+def run(sigmas):
+    path = E.run_path(months, sigmas, weights, returns_m, names, tilt_mask, mandate_mask, keep_weights=True)
+    W = pd.DataFrame(np.vstack(path["weights"].to_list()), index=months, columns=weights.columns)
+    return path, DY.daily_returns_of_path(W, returns_d_eval) - bench_daily
+
+def share_name(e, share):
+    return f"{e}, daily 3y, share {share:g} | C3"
+
+def window_name(e, w):
+    return f"{e}, daily {w} months | C3"
+
+paths, dailies, specs = {}, {}, {}
+t0 = time.time()
+for e in STRUCTURED:
+    for share in SHARES:
+        name = share_name(e, share)
+        sig = {m: CV.blended_cov(base[(e, 36)][m], residual[e][m], share) for m in months}
+        paths[name], dailies[name] = run(sig)
+        specs[name] = {"part": "residual share", "estimator": e, "share": share, "window, calendar months": 36}
+        print(f"{name:<36} {time.time() - t0:5.0f}s  inaccurate {int((paths[name]['status'] != 'optimal').sum())}")
+for e in ESTIMATORS:
+    for w in WINDOWS:
+        name = window_name(e, w)
+        paths[name], dailies[name] = run(base[(e, w)])
+        specs[name] = {"part": "window", "estimator": e, "share": np.nan, "window, calendar months": w}
+        print(f"{name:<36} {time.time() - t0:5.0f}s  inaccurate {int((paths[name]['status'] != 'optimal').sum())}")
+assert len(paths) == 26
+checks = []
+for name in [share_name(e, 0.0) for e in STRUCTURED] + [window_name(e, 36) for e in ESTIMATORS]:
+    study = f"{specs[name]['estimator']}, daily 3y | C3"
+    gap_m = float((paths[name]["active_return"].round(10) - committed_m[study].reindex(months)).abs().max())
+    new_d, old_d = dailies[name].round(10).to_numpy(), committed_d[study].to_numpy()
+    assert len(new_d) == len(old_d) == len(eval_days)
+    gap_d = float(np.abs(new_d - old_d).max())
+    checks.append({"path": name, "the study's path": study, "largest gap, monthly": gap_m, "largest gap, daily": gap_d,
+                   "reproduces": bool(gap_m == 0.0 and gap_d <= 1e-10)})
+checks = pd.DataFrame(checks)
+print(checks.to_string(index=False, float_format=lambda x: f"{x:.1e}"))
+assert checks["reproduces"].all(), "a path that should be the study's is not: the notebook stops here and reports"
+print(f"the six paths that are the study's reproduce its monthly and daily records; 26 paths in {time.time() - t0:.0f}s")
+"""),
+    md("""
+## The measures of the 26 paths
+
+For each path: the realised tracking error on months and on days, the mean forecast tracking error, the one-way turnover a month, the months in which the turnover cap was relaxed, the months the solver reported as inaccurate, the effective number of industries and the number held, as notebook 12 reports them.
+"""),
+    code("""
+rows = []
+for name, path in paths.items():
+    s = E.summarise(path)
+    rows.append({"path": name, **specs[name],
+                 "realised TE on months, bp a year": 1e4 * s["realised TE"],
+                 "realised TE on days, bp a year": 1e4 * float(np.std(dailies[name], ddof=1) * np.sqrt(C.DAILY_PERIODS)),
+                 "forecast TE (mean), bp a year": 1e4 * s["forecast TE (mean)"], "turnover (one-way)": s["turnover (one-way)"],
+                 "relaxed months": s["relaxed months"], "inaccurate months": s["inaccurate months"],
+                 "effective number": s["effective number"], "industries held": s["industries held"],
+                 "mean days in the window": float(np.mean(list(days_in_window[specs[name]["window, calendar months"]].values())))})
+path_table = pd.DataFrame(rows)
+path_table.to_csv(f"{C.OUTPUT_DIR}/structured_models_paths_{vintage}.csv", index=False, float_format="%.6f")
+show = ["path", "realised TE on months, bp a year", "realised TE on days, bp a year", "forecast TE (mean), bp a year", "turnover (one-way)", "relaxed months"]
+print(path_table[show].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+sample_name = window_name("sample", 36)
+T36 = pd.Series(days_in_window[36])
+for e, k in (("factor", 7), ("pca", 2)):
+    one = path_table.set_index("path").loc[share_name(e, 1.0)]
+    ref = path_table.set_index("path").loc[sample_name]
+    print(f"{e} at lambda 1: the residual part scaled by (T - 1) / (T - {k}), median {float(np.median((T36 - 1) / (T36 - k))):.4f}; "
+          f"{one['realised TE on days, bp a year']:.3f} bp a year on days and {one['realised TE on months, bp a year']:.3f} on months, "
+          f"against the sample covariance's {ref['realised TE on days, bp a year']:.3f} and {ref['realised TE on months, bp a year']:.3f}")
+"""),
+    md("""
+## The paired tests, on days and on months
+
+Part 1: each of the ten paths against the daily sample covariance on three years. Part 2: each estimator against the sample covariance on the same window, and the sample covariance on 3, 6 and 12 months against three years, fifteen rows. On days the test of notebook 18, with 252 periods a year, blocks of 252 trading days and 2,000 draws in chunks of 200; on months notebook 17's, with blocks of twelve months; the seed and the level of notebook 12's bootstrap. Holm's correction within each part and each frequency. Every row is reported with no verdict.
+"""),
+    code("""
+t0 = time.time()
+pairs = [("residual share", share_name(e, share), sample_name) for e in STRUCTURED for share in SHARES]
+for e in ESTIMATORS:
+    for w in WINDOWS:
+        if e != "sample":
+            pairs.append(("window", window_name(e, w), window_name("sample", w)))
+        elif w != 36:
+            pairs.append(("window", window_name(e, w), sample_name))
+assert len(pairs) == 25
+test_rows = []
+for frequency in ("daily", "monthly"):
+    for part, a, b in pairs:
+        if frequency == "daily":
+            s1, s2, settings = dailies[a].to_numpy(), dailies[b].to_numpy(), DAILY
+        else:
+            s1, s2, settings = paths[a]["active_return"].to_numpy(), paths[b]["active_return"].to_numpy(), MONTHLY
+        out = PT.test(s1, s2, seed=C.EVAL_BOOTSTRAP_SEED, **settings)
+        detectable = PT.detectable_difference(out["se"], out["critical"], C.PAIRED_DETECTABLE_POWER)
+        test_rows.append({"comparison": part, "label": f"{a.split(' | ')[0]} against {b.split(' | ')[0]}", "series 1": a, "series 2": b,
+                          "frequency": frequency, "constraint set": "C3", "observations": out["months"], "unit": "bp a year",
+                          "sd 1": 1e4 * out["sd1"], "sd 2": 1e4 * out["sd2"], "difference": 1e4 * out["difference"],
+                          "standard error": 1e4 * out["se"], "critical value": out["critical"], "lower": 1e4 * out["lower"], "upper": 1e4 * out["upper"],
+                          "detectable difference": 1e4 * detectable, "detectable difference, share of sd 2": detectable / out["sd2"],
+                          "correlation": out["correlation"], "p-value": out["p_value"], "Holm p-value": np.nan,
+                          "log-variance difference": out["log_difference"], "its standard error": out["se_log"],
+                          "block": out["block"], "draws": out["draws"], "level": out["level"], "periods": out["periods"], "seed": C.EVAL_BOOTSTRAP_SEED})
+    print(f"{frequency}: {time.time() - t0:.0f}s")
+tests = pd.DataFrame(test_rows)
+for (frequency, part), idx in tests.groupby(["frequency", "comparison"]).groups.items():     # Holm within each part and each frequency
+    tests.loc[idx, "Holm p-value"] = PT.holm(tests.loc[idx, "p-value"].to_numpy())
+assert tests.groupby(["frequency", "comparison"]).size().to_dict() == {("daily", "residual share"): 10, ("daily", "window"): 15, ("monthly", "residual share"): 10, ("monthly", "window"): 15}
+tests.to_csv(f"{C.OUTPUT_DIR}/structured_models_paired_tests_{vintage}.csv", index=False, float_format="%.10f")
+show = ["comparison", "label", "frequency", "sd 1", "sd 2", "difference", "standard error", "lower", "upper", "detectable difference", "p-value", "Holm p-value"]
+print(tests[show].to_string(index=False, float_format=lambda x: f"{x:.3f}"))
+"""),
+    md("""
+## Shrinkage's intensity by window
+
+Shrinkage's intensity over the 566 months on each window, with the number of days the window holds and the returns of the 49 industries it holds for each of the covariance matrix's 1,225 numbers. On 36 months the median is notebook 10's committed figure, checked here.
+"""),
+    code("""
+n_assets = weights.shape[1]
+n_numbers = n_assets * (n_assets + 1) // 2
+assert n_assets == 49 and n_numbers == 1225
+lw = pd.DataFrame([{"window, calendar months": w, "median intensity": float(np.median(list(intensity[w].values()))),
+                    "mean intensity": float(np.mean(list(intensity[w].values()))), "smallest": float(np.min(list(intensity[w].values()))),
+                    "largest": float(np.max(list(intensity[w].values()))), "mean days": float(np.mean(list(days_in_window[w].values()))),
+                    "fewest days": int(np.min(list(days_in_window[w].values()))), "most days": int(np.max(list(days_in_window[w].values()))),
+                    "returns per number, mean": float(np.mean(list(days_in_window[w].values()))) * n_assets / n_numbers} for w in WINDOWS])
+table10 = pd.read_csv(committed_file("covariance_estimators")).set_index(["estimator", "data"])
+committed_median = float(table10.loc[("ledoit_wolf", "daily_3y"), "shrinkage intensity (median)"])
+assert abs(lw.loc[lw["window, calendar months"] == 36, "median intensity"].iloc[0] - committed_median) < 5e-7, "the median on 36 months is not notebook 10's"
+lw.to_csv(f"{C.OUTPUT_DIR}/structured_models_shrinkage_{vintage}.csv", index=False, float_format="%.6f")
+print(lw.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+print(f"notebook 10's median on three years of daily returns: {committed_median:.6f}; here {lw['median intensity'].iloc[-1]:.6f}")
+print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("structured_models_")))
+"""),
+    md("""
+## Results, with no verdict
+
+**The residual covariance given back (part 1, `structured_models_paths`, `structured_models_paired_tests`).** On daily returns the six-factor model's tracking error falls from 78.60 basis points a year at lambda 0 to 75.71 at 0.25, 74.41 at 0.5 and 74.04 at 0.75, and is 74.46 at 1, against the sample covariance's 74.46. The principal-component model's falls from 77.87 to 75.54, 74.37 and 74.06, and is 74.46 at 1. Against the sample covariance on days, after Holm's correction across the ten, the differences at lambda 0 and 0.25 are statistically significant at the 5% level (plus 4.14 and plus 1.25 for the six-factor model, plus 3.41 and plus 1.09 for the principal-component model), those at 0.5 are not (minus 0.05 and minus 0.09), and those at 0.75 are, below it (minus 0.42 and minus 0.40, Holm 0.015 and 0.014). On monthly returns both models fall at every step, from 93.45 and 91.48 to 84.67 and 84.65, against the sample covariance's 84.65; after Holm's correction across the ten, the six-factor model's differences at 0 and 0.25 and the principal-component model's at 0 are statistically significant at the 5% level. At lambda 1 the residual part is scaled by a median of 1.0080 and 1.0013 against the sample covariance's denominator, and both paths realise within 0.002 basis points a year of the sample covariance on days.
+
+**Shorter windows (part 2, `structured_models_paths`, `structured_models_paired_tests`, `structured_models_shrinkage`).** The windows of 3, 6, 12 and 36 months hold on average 63.0, 126.0, 252.1 and 756.3 trading days, which is 2.5, 5.0, 10.1 and 30.3 returns of the 49 industries for each of the covariance matrix's 1,225 numbers. On daily returns the sample covariance realises 82.26, 78.30, 76.24 and 74.46 basis points a year, and shrinkage 80.08, 77.00, 75.47 and 74.31: each realises more on every shorter window, and the sample covariance's differences from its own three years are statistically significant at the 5% level after Holm's correction across the fifteen. Against the sample covariance on the same window, shrinkage realises 2.18, 1.29, 0.77 and 0.15 less, the first three statistically significant at the 5% level after Holm's correction and the last not (Holm 0.105), and its median intensity is 0.097, 0.053, 0.029 and 0.012. The six-factor model realises 2.18 less, 0.10 less, 1.90 more and 4.14 more than the sample covariance on the same window, and the principal-component model 2.28 less, 0.09 more, 1.54 more and 3.41 more; after Holm's correction the two differences on 6 months are not statistically significant at the 5% level and the other six are. On months the same differences are 1.96 less, 2.57 more, 5.36 more and 8.79 more for the six-factor model and 2.87 less, 3.22 more, 4.55 more and 6.83 more for the principal-component model, and after Holm's correction only the six-factor model's on 36 months is statistically significant at that level. On 3 months every estimator's mean one-way turnover is 1.99% to 2.04% a month, the cap of 2%, which is relaxed in 9 to 13 of the 566 months, against 2 on three years.
+
+**What the two parts show.** With three years of daily returns the sample covariance is estimated precisely: shrinkage's median intensity is 0.012, and the structured models' assumption of no residual covariance between industries costs more than the estimation error it saves, a cost that disappears once the residual covariance is given back. With less data the balance is inverted: on 3 months of daily returns both structured models realise less tracking error than the sample covariance, as shrinkage does on every shorter window. This is the trade-off Dom, Howard, Jansen and Lohre (2025) describe for the exact factor model.
+"""),
+]
+
+
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15), ("16_factor_objective_attribution.ipynb", NB16), ("17_paired_tests.ipynb", NB17), ("18_daily_tracking_error.ipynb", NB18)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_cap_weight_check.ipynb", NB08), ("09_principal_components.ipynb", NB09), ("10_covariance_estimators.ipynb", NB10), ("11_optimiser.ipynb", NB11), ("12_rolling_evaluation.ipynb", NB12), ("13_factor_attribution.ipynb", NB13), ("14_factor_objective.ipynb", NB14), ("15_factor_objective_evaluation.ipynb", NB15), ("16_factor_objective_attribution.ipynb", NB16), ("17_paired_tests.ipynb", NB17), ("18_daily_tracking_error.ipynb", NB18), ("19_structured_models.ipynb", NB19)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))

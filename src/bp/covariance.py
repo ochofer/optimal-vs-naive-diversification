@@ -8,7 +8,10 @@ principal-component model describe it with a small number of common sources of m
 plus each asset's own variance. The tests measure how well each estimate
 forecasts the variance of test portfolios in the next month (the bias
 statistic) and how well the minimum-variance portfolio built from it does
-(the tests of Dom, Howard, Jansen and Lohre, 2025).
+(the tests of Dom, Howard, Jansen and Lohre, 2025). Notebook 19, added after
+the study's results were known, gives the two structured models back a share of
+the residual covariance between assets and builds the four daily estimators from
+shorter windows.
 """
 from __future__ import annotations
 
@@ -144,6 +147,49 @@ def pca_cov(X: np.ndarray, n_components: int, market: np.ndarray | None = None) 
     return base + common + own, k
 
 
+def factor_residual_cov(X: np.ndarray, F: np.ndarray) -> np.ndarray:
+    """The covariance of the residuals of factor_cov's regression, with factor_cov's denominator T - K - 1, so that its
+    diagonal is factor_cov's residual variances and its off-diagonal is the residual covariance between assets that the
+    exact factor model sets to zero (notebook 19)."""
+    X = np.asarray(X, dtype=float)
+    F = np.asarray(F, dtype=float)
+    T, K = F.shape
+    A = np.column_stack([np.ones(T), F])
+    coef, *_ = np.linalg.lstsq(A, X, rcond=None)
+    resid = X - A @ coef
+    return np.cov(resid, rowvar=False, ddof=K + 1)
+
+
+def pca_residual_cov(X: np.ndarray, n_components: int, market: np.ndarray) -> np.ndarray:
+    """What pca_cov with the market leaves after its common part: the covariance of the residuals on the market,
+    denominator T - 2, less the part its first n_components - 1 principal components describe. Its diagonal is pca_cov's
+    own variances before their floor of 1e-12, and its off-diagonal is the residual covariance between assets that the
+    principal-component model sets to zero (notebook 19)."""
+    X = np.asarray(X, dtype=float)
+    m = np.asarray(market, dtype=float)
+    A = np.column_stack([np.ones(len(m)), m])
+    coef, *_ = np.linalg.lstsq(A, X, rcond=None)
+    resid = X - A @ coef
+    target = np.cov(resid, rowvar=False, ddof=2)
+    k = n_components - 1
+    vals, vecs = np.linalg.eigh(target)
+    order = np.argsort(vals)[::-1][:k]
+    V = vecs[:, order]
+    L = np.clip(vals[order], 0.0, None)
+    common = (V * L) @ V.T
+    return target - common
+
+
+def blended_cov(structured: np.ndarray, residual: np.ndarray, share: float) -> np.ndarray:
+    """A structured estimate given back `share` of the residual covariance between assets: the structured estimate plus
+    `share` times the off-diagonal part of `residual`, B Sigma_F B' + D + share (S_e - D) for the factor model. At share 0
+    it is the structured estimate; at share 1 the factor model's estimate is B Sigma_F B' + S_e, the sample covariance but
+    for the residuals' denominator (notebook 19)."""
+    off = np.array(residual, dtype=float, copy=True)
+    np.fill_diagonal(off, 0.0)
+    return structured + share * off
+
+
 def scale_daily_to_monthly(Sigma_daily: np.ndarray, scale: float = C.DAILY_TO_MONTHLY_SCALE) -> np.ndarray:
     """A daily covariance times the number of trading days in a month; exact when daily returns do not predict the next day's."""
     return Sigma_daily * scale
@@ -177,6 +223,14 @@ def daily_window(excess_d: pd.DataFrame, month: pd.Period, years: int) -> pd.Dat
     """The trading days of the 12 * years calendar months before `month`, days with any missing value left out."""
     end = (month - 1).asfreq("D", "end")
     start = (month - 12 * years).asfreq("D", "start")
+    return excess_d.loc[start:end].dropna()
+
+
+def daily_window_months(excess_d: pd.DataFrame, month: pd.Period, months: int) -> pd.DataFrame:
+    """The trading days of the `months` calendar months before `month`, days with any missing value left out, counted
+    as daily_window counts: daily_window(excess_d, month, years) is daily_window_months(excess_d, month, 12 * years)."""
+    end = (month - 1).asfreq("D", "end")
+    start = (month - months).asfreq("D", "start")
     return excess_d.loc[start:end].dropna()
 
 
