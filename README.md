@@ -30,7 +30,7 @@ The bands of the replication, the sample boundaries and every setting of the man
 
 ## The notebooks
 
-One idea per notebook, run in order: the replication in 01 to 07, the mandate in 08 to 13 and 17 to 18, and the factor objective in 14 to 16.
+One idea per notebook, run in order: the replication in 01 to 07, the mandate in 08 to 13 and 17 to 19, and the factor objective in 14 to 16.
 
 | Notebook | What it does |
 |---|---|
