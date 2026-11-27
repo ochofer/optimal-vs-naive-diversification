@@ -1,0 +1,556 @@
+# Copied verbatim from src/bp/paired.py at commit ddbb75c of github.com/ochofer/risk-models-for-index-tracking; every line below this one is the source file unchanged.
+"""
+Ledoit and Wolf (2011): inference on the difference of two variances measured
+on the same months, the test Dom, Howard, Jansen and Lohre (2025) apply to
+their portfolios' realised volatilities.
+
+    Ledoit, O. and Wolf, M. (2011). Robust performance hypothesis testing with
+    the variance. Wilmott, 2011(55), 86-89.
+
+Added on 18 November 2026, after every recorded run of the study, and
+labelled so wherever it is used. Two paths that share their months and whose
+active returns move together have a difference far less noisy than either
+figure. The module repeats the
+structure of Signal Evaluation's test of two Sharpe ratios (Ledoit and Wolf
+2008) with the variance in place of the Sharpe ratio.
+
+The statistic of the paper is the difference of the log variances,
+Delta = log(sigma_1^2) - log(sigma_2^2), a smooth function of four means, those
+of r_1, r_2, r_1^2 and r_2^2 (sigma^2 = E[r^2] - mu^2). Its standard error
+comes from the delta method: the gradient of the function times the long-run
+covariance matrix Psi of the four series, which allows the months to be
+correlated with one another and the returns to have fat tails.
+
+  On the sample itself, Psi is the prewhitened Parzen-kernel estimate with
+  Andrews' (1991) automatic bandwidth: a VAR(1) fitted to the four centred
+  series, its singular values held within 0.97, the kernel estimate on the
+  residuals, then recoloured. Ledoit and Wolf (2008, footnote 8 and Remark
+  4.1) report that the prewhitened Parzen kernel performs like the
+  prewhitened QS kernel they propose and, having finite support, is more
+  convenient to implement; the 2011 article (p. 88) keeps the same machinery
+  and repeats the remark.
+
+  The circular block bootstrap resamples blocks of consecutive months, wrapping
+  from the last month to the first, so that the dependence within a block is
+  kept. On each bootstrap sample, Psi is the average outer product of the
+  blocks' scaled means, the estimate that matches the resampling.
+
+  The studentised statistic |Delta* - Delta_hat| / se* is computed on every
+  bootstrap sample. The share of bootstrap statistics at least as large as
+  |Delta_hat| / se(Delta_hat) is the p-value of equal variances, in the form
+  the paper reports.
+
+From the same resamples a second statistic is read, the difference of the two
+annualised standard deviations, sqrt(12) (sigma_1 - sigma_2), scaled to the
+n minus 1 convention of the study's tables (times sqrt(T / (T - 1))) so that
+it is the difference of two realised tracking errors or volatilities as the
+tables print them. Its 95th percentile z* of the studentised statistic gives
+the symmetric interval Delta_hat +/- z* se(Delta_hat), in the tables' units.
+The log-variance difference is unchanged by that scaling.
+
+Holm (1979) adjusts the p-values of a family of comparisons, as the paper does
+across its seven: the smallest p-value is multiplied by the family's size, the
+next by one less, and each adjusted value is at least the one before it.
+
+A row whose interval includes zero says what the comparison could have seen
+only beside the difference at which the interval would exclude zero about four
+times in five: (z* + the standard normal quantile at the power) times the
+standard error, the detectable difference, with the power in constants.py
+(PAIRED_DETECTABLE_POWER, added 18 November 2026). The chance that the interval
+excludes zero at a given true difference is approximated by the normal
+probability of that difference over the standard error, less z*: a figure from
+the row's own standard error and critical value under a normal approximation,
+which refers to the interval.
+
+The block size, the number of draws, the level and the seed are the study's
+(EVAL_BOOTSTRAP_BLOCK_MONTHS, EVAL_BOOTSTRAP_DRAWS, EVAL_BOOTSTRAP_LEVEL,
+EVAL_BOOTSTRAP_SEED in constants.py); every caller passes them. The block is
+fixed at the bias band's twelve months, where Ledoit and Wolf (2008,
+Algorithm 3.1) calibrate it from the data; notebook 17 reports the rows at
+blocks of 3, 6 and 24 months beside the committed ones (added 19 November
+2026, PAIRED_BLOCK_LENGTHS_FURTHER). The module depends on numpy and the
+standard library alone, so that another study can import it unchanged.
+
+References.
+
+    Andrews, D. W. K. (1991). Heteroskedasticity and autocorrelation
+    consistent covariance matrix estimation. Econometrica, 59(3), 817-858.
+    Holm, S. (1979). A simple sequentially rejective multiple test procedure.
+    Scandinavian Journal of Statistics, 6(2), 65-70.
+    Ledoit, O. and Wolf, M. (2008). Robust performance hypothesis testing
+    with the Sharpe ratio. Journal of Empirical Finance, 15(5), 850-859.
+    Ledoit, O. and Wolf, M. (2011). Robust performance hypothesis testing
+    with the variance. Wilmott, 2011(55), 86-89.
+"""
+from __future__ import annotations
+
+import math
+
+import numpy as np
+
+__all__ = ["log_variance_difference", "sd_difference", "standard_errors", "circular_block_indices", "test", "holm",
+           "simulate_null_pair", "size_check", "simulate_garch_pair", "size_check_daily", "normal_cdf", "normal_quantile",
+           "detectable_difference", "chance_to_exclude_zero", "influence_series", "batch_means", "student_t_cdf",
+           "student_t_quantile"]
+
+
+def _moments(r1: np.ndarray, r2: np.ndarray):
+    return r1.mean(), r2.mean(), (r1 ** 2).mean(), (r2 ** 2).mean()
+
+
+def _scale(months: int, periods: int, ddof: int) -> float:
+    """sqrt(periods) for the annualisation times sqrt(T / (T - ddof)) for the tables' n minus ddof convention."""
+    return float(np.sqrt(periods * months / (months - ddof)))
+
+
+def _delta_log(mu1, mu2, g1, g2):
+    return np.log(g1 - mu1 ** 2) - np.log(g2 - mu2 ** 2)
+
+
+def _delta_sd(mu1, mu2, g1, g2, scale):
+    return scale * (np.sqrt(g1 - mu1 ** 2) - np.sqrt(g2 - mu2 ** 2))
+
+
+def _gradient_log(mu1, mu2, g1, g2) -> np.ndarray:
+    """The gradient of the log-variance difference with respect to (mu1, mu2, g1, g2); works on arrays of draws too."""
+    v1, v2 = g1 - mu1 ** 2, g2 - mu2 ** 2
+    return np.stack([-2 * mu1 / v1, 2 * mu2 / v2, 1 / v1, -1 / v2], axis=-1)
+
+
+def _gradient_sd(mu1, mu2, g1, g2, scale) -> np.ndarray:
+    """The gradient of the scaled standard-deviation difference with respect to (mu1, mu2, g1, g2)."""
+    s1, s2 = np.sqrt(g1 - mu1 ** 2), np.sqrt(g2 - mu2 ** 2)
+    return scale * np.stack([-mu1 / s1, mu2 / s2, 0.5 / s1, -0.5 / s2], axis=-1)
+
+
+def log_variance_difference(r1, r2) -> float:
+    """log of the variance of r1 minus log of the variance of r2, population variances."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    return float(_delta_log(*_moments(r1, r2)))
+
+
+def sd_difference(r1, r2, periods: int = 12, ddof: int = 1) -> float:
+    """The annualised standard deviation of r1 minus that of r2, in the n minus ddof convention."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    return float(_delta_sd(*_moments(r1, r2), _scale(len(r1), periods, ddof)))
+
+
+def _parzen(x: float) -> float:
+    x = abs(x)
+    if x <= 0.5:
+        return 1 - 6 * x ** 2 + 6 * x ** 3
+    if x <= 1:
+        return 2 * (1 - x) ** 3
+    return 0.0
+
+
+def _gamma(v: np.ndarray, j: int) -> np.ndarray:
+    """The sample autocovariance matrix at lag j, divided by T."""
+    t = len(v)
+    return v[j:].T @ v[:t - j] / t
+
+
+def _ar1(x: np.ndarray):
+    """Least-squares AR(1) with an intercept: the coefficient and the residual variance."""
+    y, z = x[1:], x[:-1]
+    zc, yc = z - z.mean(), y - y.mean()
+    rho = float(zc @ yc / (zc @ zc))
+    resid = yc - rho * zc
+    return rho, float(resid @ resid / len(resid))
+
+
+def _andrews_alpha(v: np.ndarray) -> float:
+    """Andrews' (1991) plug-in quantity for the Parzen kernel, from univariate AR(1) fits, each series weighted the same."""
+    num = den = 0.0
+    for i in range(v.shape[1]):
+        rho, sig2 = _ar1(v[:, i])
+        num += 4 * rho ** 2 * sig2 ** 2 / (1 - rho) ** 8
+        den += sig2 ** 2 / (1 - rho) ** 4
+    return num / den
+
+
+def _psi_parzen(v: np.ndarray) -> np.ndarray:
+    """The Parzen-kernel long-run covariance with Andrews' bandwidth 2.6614 (alpha T)^(1/5)."""
+    t, p = v.shape
+    bandwidth = 2.6614 * (_andrews_alpha(v) * t) ** 0.2
+    psi = _gamma(v, 0)
+    j = 1
+    while j < bandwidth and j < t:
+        g = _gamma(v, j)
+        psi = psi + _parzen(j / bandwidth) * (g + g.T)
+        j += 1
+    return psi * t / (t - p)
+
+
+def _psi_prewhitened(v: np.ndarray) -> np.ndarray:
+    """The prewhitened Parzen-kernel estimate of the long-run covariance of the four centred series."""
+    x, y = v[:-1], v[1:]
+    a = np.linalg.lstsq(x, y, rcond=None)[0].T                  # y_t = A y_{t-1} + e_t, no intercept
+    u, d, vt = np.linalg.svd(a)
+    a = u @ np.diag(np.clip(d, -0.97, 0.97)) @ vt
+    resid = y - x @ a.T
+    inv = np.linalg.inv(np.eye(4) - a)
+    return inv @ _psi_parzen(resid) @ inv.T
+
+
+def standard_errors(r1, r2, periods: int = 12, ddof: int = 1) -> dict:
+    """The delta-method standard errors of the two statistics on the sample: the log-variance difference
+    and the scaled standard-deviation difference, both from the prewhitened Parzen-kernel estimate of Psi."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    mu1, mu2, g1, g2 = _moments(r1, r2)
+    v = np.column_stack([r1 - mu1, r2 - mu2, r1 ** 2 - g1, r2 ** 2 - g2])
+    t = len(v)
+    psi = _psi_prewhitened(v)
+    scale = _scale(t, periods, ddof)
+    gl, gs = _gradient_log(mu1, mu2, g1, g2), _gradient_sd(mu1, mu2, g1, g2, scale)
+    return {"se_log": float(np.sqrt(gl @ psi @ gl / t)), "se_sd": float(np.sqrt(gs @ psi @ gs / t))}
+
+
+def circular_block_indices(months: int, block: int, draws: int, rng: np.random.Generator) -> np.ndarray:
+    """Indices of `draws` circular block bootstrap samples: floor(months / block) blocks of `block`
+    consecutive months each, every block starting at a month drawn uniformly, wrapping past the last
+    month to the first. Shape (draws, blocks * block)."""
+    n_blocks = months // block
+    starts = rng.integers(0, months, size=(draws, n_blocks))
+    idx = (starts[:, :, None] + np.arange(block)[None, None, :]) % months
+    return idx.reshape(draws, n_blocks * block)
+
+
+def _statistics_of_draws(a, b, block, delta_log_hat, delta_sd_hat, scale):
+    """The studentised statistics of both differences on the resamples in the rows of a and b."""
+    draws, n = a.shape
+    n_blocks = n // block
+    mu1, mu2 = a.mean(axis=1), b.mean(axis=1)
+    g1, g2 = (a ** 2).mean(axis=1), (b ** 2).mean(axis=1)
+    y = np.stack([a - mu1[:, None], b - mu2[:, None], a ** 2 - g1[:, None], b ** 2 - g2[:, None]], axis=-1)
+    zeta = np.sqrt(block) * y.reshape(draws, n_blocks, block, 4).mean(axis=2)
+    psi = np.einsum("dki,dkj->dij", zeta, zeta) / n_blocks
+    gl, gs = _gradient_log(mu1, mu2, g1, g2), _gradient_sd(mu1, mu2, g1, g2, scale)
+    se_log = np.sqrt(np.einsum("di,dij,dj->d", gl, psi, gl) / n)
+    se_sd = np.sqrt(np.einsum("di,dij,dj->d", gs, psi, gs) / n)
+    stat_log = np.abs(_delta_log(mu1, mu2, g1, g2) - delta_log_hat) / se_log
+    stat_sd = np.abs(_delta_sd(mu1, mu2, g1, g2, scale) - delta_sd_hat) / se_sd
+    return stat_log, stat_sd
+
+
+def _bootstrap_statistics(r1, r2, delta_log_hat, delta_sd_hat, scale, block, draws, rng, chunk: int | None = None):
+    """The studentised statistics of both differences on the same resamples: shape (draws,) each. The
+    indices of every draw are drawn once; with `chunk` the statistics are computed `chunk` draws at a
+    time, so that long daily series fit in memory. Every operation runs row by row, and at the chunk the
+    daily test uses the results equal the unchunked ones in the recorded environment; a draw computed
+    alone need not give the bits it gives among many, because the order in which numpy adds the elements
+    of a row can depend on the shape of the array the row sits in, so the test allows 1e-12 at a chunk
+    of one draw. The monthly test is not chunked (added 18 November 2026 for the daily series)."""
+    t = len(r1)
+    idx = circular_block_indices(t, block, draws, rng)
+    if chunk is None or chunk >= draws:
+        return _statistics_of_draws(r1[idx], r2[idx], block, delta_log_hat, delta_sd_hat, scale)
+    stat_log, stat_sd = np.empty(draws), np.empty(draws)
+    for start in range(0, draws, chunk):
+        part = idx[start:start + chunk]
+        sl, ss = _statistics_of_draws(r1[part], r2[part], block, delta_log_hat, delta_sd_hat, scale)
+        stat_log[start:start + len(part)], stat_sd[start:start + len(part)] = sl, ss
+    return stat_log, stat_sd
+
+
+def test(r1, r2, block: int = 12, draws: int = 2000, level: float = 0.95, seed: int | np.random.Generator = 0,
+         periods: int = 12, ddof: int = 1, chunk: int | None = None) -> dict:
+
+    """Ledoit and Wolf's test of equal variances, r1 against r2, on paired monthly series.
+
+    Returns the two annualised standard deviations and their difference (r1 minus r2, in the n minus ddof
+    convention), the correlation of the two series, the log-variance difference with its standard error,
+    the p-value of equal variances from the studentised bootstrap of the log-variance difference (the
+    paper's form), the symmetric studentised interval of the standard-deviation difference at `level`
+    with its half-width and critical value, whether that interval excludes zero, and the settings. The
+    same seed gives the same result."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    if r1.shape != r2.shape or r1.ndim != 1:
+        raise ValueError("two one-dimensional series over the same months are needed")
+    rng = seed if isinstance(seed, np.random.Generator) else np.random.default_rng(seed)
+    t = len(r1)
+    scale = _scale(t, periods, ddof)
+    mu1, mu2, g1, g2 = _moments(r1, r2)
+    delta_log_hat = float(_delta_log(mu1, mu2, g1, g2))
+    delta_sd_hat = float(_delta_sd(mu1, mu2, g1, g2, scale))
+    se = standard_errors(r1, r2, periods, ddof)
+    stat_log, stat_sd = _bootstrap_statistics(r1, r2, delta_log_hat, delta_sd_hat, scale, block, draws, rng, chunk)
+    d_log = abs(delta_log_hat) / se["se_log"]
+    p_log = (int((stat_log >= d_log).sum()) + 1) / (draws + 1)
+    d_sd = abs(delta_sd_hat) / se["se_sd"]
+    p_sd = (int((stat_sd >= d_sd).sum()) + 1) / (draws + 1)
+    z_sd = float(np.quantile(stat_sd, level))
+    half = z_sd * se["se_sd"]
+    sd1, sd2 = scale * float(np.sqrt(g1 - mu1 ** 2)), scale * float(np.sqrt(g2 - mu2 ** 2))
+    return {"months": t, "sd1": sd1, "sd2": sd2, "difference": delta_sd_hat, "se": se["se_sd"],
+            "correlation": float(np.corrcoef(r1, r2)[0, 1]),
+            "log_difference": delta_log_hat, "se_log": se["se_log"], "p_value": p_log, "p_value_sd": p_sd,
+            "lower": delta_sd_hat - half, "upper": delta_sd_hat + half, "half_width": half, "critical": z_sd,
+            "excludes_zero": bool(abs(delta_sd_hat) > half),
+            "block": block, "draws": draws, "level": level, "periods": periods, "ddof": ddof}
+
+
+def holm(p_values) -> np.ndarray:
+    """Holm's (1979) step-down adjustment of a family of p-values, in the family's order."""
+    p = np.asarray(p_values, dtype=float)
+    m = len(p)
+    order = np.argsort(p)
+    adjusted = np.empty(m)
+    running = 0.0
+    for rank, i in enumerate(order):
+        running = max(running, min(1.0, (m - rank) * p[i]))
+        adjusted[i] = running
+    return adjusted
+
+
+def simulate_null_pair(months: int, sd: float, rho: float, dof: int, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+    """Two monthly series with mean zero and the same standard deviation, so equal variances, and
+    correlation rho: a common Student-t shock and one own shock each, every shock scaled to variance 1."""
+    scale = np.sqrt(dof / (dof - 2))
+    common, own1, own2 = (rng.standard_t(dof, size=(3, months)) / scale)
+    e1 = np.sqrt(rho) * common + np.sqrt(1 - rho) * own1
+    e2 = np.sqrt(rho) * common + np.sqrt(1 - rho) * own2
+    return sd * e1, sd * e2
+
+
+def size_check(pairs: int, months: int, sd: float, rho: float, dof: int, seed: int,
+               block: int = 12, draws: int = 2000, level: float = 0.95, periods: int = 12, ddof: int = 1) -> dict:
+    """The share of simulated pairs with equal variances whose p-value falls below 1 - level: the test's
+    rejection rate under the null, which should be close to 1 - level. Returns that rate, the share of
+    intervals of the standard-deviation difference that exclude zero, the counts, and each pair's p-value
+    and difference."""
+    root = np.random.SeedSequence(seed)
+    data_seed, boot_seed = root.spawn(2)
+    data_rng = np.random.default_rng(data_seed)
+    boot_rngs = [np.random.default_rng(s) for s in boot_seed.spawn(pairs)]
+    p_values, excludes, differences = [], [], []
+    for k in range(pairs):
+        r1, r2 = simulate_null_pair(months, sd, rho, dof, data_rng)
+        out = test(r1, r2, block=block, draws=draws, level=level, seed=boot_rngs[k], periods=periods, ddof=ddof)
+        p_values.append(out["p_value"])
+        excludes.append(out["excludes_zero"])
+        differences.append(out["difference"])
+    p_values, excludes = np.array(p_values), np.array(excludes)
+    rejected = p_values < 1 - level
+    return {"rate": float(rejected.mean()), "rejected": int(rejected.sum()),
+            "rate_interval": float(excludes.mean()), "rejected_interval": int(excludes.sum()), "pairs": pairs,
+            "p_values": p_values, "excludes_interval": excludes, "differences": np.array(differences)}
+
+
+def simulate_garch_pair(days: int, sd: float, rho: float, dof: int, garch: tuple[float, float, float],
+                        rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+    """Two daily series with mean zero, the same unconditional standard deviation `sd`, correlation rho,
+    Student-t shocks scaled to variance 1, and one GARCH(1,1) variance common to both: with (omega, alpha,
+    beta) = garch, the variance of day t is omega + alpha times the squared common shock of the day before
+    (the shock as it entered the series, scaled by that day's variance) + beta times the variance of the
+    day before, and it scales the common shock and both own shocks of day t; the recursion starts at the
+    unconditional variance omega / (1 - alpha - beta), which is 1 for the study's (0.02, 0.06, 0.92)."""
+    omega, alpha, beta = garch
+    scale = np.sqrt(dof / (dof - 2))
+    common, own1, own2 = (rng.standard_t(dof, size=(3, days)) / scale)
+    h = np.empty(days)
+    h0 = omega / (1.0 - alpha - beta)
+    scaled_common = np.empty(days)
+    for d in range(days):
+        h[d] = h0 if d == 0 else omega + alpha * scaled_common[d - 1] ** 2 + beta * h[d - 1]
+        scaled_common[d] = np.sqrt(h[d]) * common[d]
+    vol = np.sqrt(h)
+    e1 = np.sqrt(rho) * scaled_common + np.sqrt(1 - rho) * vol * own1
+    e2 = np.sqrt(rho) * scaled_common + np.sqrt(1 - rho) * vol * own2
+    return sd * e1, sd * e2
+
+
+def _daily_pair_test(job):
+    """One pair of the daily size check: the test on the pair with its own bootstrap seed."""
+    r1, r2, seed_sequence, block, draws, level, periods, ddof, chunk = job
+    out = test(r1, r2, block=block, draws=draws, level=level, seed=np.random.default_rng(seed_sequence),
+               periods=periods, ddof=ddof, chunk=chunk)
+    return out["p_value"], out["excludes_zero"], out["difference"], out["se"], out["critical"]
+
+
+def size_check_daily(pairs: int, days: int, sd: float, rho: float, dof: int, garch: tuple[float, float, float], seed: int,
+                     block: int = 252, draws: int = 2000, level: float = 0.95, periods: int = 252, ddof: int = 1,
+                     chunk: int | None = 200, workers: int | None = None, batch: int = 100) -> dict:
+    """The size check on simulated daily pairs with clustered volatility (simulate_garch_pair), otherwise as
+    size_check: the share of pairs with equal variances whose p-value falls below 1 - level, the share of
+    intervals excluding zero, the counts, each pair's p-value, difference, standard error and critical
+    value (the critical values added 19 November 2026, so that the size table can report their median).
+    The pairs are drawn in sequence from one generator and each pair's bootstrap seed is spawned in
+    sequence, so the first k pairs of a run of n are the pairs of a run of k (tests/test_daily.py). With
+    `workers` above one the tests of the pairs run in that many processes, `batch` pairs at a time, the
+    data still drawn in sequence; each pair's figures are those of the one-process run (added 20
+    November 2026, so that the three runs of 3,000 pairs fit a sitting)."""
+    root = np.random.SeedSequence(seed)
+    data_seed, boot_seed = root.spawn(2)
+    data_rng = np.random.default_rng(data_seed)
+    boot_seqs = boot_seed.spawn(pairs)
+    results = []
+    pool = None
+    if workers and workers > 1:
+        import multiprocessing
+        pool = multiprocessing.get_context("fork").Pool(workers)
+    try:
+        for start in range(0, pairs, batch):
+            jobs = []
+            for k in range(start, min(start + batch, pairs)):
+                r1, r2 = simulate_garch_pair(days, sd, rho, dof, garch, data_rng)
+                jobs.append((r1, r2, boot_seqs[k], block, draws, level, periods, ddof, chunk))
+            results.extend(pool.map(_daily_pair_test, jobs, chunksize=1) if pool else [_daily_pair_test(j) for j in jobs])
+    finally:
+        if pool:
+            pool.close()
+            pool.join()
+    p_values = np.array([r[0] for r in results])
+    excludes = np.array([r[1] for r in results])
+    differences, ses, crits = [r[2] for r in results], [r[3] for r in results], [r[4] for r in results]
+    rejected = p_values < 1 - level
+    return {"rate": float(rejected.mean()), "rejected": int(rejected.sum()),
+            "rate_interval": float(excludes.mean()), "rejected_interval": int(excludes.sum()), "pairs": pairs,
+            "p_values": p_values, "excludes_interval": excludes, "differences": np.array(differences), "standard_errors": np.array(ses),
+            "critical_values": np.array(crits)}
+
+
+def normal_cdf(x: float) -> float:
+    """The standard normal distribution function, from the error function."""
+    return 0.5 * (1.0 + math.erf(float(x) / math.sqrt(2.0)))
+
+
+def normal_quantile(p: float) -> float:
+    """The standard normal quantile at p, by bisection on normal_cdf to 1e-12."""
+    if not 0.0 < p < 1.0:
+        raise ValueError("p must lie strictly between 0 and 1")
+    lo, hi = -40.0, 40.0
+    while hi - lo > 1e-12:
+        mid = 0.5 * (lo + hi)
+        if normal_cdf(mid) < p:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def detectable_difference(se: float, critical: float, power: float) -> float:
+    """The difference at which the interval (difference plus and minus critical times se) would exclude
+    zero with probability `power`, under a normal approximation: (critical + the normal quantile at
+    power) times the standard error, in the units of the standard error."""
+    return (float(critical) + normal_quantile(power)) * float(se)
+
+
+def chance_to_exclude_zero(gain: float, se: float, critical: float) -> float:
+    """The approximate probability that the interval excludes zero when the true difference is `gain`:
+    the normal probability of |gain| / se less the critical value."""
+    return normal_cdf(abs(float(gain)) / float(se) - float(critical))
+
+
+# ---------------------------------------------------------------------------
+# A standard error from batch means, added on 24 November 2026 after every
+# result of notebooks 17 and 18 was known. The kernel above chooses its
+# bandwidth from the data, 8 to 13 days, and 1 to 5 on the minimum-variance
+# portfolios' rows on the study's daily series, while the variances of two
+# paths can drift apart over months; batch means of a year
+# of observations keep any dependence shorter than a block inside the block.
+# ---------------------------------------------------------------------------
+
+def influence_series(r1, r2, periods: int = 12, ddof: int = 1) -> dict:
+    """The influence series of the two statistics: for each period, the gradient of the statistic at the
+    sample's four means times the period's four centred series (r1, r2, r1 squared and r2 squared, each
+    less its mean). Each series has mean zero, and the statistic less its true value is close to the
+    series' mean, so the standard error of the statistic is the standard error of that mean."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    mu1, mu2, g1, g2 = _moments(r1, r2)
+    v = np.column_stack([r1 - mu1, r2 - mu2, r1 ** 2 - g1, r2 ** 2 - g2])
+    scale = _scale(len(r1), periods, ddof)
+    return {"sd": v @ _gradient_sd(mu1, mu2, g1, g2, scale), "log": v @ _gradient_log(mu1, mu2, g1, g2)}
+
+
+def _betacf(a: float, b: float, x: float) -> float:
+    """The continued fraction of the incomplete beta function, by the modified Lentz method."""
+    tiny, qab, qap, qam = 1e-300, a + b, a + 1.0, a - 1.0
+    c, d = 1.0, 1.0 - qab * x / qap
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    h = d
+    for m in range(1, 1000):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < 1e-15:
+            return h
+    raise RuntimeError("the continued fraction did not converge")
+
+
+def _betainc(a: float, b: float, x: float) -> float:
+    """The regularised incomplete beta function I_x(a, b)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    front = math.exp(math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x))
+    if x < (a + 1.0) / (a + b + 2.0):
+        return front * _betacf(a, b, x) / a
+    return 1.0 - front * _betacf(b, a, 1.0 - x) / b
+
+
+def student_t_cdf(x: float, dof: int) -> float:
+    """The distribution function of Student's t with `dof` degrees of freedom, from the regularised
+    incomplete beta function."""
+    x, dof = float(x), float(dof)
+    tail = 0.5 * _betainc(dof / 2.0, 0.5, dof / (dof + x * x))
+    return 1.0 - tail if x >= 0 else tail
+
+
+def student_t_quantile(p: float, dof: int) -> float:
+    """The quantile of Student's t at p, by bisection on student_t_cdf to 1e-12."""
+    if not 0.0 < p < 1.0:
+        raise ValueError("p must lie strictly between 0 and 1")
+    lo, hi = -1e3, 1e3
+    while hi - lo > 1e-12:
+        mid = 0.5 * (lo + hi)
+        if student_t_cdf(mid, dof) < p:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
+def batch_means(r1, r2, block: int, periods: int = 12, ddof: int = 1, level: float = 0.95) -> dict:
+    """The study's two statistics with standard errors from batch means. The influence series is cut into
+    floor(T / block) consecutive blocks of `block` periods from the first period, the periods after the
+    last whole block left out of the blocks (not out of the statistic); the standard error is the
+    standard deviation of the blocks' means over the square root of the number of blocks. The p-value of
+    equal variances is that of the log-variance difference, the study's form, from Student's t with the
+    number of blocks less one degrees of freedom, two-sided; the interval of the standard-deviation
+    difference is the difference plus and minus the t quantile at (1 + level) / 2 times its standard
+    error. Returns the difference, its standard error, the interval, the log-variance difference and its
+    standard error, the t statistic, the p-value, the critical value, the number of blocks and the
+    periods left out of them."""
+    r1, r2 = np.asarray(r1, dtype=float), np.asarray(r2, dtype=float)
+    if r1.shape != r2.shape or r1.ndim != 1:
+        raise ValueError("two one-dimensional series over the same periods are needed")
+    t = len(r1)
+    blocks = t // block
+    if blocks < 2:
+        raise ValueError("at least two whole blocks are needed")
+    used = blocks * block
+    psi = influence_series(r1, r2, periods, ddof)
+    se = {k: float(psi[k][:used].reshape(blocks, block).mean(axis=1).std(ddof=1) / np.sqrt(blocks)) for k in psi}
+    mu1, mu2, g1, g2 = _moments(r1, r2)
+    d_sd = float(_delta_sd(mu1, mu2, g1, g2, _scale(t, periods, ddof)))
+    d_log = float(_delta_log(mu1, mu2, g1, g2))
+    t_stat = d_log / se["log"]
+    p_value = _betainc((blocks - 1) / 2.0, 0.5, (blocks - 1) / (blocks - 1 + t_stat ** 2))    # twice the upper tail, kept accurate far out
+    critical = student_t_quantile(0.5 + level / 2.0, blocks - 1)
+    return {"periods_in_sample": t, "block": block, "blocks": blocks, "left_out": t - used,
+            "difference": d_sd, "se": se["sd"], "lower": d_sd - critical * se["sd"], "upper": d_sd + critical * se["sd"],
+            "critical": critical, "log_difference": d_log, "se_log": se["log"], "t": t_stat, "p_value": p_value,
+            "excludes_zero": bool(abs(d_sd) > critical * se["sd"]), "level": level, "periods": periods, "ddof": ddof}
