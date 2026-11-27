@@ -1,0 +1,9 @@
+portfolio,realised beta
+naive tilt,1.01711779
+"sample, daily 3y | C3 tilt only",1.00932706
+"ledoit_wolf, daily 3y | C3 tilt only",1.00955909
+"factor, daily 3y | C3 tilt only",1.01033065
+"pca, daily 3y | C3 tilt only",1.00904218
+"sample, monthly 120 | C3 tilt only",1.00662339
+"robust, all five | C3 tilt only",1.00780671
+"RiskMetrics, daily 5y | C3 tilt only",1.00993925

@@ -1,0 +1,22 @@
+naive portfolio,path,ratio,naive,path value,difference,"standard error, naive","standard error, path",difference above the larger standard error
+tilted index,"sample, daily 3y | 100",gross,0.13776199,0.07371892,0.06404307,0.14571279,0.15869336,False
+tilted index,"sample, daily 3y | 100",at 50 bp,0.09911436,-0.02158074,0.12069510,0.14547076,0.15820220,False
+tilted index,"sample, daily 3y | 100",at 100 bp,0.06046672,-0.11688040,0.17734712,0.14534763,0.15795312,True
+tilted index,"ledoit_wolf, daily 3y | 100",gross,0.13776199,0.05455658,0.08320541,0.14571279,0.15510663,False
+tilted index,"ledoit_wolf, daily 3y | 100",at 50 bp,0.09911436,-0.04062696,0.13974132,0.14547076,0.15462298,False
+tilted index,"ledoit_wolf, daily 3y | 100",at 100 bp,0.06046672,-0.13580967,0.19627639,0.14534763,0.15440635,True
+tilted index,"factor, daily 3y | 100",gross,0.13776199,0.11609089,0.02167110,0.14571279,0.15434514,False
+tilted index,"factor, daily 3y | 100",at 50 bp,0.09911436,0.03594867,0.06316569,0.14547076,0.15434186,False
+tilted index,"factor, daily 3y | 100",at 100 bp,0.06046672,-0.04419356,0.10466028,0.14534763,0.15452364,False
+tilted index,"pca, daily 3y | 100",gross,0.13776199,0.07259104,0.06517095,0.14571279,0.15509736,False
+tilted index,"pca, daily 3y | 100",at 50 bp,0.09911436,-0.00944991,0.10856427,0.14547076,0.15486412,False
+tilted index,"pca, daily 3y | 100",at 100 bp,0.06046672,-0.09149086,0.15195758,0.14534763,0.15478555,False
+tilted index,"sample, monthly 120 | 100",gross,0.13776199,0.03986543,0.09789656,0.14571279,0.15853498,False
+tilted index,"sample, monthly 120 | 100",at 50 bp,0.09911436,-0.04000037,0.13911473,0.14547076,0.15706299,False
+tilted index,"sample, monthly 120 | 100",at 100 bp,0.06046672,-0.11986616,0.18033288,0.14534763,0.15575530,True
+tilted index,"robust, all five | 100",gross,0.13776199,0.02009455,0.11766744,0.14571279,0.15281464,False
+tilted index,"robust, all five | 100",at 50 bp,0.09911436,-0.07633517,0.17544953,0.14547076,0.15136105,True
+tilted index,"robust, all five | 100",at 100 bp,0.06046672,-0.17276489,0.23323161,0.14534763,0.15025434,True
+tilted index,"RiskMetrics, daily 5y | 100",gross,0.13776199,0.06324601,0.07451598,0.14571279,0.15814909,False
+tilted index,"RiskMetrics, daily 5y | 100",at 50 bp,0.09911436,-0.03611803,0.13523239,0.14547076,0.15771549,False
+tilted index,"RiskMetrics, daily 5y | 100",at 100 bp,0.06046672,-0.13548206,0.19594878,0.14534763,0.15756014,True

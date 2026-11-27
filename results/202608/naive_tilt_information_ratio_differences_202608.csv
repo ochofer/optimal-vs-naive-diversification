@@ -1,0 +1,22 @@
+naive portfolio,path,ratio,naive,path value,difference,"standard error, naive","standard error, path",difference above the larger standard error
+naive tilt,"sample, daily 3y | C3 tilt only",gross,0.12824866,0.02185026,0.10639840,0.13902704,0.13069244,False
+naive tilt,"sample, daily 3y | C3 tilt only",at 50 bp,0.10452232,-0.07228593,0.17680825,0.13865742,0.13001633,True
+naive tilt,"sample, daily 3y | C3 tilt only",at 100 bp,0.08079597,-0.16642211,0.24721808,0.13835928,0.13043036,True
+naive tilt,"ledoit_wolf, daily 3y | C3 tilt only",gross,0.12824866,0.03434243,0.09390623,0.13902704,0.13003732,False
+naive tilt,"ledoit_wolf, daily 3y | C3 tilt only",at 50 bp,0.10452232,-0.05372719,0.15824951,0.13865742,0.12918485,True
+naive tilt,"ledoit_wolf, daily 3y | C3 tilt only",at 100 bp,0.08079597,-0.14179556,0.22259153,0.13835928,0.12930607,True
+naive tilt,"factor, daily 3y | C3 tilt only",gross,0.12824866,0.07839511,0.04985355,0.13902704,0.13972621,False
+naive tilt,"factor, daily 3y | C3 tilt only",at 50 bp,0.10452232,0.02310931,0.08141301,0.13865742,0.13889696,False
+naive tilt,"factor, daily 3y | C3 tilt only",at 100 bp,0.08079597,-0.03217650,0.11297247,0.13835928,0.13844968,False
+naive tilt,"pca, daily 3y | C3 tilt only",gross,0.12824866,0.04497155,0.08327711,0.13902704,0.13447119,False
+naive tilt,"pca, daily 3y | C3 tilt only",at 50 bp,0.10452232,-0.01656764,0.12108996,0.13865742,0.13175874,False
+naive tilt,"pca, daily 3y | C3 tilt only",at 100 bp,0.08079597,-0.07810567,0.15890164,0.13835928,0.12954889,True
+naive tilt,"sample, monthly 120 | C3 tilt only",gross,0.12824866,0.07264409,0.05560457,0.13902704,0.12103799,False
+naive tilt,"sample, monthly 120 | C3 tilt only",at 50 bp,0.10452232,-0.02610521,0.13062753,0.13865742,0.11779811,False
+naive tilt,"sample, monthly 120 | C3 tilt only",at 100 bp,0.08079597,-0.12485450,0.20565047,0.13835928,0.11619612,True
+naive tilt,"robust, all five | C3 tilt only",gross,0.12824866,0.06851892,0.05972974,0.13902704,0.12486135,False
+naive tilt,"robust, all five | C3 tilt only",at 50 bp,0.10452232,-0.00379016,0.10831248,0.13865742,0.12201459,False
+naive tilt,"robust, all five | C3 tilt only",at 100 bp,0.08079597,-0.07609802,0.15689399,0.13835928,0.12012500,True
+naive tilt,"RiskMetrics, daily 5y | C3 tilt only",gross,0.12824866,0.03365930,0.09458936,0.13902704,0.13129857,False
+naive tilt,"RiskMetrics, daily 5y | C3 tilt only",at 50 bp,0.10452232,-0.07076421,0.17528653,0.13865742,0.13112959,True
+naive tilt,"RiskMetrics, daily 5y | C3 tilt only",at 100 bp,0.08079597,-0.17518771,0.25598368,0.13835928,0.13234531,True

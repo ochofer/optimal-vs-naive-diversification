@@ -1,0 +1,11 @@
+path,realised TE,exposure per bp of realised TE
+"sample, daily 3y | 75",0.01002117,0.00056945
+"ledoit_wolf, daily 3y | 75",0.00985564,0.00047832
+"factor, daily 3y | 75",0.01102305,0.00058151
+"pca, daily 3y | 75",0.01126859,0.00056933
+"sample, monthly 120 | 75",0.01279599,0.00063310
+"sample, daily 3y | 150",0.01731365,0.00107219
+"ledoit_wolf, daily 3y | 150",0.01713197,0.00107302
+"factor, daily 3y | 150",0.01876902,0.00101546
+"pca, daily 3y | 150",0.01849629,0.00103156
+"sample, monthly 120 | 150",0.01917291,0.00105679

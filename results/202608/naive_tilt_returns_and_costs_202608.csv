@@ -1,0 +1,9 @@
+,realised TE (bp),active return (gross) (bp),turnover (one-way),net active return at 50 bp (bp),net active return at 100 bp (bp)
+"sample, daily 3y | C3 tilt only",80.276300,1.754100,0.012595,-5.802800,-13.359700
+"ledoit_wolf, daily 3y | C3 tilt only",80.281900,2.757100,0.011784,-4.313300,-11.383600
+"factor, daily 3y | C3 tilt only",88.295700,6.922000,0.008136,2.040400,-2.841100
+"pca, daily 3y | C3 tilt only",86.722000,3.900000,0.008895,-1.436700,-6.773500
+"sample, monthly 120 | C3 tilt only",90.924200,6.605100,0.014965,-2.373600,-11.352300
+"robust, all five | C3 tilt only",82.305000,5.639500,0.009919,-0.311900,-6.263300
+"RiskMetrics, daily 5y | C3 tilt only",79.697600,2.682600,0.013871,-5.639800,-13.962100
+naive tilt,105.599494,13.542994,0.004176,11.037504,8.532013

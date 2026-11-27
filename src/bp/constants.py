@@ -30,9 +30,9 @@ FRENCH_FILES = {
     "momentum":   "F-F_Momentum_Factor_CSV.zip",              # Mom, monthly from 1927-01
     "factors5":   "F-F_Research_Data_5_Factors_2x3_CSV.zip",  # Mkt-RF, SMB, HML, RMW, CMA, RF from 1963-07
     "ind10":      "10_Industry_Portfolios_CSV.zip",           # DGU "Industry" dataset
-    "ind49":      "49_Industry_Portfolios_CSV.zip",           # the extension universe; carries firm counts and average size
+    "ind49":      "49_Industry_Portfolios_CSV.zip",           # the mandate's universe; carries firm counts and average size
     "size_bm25":  "25_Portfolios_5x5_CSV.zip",                # DGU "FF-1-factor" and "FF-4-factor" datasets
-    # Daily files, for the extension's covariance estimators (section 5).
+    # Daily files, for the betas and the copied covariance estimators of notebooks 08 and 09 (sections 7 and 8).
     "ind49_daily":    "49_Industry_Portfolios_daily_CSV.zip",        # value- and equal-weighted daily returns from 1926-07-01
     "factors3_daily": "F-F_Research_Data_Factors_daily_CSV.zip",     # Mkt-RF, SMB, HML, RF daily from 1926-07-01
     "factors5_daily": "F-F_Research_Data_5_Factors_2x3_daily_CSV.zip", # Mkt-RF, SMB, HML, RMW, CMA, RF daily from 1963-07-01
@@ -222,7 +222,7 @@ SIM_GARCH_OWN_PROCESS_PER_ASSET = True   # the factor and each idiosyncratic sho
 # 5. The 49 industries: the sample, and the three industries the mandate tilts
 # ---------------------------------------------------------------------------
 
-# The extension sample starts at the first month in which all 49 industries carry
+# The mandate's sample starts at the first month in which all 49 industries carry
 # a return (French codes the early gaps as -99.99): Hlth is the last industry to
 # fill and does so in 1969-07. Notebook 01 asserts it on every run.
 EXT_SAMPLE_START = "1969-07"
@@ -263,7 +263,7 @@ TIMEZONE = "Europe/Amsterdam"
 # 7. The code and the tables taken from risk-models-for-index-tracking
 # ---------------------------------------------------------------------------
 
-# The comparisons with the naive rules under the index mandate run the optimised portfolios' own code and read their
+# The comparisons with the naive portfolios under the index mandate run the optimised portfolios' own code and read their
 # recorded figures. Both come from the repository risk-models-for-index-tracking at commit ddbb75c, whose history up to
 # that commit is this repository's. The modules are copied into SOURCE_MODULES_DIR, each unchanged below a first line
 # naming its source file and the commit, and src/bp/source/constants.py holds the source's values of the names they
@@ -292,3 +292,49 @@ SOURCE_TABLES = {
     "factor_objective_monthly_202608.csv": ("results/202608/factor_objective_monthly_202608.csv", "a19f45ea671af1553912446a1bc848bae918e07e75d3509f706c117e1a99ef2b"),
     "factor_objective_attribution_202608.csv": ("results/202608/factor_objective_attribution_202608.csv", "7b917c8ebabd805f47526a97d351e7ade83351ac2d2cf73b3d69f426d9bacd4c"),
 }
+
+# ---------------------------------------------------------------------------
+# 8. The comparisons with the naive portfolios under the index mandate (notebooks 08 and 09)
+# ---------------------------------------------------------------------------
+
+# Each name below that also stands in src/bp/constants.py at SOURCE_COMMIT carries the value it has there, so that the
+# naive portfolios meet the optimised paths on the same mandate, the same months and the same measures;
+# tests/test_source_copies.py checks them against the file at the commit (NAIVE_TAKEN_FROM_SOURCE).
+COV_EVAL_START = "1979-07"            # the first month of every path: 1969-07 plus the 120 months of the monthly sample covariance
+EVAL_START_PORTFOLIO = "benchmark"    # every path, optimised or naive, starts as the benchmark
+ACTIVE_WEIGHT_BOUND = 0.02            # each untilted industry within 2 percentage points of its benchmark weight
+TURNOVER_CAP_MONTHLY_ONE_WAY = 0.02   # the optimised paths' cap on one-way turnover a month, against drifted weights; the naive portfolios are measured against it and are not held to it
+TILT_MAX_SHARE_OF_BENCHMARK = 0.5     # Coal, Oil and Util at no more than half their benchmark weight; the naive portfolios hold them at exactly half
+MANDATE_EXCLUSIONS = ("Smoke", "Guns")   # tobacco and weapons, weight zero under the full mandate and under the factor objective
+CONSTRAINT_SET_TILT_ONLY = ("long_only", "active_weight_bound", "turnover_cap", "tilt")   # the optimised paths the naive tilt meets
+CONSTRAINT_SETS = {"C3": ("long_only", "active_weight_bound", "turnover_cap", "tilt", "beta_neutral", "exclusion")}   # the mandate, under which the factor objective runs
+FO_CONSTRAINT_SET = "C3"
+EXT_COST_LEVELS = (DGU_TCOST, TCOST_SENSITIVITY)   # each net return at 50 and at 100 basis points per unit of one-way turnover
+EVAL_BOOTSTRAP_BLOCK_MONTHS = 12      # the circular block bootstrap's block, one year
+EVAL_BOOTSTRAP_DRAWS = 2000
+EVAL_BOOTSTRAP_SEED = 20261009
+EVAL_BOOTSTRAP_LEVEL = 0.95
+PAIRED_PERIODS = 12                   # months a year, the annualisation of the paired test
+PAIRED_DETECTABLE_POWER = 0.80        # the power at which the paired test's detectable difference is stated
+ATTRIBUTION_FACTORS = ("Mkt-RF", "SMB", "HML", "RMW", "CMA", "Mom")
+FO_TARGET_FACTORS = ("HML", "RMW", "CMA", "Mom")   # value, profitability, investment, momentum
+FO_TARGET_SIGN = {"Mkt-RF": 0.0, "SMB": 0.0, "HML": 1.0, "RMW": 1.0, "CMA": 1.0, "Mom": 1.0}   # s: the score and the objective sum the four targeted betas
+FO_BETA_WINDOW_YEARS = 3              # the betas: a regression of each industry on the six factors over three years of daily returns before the month
+FO_BUDGETS_ANNUAL = (0.0075, 0.0100, 0.0150)   # the optimised factor paths' budgets on forecast tracking error, a year
+FO_BUDGET_MAIN = 0.0100               # the budget of the seven optimised factor paths the tilted index meets
+ATTRIBUTION_REPRODUCTION_TOL = 0.00001          # a rebuilt optimised path reproduces the committed realised tracking error within 0.1 basis point a year
+ATTRIBUTION_IDENTITY_MAX_ABS_ERROR = 1e-9       # the factor contributions plus the residual less the active return, per month
+NAIVE_TAKEN_FROM_SOURCE = ("COV_EVAL_START", "EVAL_START_PORTFOLIO", "ACTIVE_WEIGHT_BOUND", "TURNOVER_CAP_MONTHLY_ONE_WAY",
+                           "TILT_MAX_SHARE_OF_BENCHMARK", "MANDATE_EXCLUSIONS", "CONSTRAINT_SET_TILT_ONLY", "FO_CONSTRAINT_SET",
+                           "EXT_COST_LEVELS", "EVAL_BOOTSTRAP_BLOCK_MONTHS", "EVAL_BOOTSTRAP_DRAWS", "EVAL_BOOTSTRAP_SEED",
+                           "EVAL_BOOTSTRAP_LEVEL", "PAIRED_PERIODS", "PAIRED_DETECTABLE_POWER", "ATTRIBUTION_FACTORS",
+                           "FO_TARGET_FACTORS", "FO_TARGET_SIGN", "FO_BETA_WINDOW_YEARS", "FO_BUDGETS_ANNUAL", "FO_BUDGET_MAIN",
+                           "ATTRIBUTION_REPRODUCTION_TOL", "ATTRIBUTION_IDENTITY_MAX_ABS_ERROR")
+
+# The seven optimised paths each naive portfolio meets, by their labels in the copied tables: the sample covariance,
+# Ledoit-Wolf shrinkage, the six-factor model and five principal components on three years of daily returns; the sample
+# covariance on 120 months; the robust portfolio across all five; RiskMetrics on five years of daily returns.
+NAIVE_PATHS = ("sample, daily 3y", "ledoit_wolf, daily 3y", "factor, daily 3y", "pca, daily 3y",
+               "sample, monthly 120", "robust, all five", "RiskMetrics, daily 5y")
+NAIVE_REPRODUCED = "sample, daily 3y"   # the path each notebook rebuilds from the copied modules before any naive figure
+NAIVE_SIGNIFICANCE = 0.05             # a difference is statistically significant when its Holm-adjusted p-value is below this

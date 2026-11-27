@@ -67,6 +67,9 @@ One idea per notebook, run in order: the replication in 01 to 07, the mandate in
 - **Tilt**: holding Coal, Oil and Utilities at no more than half their benchmark weight.
 - **Bias statistic**: the standard deviation of the realised active return divided by its forecast, 1 for an accurate forecast and above 1 when the forecast is too low.
 - **Residual**: the part of the active return the six factors do not explain.
+- **Naive tilt**: the index with Coal, Oil and Utilities held at half their index weight and the removed weight spread over the other 46 industries in proportion to their index weights, rebalanced to that target every month, with no risk model.
+- **Tilted index**: the index under the mandate's tilt and exclusions, with each of the other 44 industries' weights scaled up or down in proportion to its factor score as far as the 2-point limit and a floor of zero allow, rebalanced every month, with no risk model.
+- **The two naive portfolios**: the naive tilt and the tilted index together.
 
 Each note opens with the full list of the terms it uses.
 

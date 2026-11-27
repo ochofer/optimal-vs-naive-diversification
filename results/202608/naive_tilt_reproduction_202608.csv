@@ -1,0 +1,2 @@
+path,committed table,rebuilt realised TE (bp),committed realised TE (bp),difference (bp),largest monthly active return difference,band (bp),passes
+"sample, daily 3y | C3 tilt only",rolling_evaluation_202608.csv,80.27625100,80.27630000,-0.00004900,0.00000000,0.10000000,True

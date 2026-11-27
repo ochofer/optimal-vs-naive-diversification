@@ -1,0 +1,9 @@
+portfolio,realised beta
+tilted index,1.00414271
+"sample, daily 3y | 100",1.00856147
+"ledoit_wolf, daily 3y | 100",1.00904542
+"factor, daily 3y | 100",1.01205599
+"pca, daily 3y | 100",1.01117273
+"sample, monthly 120 | 100",0.99850917
+"robust, all five | 100",1.00828952
+"RiskMetrics, daily 5y | 100",1.00983010

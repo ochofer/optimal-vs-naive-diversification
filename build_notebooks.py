@@ -6,7 +6,10 @@ hand-edited notebook cannot be reviewed as a diff. The notebooks here are build
 artefacts: this script is the source of truth for the prose, and src/bp/ is the
 source of truth for the code. Each notebook writes the modules it needs into
 src/bp/ with %%writefile cells, so it runs standalone in Colab from a blank
-runtime, and the same modules run from the repository checkout.
+runtime, and the same modules run from the repository checkout. Notebooks 08 and
+09 also read the modules and tables copied from risk-models-for-index-tracking
+into src/bp/source/ and results/202608/source/, so they run from the root of a
+checkout of this repository.
 
 Run:  python3 build_notebooks.py
 Notebooks are written without outputs. Never commit a notebook with outputs.
@@ -98,7 +101,7 @@ NB01 = [
 | Gated | said of a cell the band applies to |
 | Verdict | pass or MISS for a gated cell |
 
-**What this notebook does.** It downloads the ten Ken French files this project uses (six monthly files for the replication, four daily files for the extension from notebook 10 on), records what it downloaded (date, URL, SHA-256 of the zip, and the CRSP vintage French prints at the top of each file), parses each file into monthly tables, and counts what is in them against what DeMiguel, Garlappi and Uppal (2009) say they used.
+**What this notebook does.** It downloads the ten Ken French files this project uses (six monthly files for the replication, four daily files for the comparisons under the index mandate in notebooks 08 and 09), records what it downloaded (date, URL, SHA-256 of the zip, and the CRSP vintage French prints at the top of each file), parses each file into monthly tables, and counts what is in them against what DeMiguel, Garlappi and Uppal (2009) say they used.
 
 **Why it comes first.** Every number in the project is computed from these files, and French revises history: a return from 1985 can differ between the file served today and the one served last year. A replication that misses a published number by 0.01 has to be able to say whether the code or the vintage moved. The provenance record written here makes that possible, and it is attached to every later output.
 
@@ -107,8 +110,8 @@ NB01 = [
 - The three portfolio files (10 industries, 49 industries, 25 size-and-value portfolios) and the three-factor file run monthly from 1926-07. On the vintage read on 10 September 2026 (CRSP 202607) that is 1,201 rows to 2026-07; a later vintage adds one row per month. The five-factor file starts in 1963-07 (757 rows on that vintage) and the momentum factor in 1927-01.
 - DGU's sample is 1963-07 to 2004-11 (their Table 2), which is **497 months**. With their 120-month estimation window the out-of-sample period is 1973-07 to 2004-11, **377 months**. Both counts are asserted below.
 - Their four French-sourced datasets have N = 11, 3, 21 and 24 assets (Table 2). The 21 and 24 come from 20 of the 25 size-and-value portfolios: DGU drop the five largest-size portfolios (their footnote 24), because the market, SMB and HML are almost a linear combination of all 25.
-- In French's 49-industry file nine industries have gaps coded -99.99 in the early decades. All 49 are populated from **1969-07**; the extension in later notebooks starts there.
-- The four daily files (49 industries, three factors and momentum from 1926, five factors from 1963-07) are downloaded and recorded here and first used in notebook 10; their counts are checked there, where the daily windows are built.
+- In French's 49-industry file nine industries have gaps coded -99.99 in the early decades. All 49 are populated from **1969-07**; the sample of notebooks 08 and 09 starts there.
+- The four daily files (49 industries, three factors and momentum from 1926, five factors from 1963-07) are downloaded and recorded here and first used in notebooks 08 and 09, which build three-year windows of daily returns from them.
 - One number that is already a replication check: DGU's Table 3 reports the Sharpe ratio of the value-weighted market, "vw", as 0.1138 in every French-sourced column. That is the monthly Sharpe ratio of French's Mkt-RF over the out-of-sample window. The same calculation on today's vintage is printed beside it. The two differ because the vintages differ, and the size of the difference shows how much revision the sample has absorbed since 2009.
 """),
     md("""
@@ -1490,7 +1493,7 @@ The paper's conclusion therefore depends on neither assumption of notebook 04. F
 **What this notebook does not settle.**
 
 - The clustering here is symmetric: a large gain raises next month's volatility exactly as much as a large loss of the same size, because the GARCH recursion uses the squared shock and the square has no sign. In real markets a loss raises volatility more than a gain does (the leverage effect), so turbulent periods follow falls more than rises; this market has no such asymmetry, and building one would need a different recursion, which this study does not run.
-- In this market the correlations between assets move for one reason only: when the factor's volatility rises relative to the assets' own volatility, more of each asset's movement is the common movement, so the correlations rise. In real markets correlations also change for reasons that have nothing to do with the factor's volatility, for example when investors sell many assets at once in a crisis. The real-data notebooks of the extension (09 to 12) measure the industries' co-movement as it is, with no model of why it moves.
+- In this market the correlations between assets move for one reason only: when the factor's volatility rises relative to the assets' own volatility, more of each asset's movement is the common movement, so the correlations rise. In real markets correlations also change for reasons that have nothing to do with the factor's volatility, for example when investors sell many assets at once in a crisis. The portfolios that notebooks 08 and 09 read from risk-models-for-index-tracking are built on the industries' co-movement as measured from their returns, with no model of why it moves.
 - The GARCH parameters, alpha 0.10 and beta 0.85, were fixed before the run and no others were tried, so the result holds for clustering of textbook strength and says nothing about stronger or weaker clustering; a sweep of parameters after the result would be tuning, and is not run.
 - Every number comes from one draw of each market, as in notebook 05, so a difference of about 0.005 between two cells is of the size that a change of seed alone produces.
 """),
@@ -1779,7 +1782,617 @@ The in-sample upper bound on the whole sample, 0.19 to 0.42 across the datasets,
 ]
 
 
+# ---------------------------------------------------------------------------
+# 08 and 09: the two naive portfolios under the index mandate
+# ---------------------------------------------------------------------------
+
+SETUP_0809 = """
+import os
+import sys
+import json
+import time
+if not (os.path.isdir("src/bp/source") and os.path.isdir("results/202608/source")):
+    raise SystemExit("This notebook runs from the root of a checkout of this repository, which holds the modules and tables copied from risk-models-for-index-tracking.")
+sys.path.insert(0, "src")
+import numpy as np
+import pandas as pd
+from bp import constants as C
+from bp import french_loader as fl
+from bp import naive as N
+from bp.source import attribution as A
+from bp.source import covariance as CV
+from bp.source import evaluation as E
+from bp.source import optimiser as O
+from bp.source import paired as PT
+
+pd.set_option("display.width", 250)
+pd.set_option("display.max_rows", 120)
+pd.set_option("display.max_columns", 40)
+
+records = [fl.download(key) for key in ("ind49", "factors3", "factors5", "momentum", "ind49_daily", "factors3_daily", "factors5_daily", "momentum_daily")]
+fl.write_provenance(records)
+vintage = records[0]["vintage_line"].split("using the ")[1].split(" ")[0]
+assert len({r["vintage_line"].split("using the ")[1].split(" ")[0] for r in records}) == 1, "the eight files are of one vintage"
+committed = {r["filename"]: r["zip_sha256"] for r in json.load(open("results/202608/provenance_french.json"))}
+same = all(committed.get(r["filename"]) == r["zip_sha256"] for r in records)
+print("vintage:", vintage, "| the eight files", "are the committed ones" if same else "differ from the committed ones", "| provenance written to", C.PROVENANCE_FILE)
+
+
+def source_table(stem):
+    name = [k for k in C.SOURCE_TABLES if k.startswith(stem + "_")][0]
+    return pd.read_csv(C.SOURCE_TABLES_DIR + name), name
+
+
+def out(stem):
+    os.makedirs(C.OUTPUT_DIR, exist_ok=True)
+    return f"{C.OUTPUT_DIR}/{stem}_{vintage}.csv"
+
+
+P = CV.Panels()
+weights, returns_m = P.weights, P.returns_m
+months = pd.period_range(C.COV_EVAL_START, P.last, freq="M")
+assert len(months) == 566 and str(months[0]) == "1979-07" and str(months[-1]) == C.EXT_SAMPLE_END
+industries = [c.strip() for c in weights.columns]
+tilt_mask, _ = O.masks(weights.columns)
+_, mandate_mask = O.masks(weights.columns, exclude=C.MANDATE_EXCLUSIONS)
+FACTORS = list(C.ATTRIBUTION_FACTORS)
+TARGETED = list(C.FO_TARGET_FACTORS)
+S = np.array([C.FO_TARGET_SIGN[f] for f in FACTORS])
+bench_ex = P.bench_m.loc[months].to_numpy()
+COSTS = [int(round(c * 1e4)) for c in C.EXT_COST_LEVELS]
+
+t0 = time.time()
+Sigma, betas = {}, {}
+for m in months:
+    Sigma[m], _, _ = CV.estimate("sample", "daily_3y", m, P)
+    X = CV.daily_window(P.excess_d, m, C.FO_BETA_WINDOW_YEARS)
+    _, betas[m] = CV.factor_cov(X.to_numpy(), P.factors_d.loc[X.index, FACTORS].to_numpy())
+IDX = N.resample_indices(len(months))
+print(f"{len(months)} months, {months[0]} to {months[-1]}: the sample covariance and the betas on three years of daily returns in {time.time() - t0:.0f}s")
+"""
+
+PATHS_TABLE = """
+| Label | The covariance estimator the optimiser used |
+|---|---|
+| sample, daily 3y | the sample covariance of the last three years of daily returns, scaled to a month |
+| ledoit_wolf, daily 3y | the same, shrunk towards a matrix with the same variance for every industry and no correlation, by the method of Ledoit and Wolf (2004b) |
+| factor, daily 3y | the covariance implied by a regression of each industry on the six factors over the same three years |
+| pca, daily 3y | the covariance implied by the first five principal components of the same three years |
+| sample, monthly 120 | the sample covariance of the last 120 monthly returns |
+| robust, all five | no single estimator: the weights whose largest forecast tracking error across the five estimates above is smallest |
+| RiskMetrics, daily 5y | J.P. Morgan's 1996 RiskMetrics covariance on five years of daily returns, each day's weight halving every year of trading days |
+"""
+
+NB08 = [
+    md("""
+# 08. The naive tilt: the mandate's tilt held with no optimiser
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | the index the portfolio tracks: French's 49 industries, each held in proportion to its market capitalisation at the start of the month |
+| Active weight | the portfolio's weight in an industry minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Covariance matrix | the table of all variances and covariances of the 49 industries' returns |
+| Tracking error | the standard deviation of the monthly active return times the square root of 12, a figure per year; realised when measured on the active returns afterwards, forecast when computed from a covariance matrix before the month |
+| Basis point | one hundredth of a percentage point; 100 basis points a year of tracking error is 1% a year |
+| Tilt | Coal, Oil and Util (utilities) held at no more than half their benchmark weight |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance, 2% a month here |
+| Mandate | the rules the optimised portfolios obey in this notebook: long-only, each industry outside the tilt within 2 percentage points of its benchmark weight, the turnover cap and the tilt; risk-models-for-index-tracking calls this set "C3 tilt only" |
+| Naive tilt | the portfolio this notebook builds: Coal, Oil and Util at exactly half their benchmark weight, and the weight this removes added to the other 46 industries in proportion to their benchmark weights; it uses no estimate of risk |
+| Covariance estimator | a method for estimating the covariance matrix from past returns |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
+| Factor | a return series that moves many assets at once; the six here are the market (Mkt-RF), size (SMB), value (HML), profitability (RMW), investment (CMA) and momentum (Mom) |
+| Principal component | a combination of the industries chosen to explain as much of their total variance as one combination can |
+| Optimiser | the routine of risk-models-for-index-tracking that holds, each month, the long-only portfolio with the smallest forecast tracking error under the mandate |
+| Path | the month-by-month sequence of portfolios of one method, each formed on the data before its month |
+| Optimised path | the path the optimiser holds with one covariance estimator |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought |
+| Drifted weights | the previous month's weights after that month's returns have moved them |
+| Index turnover | the one-way turnover the benchmark itself needs from its drifted weights to its new weights |
+| Cost level | the cost charged per unit of one-way turnover, 50 or 100 basis points here, applied after the fact |
+| Net active return | the active return per year less 12 times the mean one-way turnover times the cost level |
+| Information ratio | the active return per year divided by the realised tracking error |
+| Standard error | the standard deviation an estimate would show across repeated samples of the same length |
+| Block bootstrap | resampling the months in blocks of 12 consecutive months, circular, so that a block may run past the last month into the first; each resample keeps the months of a block together |
+| Draw | one resample of the months, 2,000 here |
+| Seed | the number that starts the random number generator, fixed in `constants.py` so that every run draws the same resamples |
+| Paired test | a test of the difference between two figures measured on the same months; here the test of Ledoit and Wolf (2011) on the variances of two active returns, with a block bootstrap, copied unchanged in `src/bp/source/paired.py` |
+| p-value | the probability, if the two tracking errors were equal, of a difference at least as far from zero as the one measured |
+| Holm's correction | the adjustment of Holm (1979) to the p-values of a family of comparisons tested together; a difference is statistically significant at the 5 per cent level when its adjusted p-value is below 0.05 |
+| Detectable difference | the difference the paired test would find with probability 0.8 at the 5 per cent level, given its standard error |
+| Excess return | a return minus the risk-free rate, the return on a one-month US Treasury bill |
+| Beta | how much a return moves with another on average; the realised beta is the slope of the portfolio's monthly excess return on the benchmark's |
+| Active exposure | the portfolio's beta to a factor minus the benchmark's beta to it, with each industry's betas from a regression on the six factors over the three years of daily returns before the month |
+| Attribution | the split of each month's active return into the active exposures times the factors' returns, and a residual |
+| Spread | the cap-weighted return of the 46 industries outside the tilt minus the cap-weighted return of Coal, Oil and Util |
+| t-ratio | a mean divided by its standard error |
+| Band | the largest difference, fixed before the run, at which a rebuilt figure counts as reproducing the recorded one |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**What this notebook does.** An index fund under the mandate holds Coal, Oil and Util at no more than half their benchmark weight and has to put the weight it removes somewhere. Risk-models-for-index-tracking puts it where an optimiser says, using a covariance estimator. This notebook puts it in the simplest place that obeys the tilt, the other 46 industries in proportion to their benchmark weights, and measures what the optimiser's work saves: the naive tilt's realised tracking error beside each of the seven optimised paths, month by month from 1979-07 to 2026-08, with the paired test and Holm's correction across the seven, and the naive tilt's turnover, costs, information ratio, realised beta and attribution beside theirs.
+
+**Where the optimised paths come from.** The seven paths, their monthly active returns and their measures are read from tables of risk-models-for-index-tracking at commit ddbb75c, copied unchanged into `results/202608/source/`, and the code that built them is copied unchanged into `src/bp/source/`, each file with a first line that names its source file and the commit. `tests/test_source_copies.py` checks every copy. Before any figure of the naive tilt is computed, section 1 rebuilds one optimised path from the copied code and requires it to reproduce the recorded tracking error within a band of 0.1 basis point a year.
+
+The seven optimised paths, by their labels in the copied tables. Each holds the mandate, and is labelled "| C3 tilt only" in the tables below.
+""" + PATHS_TABLE + """
+**How the naive tilt is run.** Each month the naive tilt takes that month's benchmark weights, halves Coal, Oil and Util, and scales the other 46 up by one common factor so that the weights sum to one. It starts as the benchmark in 1979-07, as the optimised paths do, rebalances to these weights every month, and its turnover is measured against its own drifted weights. It is not held to the turnover cap, and the months in which it trades more than the cap allows are counted. The construction is `naive_tilt` in `src/bp/naive.py`.
+
+Running time: about half a minute, most of it rebuilding the optimised path in section 1.
+"""),
+    writefile("constants.py"),
+    writefile("naive.py"),
+    code(SETUP_0809),
+    md("""
+## 1. One optimised path rebuilt from the copied code
+
+The path of the sample covariance on three years of daily returns is rebuilt month by month with the copied optimiser and compared with the realised tracking error and the monthly active returns recorded in the copied tables. The notebook stops here unless the difference is inside the band.
+"""),
+    code("""
+rolling, rolling_name = source_table("rolling_evaluation")
+tilt_rows = rolling[rolling["set"] == "C3 tilt only"].set_index("variant").loc[list(C.NAIVE_PATHS)]
+active_paths, _ = source_table("active_returns")
+active_paths.index = pd.PeriodIndex(active_paths["month"], freq="M")
+label = f"{C.NAIVE_REPRODUCED} | C3 tilt only"
+t0 = time.time()
+rebuilt = E.run_path(months, Sigma, weights, returns_m, C.CONSTRAINT_SET_TILT_ONLY, tilt_mask, None)
+te_rebuilt = E.realised_tracking_error(rebuilt["active_return"])
+te_recorded = float(tilt_rows.loc[C.NAIVE_REPRODUCED, "realised TE"])
+reproduction = pd.DataFrame([{
+    "path": label, "committed table": rolling_name, "rebuilt realised TE (bp)": 1e4 * te_rebuilt,
+    "committed realised TE (bp)": 1e4 * te_recorded, "difference (bp)": 1e4 * (te_rebuilt - te_recorded),
+    "largest monthly active return difference": float(np.abs(rebuilt["active_return"].to_numpy() - active_paths.loc[months, label].to_numpy()).max()),
+    "band (bp)": 1e4 * C.ATTRIBUTION_REPRODUCTION_TOL}])
+reproduction["passes"] = reproduction["difference (bp)"].abs() <= reproduction["band (bp)"]
+reproduction.to_csv(out("naive_tilt_reproduction"), index=False, float_format="%.8f")
+print(f"rebuilt in {time.time() - t0:.0f}s")
+print(reproduction.T.to_string())
+assert reproduction["passes"].all(), "the rebuilt path does not reproduce the recorded tracking error, so no figure of the naive tilt is computed"
+"""),
+    md("""
+## 2. The naive tilt, month by month
+
+The cell runs the naive tilt over the 566 months and checks each month's weights: they sum to one, none is negative, Coal, Oil and Util are at half their benchmark weight, and each of the other 46 industries is within the mandate's 2 percentage points of its benchmark weight, a bound the naive tilt is not built to respect and meets in every month.
+"""),
+    code("""
+tilt = N.run_path(lambda m, b: N.naive_tilt(b, tilt_mask), months, weights, returns_m, betas, FACTORS, S)
+W = np.vstack(tilt["weights"].to_numpy())
+B = weights.loc[months].to_numpy()
+assert np.abs(W.sum(axis=1) - 1.0).max() < 1e-12 and (W >= 0).all()
+assert np.abs(W[:, tilt_mask] - C.TILT_MAX_SHARE_OF_BENCHMARK * B[:, tilt_mask]).max() < 1e-15
+assert np.abs(W - B)[:, ~tilt_mask].max() <= C.ACTIVE_WEIGHT_BOUND
+tilt.drop(columns="weights").to_csv(out("naive_tilt_monthly"), float_format="%.10f")
+pd.DataFrame(W, index=tilt.index, columns=industries).to_csv(out("naive_tilt_weights"), float_format="%.10f")
+row = N.measures(tilt["active_return"], tilt["turnover"], bench_ex, tilt["objective"], tilt)
+row.update({"months above the turnover cap": int((tilt["turnover"] > C.TURNOVER_CAP_MONTHLY_ONE_WAY).sum()),
+            "first month turnover": float(tilt["turnover"].iloc[0]), "largest monthly turnover": float(tilt["turnover"].max()),
+            "month of the largest turnover": str(tilt["turnover"].idxmax()), "mean benchmark turnover": float(tilt["benchmark_turnover"].mean()),
+            "largest active weight over the months": float(tilt["largest active weight"].max()),
+            "mean effective number": float(tilt["effective_number"].mean()), "mean industries held": float(tilt["held"].mean())})
+measures = pd.DataFrame([row], index=pd.Index(["naive tilt"], name="portfolio"))
+measures.to_csv(out("naive_tilt_measures"), float_format="%.10f")
+print(f"largest active weight of the 46 industries outside the tilt: {np.abs(W - B)[:, ~tilt_mask].max():.4f}")
+print(f"weight removed from Coal, Oil and Util: {tilt['removed weight'].min():.4f} to {tilt['removed weight'].max():.4f}")
+print(f"index turnover from the naive path's records: {row['mean benchmark turnover']:.8f}, recorded with the optimised paths: {float(tilt_rows['benchmark turnover'].iloc[0]):.8f}")
+print(measures.T.to_string())
+"""),
+    md("""
+## 3. Tracking error: the naive tilt against each optimised path
+
+The paired test compares the naive tilt's realised tracking error with each optimised path's on the same 566 months, with blocks of 12 months, 2,000 draws and the seed of `constants.py`, and Holm's correction across the seven comparisons. The interval is the test's 95 per cent interval on the difference.
+"""),
+    code("""
+SETTINGS = dict(block=C.EVAL_BOOTSTRAP_BLOCK_MONTHS, draws=C.EVAL_BOOTSTRAP_DRAWS, level=C.EVAL_BOOTSTRAP_LEVEL, periods=C.PAIRED_PERIODS)
+r1 = tilt["active_return"].to_numpy()
+rows = []
+for v in C.NAIVE_PATHS:
+    s2 = active_paths.loc[months, f"{v} | C3 tilt only"].to_numpy(dtype=float)
+    t = PT.test(r1, s2, seed=C.EVAL_BOOTSTRAP_SEED, **SETTINGS)
+    rows.append({"path": f"{v} | C3 tilt only", "naive tilt (bp)": 1e4 * t["sd1"], "path (bp)": 1e4 * t["sd2"],
+                 "path, committed table (bp)": 1e4 * float(tilt_rows.loc[v, "realised TE"]),
+                 "difference (bp)": 1e4 * t["difference"], "standard error (bp)": 1e4 * t["se"], "critical value": t["critical"],
+                 "lower (bp)": 1e4 * t["lower"], "upper (bp)": 1e4 * t["upper"],
+                 "detectable difference (bp)": 1e4 * PT.detectable_difference(t["se"], t["critical"], C.PAIRED_DETECTABLE_POWER),
+                 "correlation": t["correlation"], "p-value": t["p_value"]})
+paired = pd.DataFrame(rows)
+paired["Holm p-value"] = PT.holm(paired["p-value"].to_numpy())
+paired.to_csv(out("naive_tilt_paired_tests"), index=False, float_format="%.8f")
+print(paired[["path", "naive tilt (bp)", "path (bp)", "difference (bp)", "lower (bp)", "upper (bp)", "correlation", "Holm p-value"]].to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+print(f"statistically significant at the 5 per cent level after Holm's correction: {int((paired['Holm p-value'] < C.NAIVE_SIGNIFICANCE).sum())} of {len(paired)}")
+"""),
+    md("""
+## 4. Turnover, costs and net active return
+
+The naive tilt's active return, turnover and net active return at the two cost levels, beside the seven optimised paths' recorded figures, all in basis points a year except turnover, which is the mean one-way turnover a month.
+"""),
+    code("""
+costs = pd.DataFrame({"realised TE (bp)": 1e4 * tilt_rows["realised TE"], "active return (gross) (bp)": 1e4 * tilt_rows["active return (gross)"],
+                      "turnover (one-way)": tilt_rows["turnover (one-way)"],
+                      "net active return at 50 bp (bp)": 1e4 * tilt_rows["net active return at 50 bp"],
+                      "net active return at 100 bp (bp)": 1e4 * tilt_rows["net active return at 100 bp"]})
+costs.index = [f"{v} | C3 tilt only" for v in costs.index]
+nv = measures.loc["naive tilt"]
+costs.loc["naive tilt"] = [1e4 * nv["realised TE"], 1e4 * nv["active return (gross)"], nv["turnover (one-way)"],
+                           1e4 * nv["net active return at 50 bp"], 1e4 * nv["net active return at 100 bp"]]
+costs.to_csv(out("naive_tilt_returns_and_costs"), float_format="%.6f")
+print(costs.to_string(float_format=lambda x: f"{x:.4f}"))
+print(f"months in which the naive tilt trades more than the cap: {int(nv['months above the turnover cap'])} of {len(months)}; "
+      f"first month {nv['first month turnover']:.4f}, largest {nv['largest monthly turnover']:.4f} in {nv['month of the largest turnover']}")
+"""),
+    md("""
+## 5. Information ratios and realised betas
+
+Each information ratio is given before costs and at the two cost levels, with its standard error from the same 2,000 block bootstrap resamples of the months; the cost is held at the full-sample figure in every resample. No test of a difference between two information ratios is made. The realised beta is the slope of each portfolio's monthly excess return on the benchmark's.
+"""),
+    code("""
+def cost_of(table, label):
+    return {bp: float(table.loc[label, f"cost at {bp} bp"]) for bp in COSTS}
+
+
+ir_rows = [{"portfolio": "naive tilt", **N.information_ratios(r1, cost_of(measures, "naive tilt"), IDX)}]
+for v in C.NAIVE_PATHS:
+    ir_rows.append({"portfolio": f"{v} | C3 tilt only", **N.information_ratios(active_paths.loc[months, f"{v} | C3 tilt only"], cost_of(tilt_rows, v), IDX)})
+information_ratios = pd.DataFrame(ir_rows).set_index("portfolio")
+information_ratios.to_csv(out("naive_tilt_information_ratios"), float_format="%.8f")
+beta_rows = [{"portfolio": "naive tilt", "realised beta": N.realised_beta(r1, bench_ex)}]
+beta_rows += [{"portfolio": f"{v} | C3 tilt only", "realised beta": N.realised_beta(active_paths.loc[months, f"{v} | C3 tilt only"], bench_ex)} for v in C.NAIVE_PATHS]
+realised_betas = pd.DataFrame(beta_rows)
+realised_betas.to_csv(out("naive_tilt_realised_betas"), index=False, float_format="%.8f")
+print(information_ratios.to_string(float_format=lambda x: f"{x:.4f}"))
+print(realised_betas.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+"""),
+    md("""
+## 6. Attribution to the six factors
+
+The copied attribution splits each month's active return of the naive tilt into its six active exposures times the factors' returns, and a residual, with the betas of section 2. Each contribution is a figure per year with its standard error. The second table sets the naive tilt's contributions beside the seven optimised paths' recorded ones, in basis points a year.
+"""),
+    code("""
+att = A.attribute(pd.DataFrame(W, index=months, columns=weights.columns), weights.loc[months], betas, P.factors_m, tilt["active_return"])
+assert float(att["identity error"].abs().max()) <= C.ATTRIBUTION_IDENTITY_MAX_ABS_ERROR
+att.to_csv(out("naive_tilt_attribution_monthly"), float_format="%.10f")
+summary = A.summarise(att)
+summary["portfolio"] = "naive tilt"
+summary["targeted total (per year)"] = sum(summary[f"contribution {f} (per year)"] for f in TARGETED)
+attribution = pd.DataFrame([summary]).set_index("portfolio")
+attribution.to_csv(out("naive_tilt_attribution_summary"), float_format="%.10f")
+print(attribution.T.to_string(float_format=lambda x: f"{x:.6f}"))
+recorded, _ = source_table("attribution_summary")
+recorded = recorded[recorded["set"] == "C3 tilt only"].set_index("variant").loc[list(C.NAIVE_PATHS)]
+cols = [f"contribution {f} (per year)" for f in FACTORS] + ["factor total (per year)", "residual (per year)", "active return (per year)"]
+beside = pd.concat([attribution[cols], recorded[cols].rename(index=lambda v: f"{v} | C3 tilt only")])
+print((1e4 * beside).rename(columns=lambda c: c.replace(" (per year)", "")).to_string(float_format=lambda x: f"{x:.1f}"))
+"""),
+    md("""
+## 7. Two checks written after the results were known
+
+Both checks were written on 27 November 2026, once the figures of sections 3 to 6 were known, to read the active return correctly. The first sets each difference between the naive tilt's information ratio and a path's beside the two ratios' standard errors, from the table of section 5; it is a comparison of sizes, and no test is made. The second rebuilds the naive tilt's active return from the spread: each month the active return equals the weight removed from Coal, Oil and Util times the spread, and the cell checks the identity and reports the spread's mean and standard deviation per year, its t-ratio with the months taken as independent, and its share of positive months.
+"""),
+    code("""
+# Added after the run, 27 November 2026: the two checks of this section.
+ir_table = pd.read_csv(out("naive_tilt_information_ratios"), index_col=0)
+rows = []
+for path in ir_table.index[1:]:
+    for label, col, se in (("gross", "information ratio (gross)", "standard error (gross)"),
+                           ("at 50 bp", "information ratio at 50 bp", "standard error at 50 bp"),
+                           ("at 100 bp", "information ratio at 100 bp", "standard error at 100 bp")):
+        d = ir_table.loc["naive tilt", col] - ir_table.loc[path, col]
+        rows.append({"naive portfolio": "naive tilt", "path": path, "ratio": label, "naive": ir_table.loc["naive tilt", col],
+                     "path value": ir_table.loc[path, col], "difference": d, "standard error, naive": ir_table.loc["naive tilt", se],
+                     "standard error, path": ir_table.loc[path, se],
+                     "difference above the larger standard error": bool(d > max(ir_table.loc["naive tilt", se], ir_table.loc[path, se]))})
+ir_differences = pd.DataFrame(rows)
+ir_differences.to_csv(out("naive_tilt_information_ratio_differences"), index=False, float_format="%.8f")
+print(ir_differences.groupby("ratio", sort=False)["difference above the larger standard error"].sum().to_string())
+
+Wm, Rm = weights.loc[months].copy(), returns_m.loc[months].copy()
+Wm.columns = Rm.columns = industries
+tilted = list(C.TILT_INDUSTRIES)
+rest = [c for c in industries if c not in tilted]
+spread = (Wm[rest] * Rm[rest]).sum(axis=1) / Wm[rest].sum(axis=1) - (Wm[tilted] * Rm[tilted]).sum(axis=1) / Wm[tilted].sum(axis=1)
+removed = (1.0 - C.TILT_MAX_SHARE_OF_BENCHMARK) * Wm[tilted].sum(axis=1).to_numpy()
+identity_error = float(np.abs(removed * spread.to_numpy() - r1).max())
+assert identity_error < 1e-9
+spread_table = pd.DataFrame([{"months": len(spread), "mean per year": 12 * spread.mean(), "standard deviation per year": spread.std(ddof=1) * np.sqrt(12),
+                              "t-ratio": spread.mean() / (spread.std(ddof=1) / np.sqrt(len(spread))), "share of positive months": float((spread > 0).mean()),
+                              "largest identity error": identity_error}])
+spread_table.to_csv(out("naive_tilt_spread"), index=False, float_format="%.8f")
+print(spread_table.to_string(index=False))
+"""),
+    md("""
+## What this notebook establishes, and what it does not settle
+
+The naive tilt realises 105.6 basis points a year of tracking error from 1979-07 to 2026-08. The seven optimised paths realise 79.7 to 90.9, so the naive tilt realises 14.7 to 25.9 basis points a year more than each of them, each difference statistically significant at the 5 per cent level on the paired test after Holm's correction across the seven, with adjusted p-values of 0.0035 to 0.0115. The smallest difference is against the sample covariance on 120 months and the largest against RiskMetrics. The monthly active returns of the naive tilt and of each path are correlated at 0.76 to 0.86.
+
+The naive tilt trades less. Its mean one-way turnover is 0.42% a month against 0.81% to 1.50% for the paths. It moves 11.7% of the portfolio in its first month, when it leaves the benchmark, and exceeds the turnover cap of 2% a month in 28 of the 566 months, which the cap rules out for an optimised path. Its realised beta is 1.017, against 1.007 to 1.010 for the paths.
+
+Over the sample the naive tilt earned an active return of +13.5 basis points a year before costs, against +1.8 to +6.9 for the paths, and +8.5 after a cost of 100 basis points per unit of turnover, against -14.0 to -2.8. No verdict was set on returns and no test of a difference in return was run, so these figures do not show that the naive tilt earns more than an optimised path, or that it earns less. Before costs each difference in information ratio, 0.05 to 0.11, is smaller than the standard error of either ratio, 0.12 to 0.14. The two checks of section 7, written once the results were known, read the gap in two parts:
+
+- The naive tilt's active return is, month by month, the weight removed from Coal, Oil and Util times the spread. The spread averaged +1.22% a year over the 566 months, with a standard deviation of 15.28% a year and a t-ratio of 0.55. The optimised paths hedge part of that spread away, which is also why their tracking error is lower. How much the spread earned is a property of the period.
+- After costs the gaps widen, because the naive tilt trades less than every path. That part is a property of the two methods: at 100 basis points per unit of turnover, the difference in information ratio exceeds the larger of the two standard errors against six of the seven paths.
+
+The naive tilt's mean active exposures to value, profitability, investment and momentum are all below zero, -0.024, -0.013, -0.013 and -0.005: moving weight from Coal, Oil and Util to the other 46 industries lowers the portfolio's betas to all four.
+
+**What this notebook does not settle.**
+
+- The naive tilt is one construction of a tilt with no estimate of risk. Spreading the removed weight in another way, over a chosen set of industries close to the tilted ones for example, would realise a different tracking error, and none is run here.
+- The figures are those of one sample and one vintage, 202608. A later vintage reproduces the comparisons, and not every digit, because French revises history.
+- The optimised paths are read from risk-models-for-index-tracking at commit ddbb75c and one of them is rebuilt here. The others are taken as recorded, and their checks are in that repository.
+"""),
+]
+
+NB09 = [
+    md("""
+# 09. The tilted index: the factor objective's direction with no optimiser
+
+**Terms used in this notebook.**
+
+| Term | Meaning |
+|---|---|
+| Market capitalisation | the number of a firm's shares times their price, the firm's size in money |
+| Cap-weighted | weighted by market capitalisation |
+| Benchmark | the index the portfolio tracks: French's 49 industries, each held in proportion to its market capitalisation at the start of the month |
+| Active weight | the portfolio's weight in an industry minus the benchmark's weight in it |
+| Active return | the portfolio's return minus the benchmark's return in the same month |
+| Covariance matrix | the table of all variances and covariances of the 49 industries' returns |
+| Tracking error | the standard deviation of the monthly active return times the square root of 12, a figure per year; realised when measured on the active returns afterwards, forecast when computed from a covariance matrix before the month |
+| Basis point | one hundredth of a percentage point; 100 basis points a year of tracking error is 1% a year |
+| Tilt | Coal, Oil and Util (utilities) held at no more than half their benchmark weight |
+| Turnover cap | an upper limit on the one-way turnover of a rebalance, 2% a month here |
+| Excess return | a return minus the risk-free rate, the return on a one-month US Treasury bill |
+| Factor | a return series that moves many assets at once; the six here are the market (Mkt-RF), size (SMB), value (HML), profitability (RMW), investment (CMA) and momentum (Mom) |
+| Beta | how much a return moves with another on average; each industry's betas to the six factors come from a regression over the three years of daily returns before the month, and the realised beta of a portfolio is the slope of its monthly excess return on the benchmark's |
+| Mandate | the rules the optimised portfolios obey in this notebook: long-only, each industry outside the tilt within 2 percentage points of its benchmark weight, the turnover cap, the tilt, tobacco and weapons (Smoke and Guns) excluded, and a beta of one to the benchmark; risk-models-for-index-tracking calls this set "C3" |
+| Active exposure | the portfolio's beta to a factor minus the benchmark's beta to it |
+| Targeted factors | value, profitability, investment and momentum, the four factors whose active exposures the factor objective adds up |
+| Factor objective | each month, the sum of the portfolio's active exposures to the four targeted factors, which the optimiser makes as large as it can under the mandate and a budget |
+| Budget | the largest forecast tracking error the optimiser may take, 100 basis points a year for the seven paths compared here |
+| Exposure per basis point | the mean of the factor objective over the months divided by the realised tracking error in basis points: what each basis point of tracking error bought |
+| Covariance estimator | a method for estimating the covariance matrix from past returns |
+| Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
+| Principal component | a combination of the industries chosen to explain as much of their total variance as one combination can |
+| Optimiser | the routine of risk-models-for-index-tracking that holds, each month, the long-only portfolio with the largest factor objective under the mandate and the budget |
+| Path | the month-by-month sequence of portfolios of one method, each formed on the data before its month |
+| Optimised path | the path the optimiser holds with one covariance estimator |
+| Score | an industry's betas to the four targeted factors, added up |
+| Tilted index | the portfolio this notebook builds: the benchmark with the tilt and the exclusions, each other industry's weight then raised or lowered with its score as far as the bound on each active weight and the floor at zero allow; it uses no estimate of risk and no budget |
+| One-way turnover | half the sum over industries of the absolute changes in weight at a rebalance; the fraction of the portfolio sold, which is also the fraction bought |
+| Drifted weights | the previous month's weights after that month's returns have moved them |
+| Cost level | the cost charged per unit of one-way turnover, 50 or 100 basis points here, applied after the fact |
+| Net active return | the active return per year less 12 times the mean one-way turnover times the cost level |
+| Information ratio | the active return per year divided by the realised tracking error |
+| Standard error | the standard deviation an estimate would show across repeated samples of the same length |
+| Block bootstrap | resampling the months in blocks of 12 consecutive months, circular, so that a block may run past the last month into the first; each resample keeps the months of a block together |
+| Draw | one resample of the months, 2,000 here |
+| Seed | the number that starts the random number generator, fixed in `constants.py` so that every run draws the same resamples |
+| p-value | the probability, if the two exposures per basis point were equal, of a difference at least as far from zero as the one measured |
+| Holm's correction | the adjustment of Holm (1979) to the p-values of a family of comparisons tested together; a difference is statistically significant at the 5 per cent level when its adjusted p-value is below 0.05 |
+| Attribution | the split of each month's active return into the active exposures times the factors' returns, and a residual |
+| Band | the largest difference, fixed before the run, at which a rebuilt figure counts as reproducing the recorded one |
+| Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
+| Provenance | the record of what was downloaded, when, with its checksum and vintage |
+
+**What this notebook does.** Under the factor objective of risk-models-for-index-tracking an optimiser spends a budget of forecast tracking error on exposure to the four targeted factors. The tilted index moves the benchmark in the same direction with no estimate of risk: each industry's weight goes up or down with its score, as far as the mandate's bound on each active weight and the floor at zero allow. This notebook measures what the optimiser's work buys: the tilted index's exposure per basis point of realised tracking error beside each of the seven optimised paths at a budget of 100 basis points a year, month by month from 1979-07 to 2026-08, with a paired block bootstrap and Holm's correction across the seven, and the tilted index's tracking error, turnover, costs, information ratio, realised beta and attribution beside theirs.
+
+**Where the optimised paths come from.** The seven paths, their monthly records and their measures are read from tables of risk-models-for-index-tracking at commit ddbb75c, copied unchanged into `results/202608/source/`, and the code that built them is copied unchanged into `src/bp/source/`, each file with a first line that names its source file and the commit. `tests/test_source_copies.py` checks every copy. Before any figure of the tilted index is computed, section 1 rebuilds one optimised path from the copied code and requires it to reproduce the recorded tracking error within a band of 0.1 basis point a year.
+
+The seven optimised paths, by their labels in the copied tables. Each holds the mandate at a budget of 100 basis points a year, and is labelled "| 100" in the tables below.
+""" + PATHS_TABLE + """
+**How the tilted index is built.** Each month:
+
+1. Start from the month's benchmark weights. Hold Coal, Oil and Util at half their benchmark weight, set Smoke and Guns to zero, and add the weight this removes to the other 44 industries in proportion to their benchmark weights. Call these weights w0.
+2. Compute each of the 44 industries' score from that month's betas and centre it on its mean weighted by w0, so that the centred scores z sum to zero under w0.
+3. Set the weight of each of the 44 to w0 times (1 + k z), with one k for all 44: the largest value at which every active weight of the 44 stays within 2 percentage points and no weight falls below zero.
+
+The weights still sum to one, because the centred scores sum to zero under w0. An industry whose score is above the w0-weighted mean gets more weight than w0 gives it, and one below gets less. The tilted index starts as the benchmark in 1979-07, as the optimised paths do, rebalances to these weights every month, and its turnover is measured against its own drifted weights. It is not held to the turnover cap or to a beta of one, and its months above the cap and its realised beta are reported. The construction is `tilted_index` in `src/bp/naive.py`.
+
+Running time: about half a minute, most of it rebuilding the optimised path in section 1.
+"""),
+    writefile("constants.py"),
+    writefile("naive.py"),
+    code(SETUP_0809),
+    md("""
+## 1. One optimised path rebuilt from the copied code
+
+The path of the sample covariance on three years of daily returns at the budget of 100 basis points is rebuilt month by month with the copied optimiser and compared with the realised tracking error, the monthly active returns and the monthly factor objective recorded in the copied tables. The notebook stops here unless the difference is inside the band.
+"""),
+    code("""
+fo_eval, fo_eval_name = source_table("factor_objective_evaluation")
+fo_eval = fo_eval.set_index(fo_eval.columns[0])
+fo_month, _ = source_table("factor_objective_monthly")
+fo_month["month"] = pd.PeriodIndex(fo_month["month"], freq="M")
+MAIN = int(round(1e4 * C.FO_BUDGET_MAIN))
+label = f"{C.NAIVE_REPRODUCED} | {MAIN}"
+MANDATE = C.CONSTRAINT_SETS[C.FO_CONSTRAINT_SET]
+t0 = time.time()
+rebuilt = E.run_factor_path(months, Sigma, betas, weights, returns_m, MANDATE, S, C.FO_BUDGET_MAIN, tilt_mask, mandate_mask)
+te_rebuilt = E.realised_tracking_error(rebuilt["active_return"])
+te_recorded = float(fo_eval.loc[label, "realised TE"])
+recorded = fo_month[fo_month["path"] == label].set_index("month").loc[months]
+reproduction = pd.DataFrame([{
+    "path": label, "committed table": fo_eval_name, "rebuilt realised TE (bp)": 1e4 * te_rebuilt,
+    "committed realised TE (bp)": 1e4 * te_recorded, "difference (bp)": 1e4 * (te_rebuilt - te_recorded),
+    "largest monthly active return difference": float(np.abs(rebuilt["active_return"].to_numpy() - recorded["active_return"].to_numpy()).max()),
+    "largest monthly objective difference": float(np.abs(rebuilt["objective"].to_numpy() - recorded["objective"].to_numpy()).max()),
+    "band (bp)": 1e4 * C.ATTRIBUTION_REPRODUCTION_TOL}])
+reproduction["passes"] = reproduction["difference (bp)"].abs() <= reproduction["band (bp)"]
+reproduction.to_csv(out("tilted_index_reproduction"), index=False, float_format="%.8f")
+print(f"rebuilt in {time.time() - t0:.0f}s")
+print(reproduction.T.to_string())
+assert reproduction["passes"].all(), "the rebuilt path does not reproduce the recorded tracking error, so no figure of the tilted index is computed"
+"""),
+    md("""
+## 2. The tilted index, month by month
+
+The cell runs the tilted index over the 566 months and checks each month's weights: they sum to one, none is negative, Coal, Oil and Util are at half their benchmark weight, Smoke and Guns are at zero, and each of the other 44 industries is within 2 percentage points of its benchmark weight. It also reports k: its range over the months, and which limit set it, the bound on an active weight or the floor at zero, at which industry.
+"""),
+    code("""
+score = {m: betas[m] @ S for m in months}
+index_path = N.run_path(lambda m, b: N.tilted_index(b, tilt_mask, mandate_mask, score[m], industries),
+                        months, weights, returns_m, betas, FACTORS, S)
+W = np.vstack(index_path["weights"].to_numpy())
+B = weights.loc[months].to_numpy()
+free = ~(tilt_mask | mandate_mask)
+assert np.abs(W.sum(axis=1) - 1.0).max() < 1e-12 and (W >= -1e-15).all()
+assert np.abs(W[:, tilt_mask] - C.TILT_MAX_SHARE_OF_BENCHMARK * B[:, tilt_mask]).max() < 1e-15 and (W[:, mandate_mask] == 0).all()
+assert np.abs(W - B)[:, free].max() <= C.ACTIVE_WEIGHT_BOUND + 1e-12
+index_path.drop(columns="weights").to_csv(out("tilted_index_monthly"), float_format="%.10f")
+pd.DataFrame(W, index=index_path.index, columns=industries).to_csv(out("tilted_index_weights"), float_format="%.10f")
+k = index_path["k"]
+k_summary = pd.DataFrame([{"k smallest": float(k.min()), "month of the smallest": str(k.idxmin()), "k largest": float(k.max()),
+                           "month of the largest": str(k.idxmax()), "k median": float(k.median()),
+                           "months set by the floor": int((index_path["k set by"] == "floor").sum()),
+                           "months set by the bound": int((index_path["k set by"] == "bound").sum()),
+                           "largest active weight of w0": float(index_path["largest active weight of w0"].max())}])
+k_summary.to_csv(out("tilted_index_k"), index=False, float_format="%.8f")
+k_set_at = index_path["k set at"].value_counts().rename("months")
+k_set_at.to_csv(out("tilted_index_k_set_at"))
+floor_months = index_path.index[index_path["k set by"] == "floor"]
+print(k_summary.T.to_string())
+print(k_set_at.to_string())
+print("months set by the floor:", ", ".join(sorted(set(index_path.loc[floor_months, "k set at"]))), f"{floor_months.min()} to {floor_months.max()}")
+row = N.measures(index_path["active_return"], index_path["turnover"], bench_ex, index_path["objective"], index_path)
+row.update({"months above the turnover cap": int((index_path["turnover"] > C.TURNOVER_CAP_MONTHLY_ONE_WAY).sum()),
+            "first month turnover": float(index_path["turnover"].iloc[0]), "largest monthly turnover": float(index_path["turnover"].max()),
+            "month of the largest turnover": str(index_path["turnover"].idxmax()), "mean benchmark turnover": float(index_path["benchmark_turnover"].mean()),
+            "largest active weight over the months": float(index_path["largest active weight"].max()),
+            "mean effective number": float(index_path["effective_number"].mean()), "mean industries held": float(index_path["held"].mean())})
+measures = pd.DataFrame([row], index=pd.Index(["tilted index"], name="portfolio"))
+measures.to_csv(out("tilted_index_measures"), float_format="%.10f")
+print(measures.T.to_string())
+"""),
+    md("""
+## 3. Exposure per basis point: the tilted index against each optimised path
+
+For each path the cell draws the same 2,000 block bootstrap resamples of the months for the tilted index and the path together, computes the difference in exposure per basis point on each, and reports the 95 per cent percentile interval and a two-sided p-value: twice the smaller of the shares of resampled differences at or below zero and at or above zero, each counted as (count + 1) / (2,000 + 1). Holm's correction is applied across the seven.
+"""),
+    code("""
+o2, a2 = index_path["objective"].to_numpy(), index_path["active_return"].to_numpy()
+index_epb = float(N.exposure_per_bp(o2, a2))
+index_star = N.exposure_per_bp(o2[IDX], a2[IDX])
+rows = []
+for v in C.NAIVE_PATHS:
+    rec = fo_month[fo_month["path"] == f"{v} | {MAIN}"].set_index("month").loc[months]
+    op, ap = rec["objective"].to_numpy(dtype=float), rec["active_return"].to_numpy(dtype=float)
+    path_epb = float(N.exposure_per_bp(op, ap))
+    lo, hi, p = N.bootstrap_difference(index_star - N.exposure_per_bp(op[IDX], ap[IDX]))
+    rows.append({"path": f"{v} | {MAIN}", "tilted index": index_epb, "path value": path_epb,
+                 "path, committed table": float(fo_eval.loc[f"{v} | {MAIN}", "exposure per bp of realised TE"]),
+                 "difference": index_epb - path_epb, "lower": lo, "upper": hi, "p-value": p})
+bootstrap = pd.DataFrame(rows)
+bootstrap["Holm p-value"] = PT.holm(bootstrap["p-value"].to_numpy())
+bootstrap.to_csv(out("tilted_index_bootstrap"), index=False, float_format="%.10f")
+print(bootstrap.to_string(index=False, float_format=lambda x: f"{x:.6f}"))
+print(f"statistically significant at the 5 per cent level after Holm's correction: {int((bootstrap['Holm p-value'] < C.NAIVE_SIGNIFICANCE).sum())} of {len(bootstrap)}")
+"""),
+    md("""
+## 4. Tracking error, returns, costs and exposures beside the paths
+
+The tilted index's measures beside the seven optimised paths' recorded measures at the budget of 100 basis points, as fractions per year, with turnover the mean one-way turnover a month. The second table gives the five single-estimator paths at the budgets of 75 and 150 basis points, as recorded, for the exposure per basis point at a smaller and a larger budget.
+"""),
+    code("""
+cols = ["realised TE", "active return (gross)", "turnover (one-way)", "net active return at 50 bp", "net active return at 100 bp",
+        "mean objective", "exposure per bp of realised TE"] + [f"mean exposure {f}" for f in TARGETED]
+beside = fo_eval.loc[[f"{v} | {MAIN}" for v in C.NAIVE_PATHS], cols].copy()
+beside.loc["tilted index"] = [measures.loc["tilted index", c] for c in cols]
+beside.to_csv(out("tilted_index_beside_paths"), float_format="%.8f")
+print(beside.to_string(float_format=lambda x: f"{x:.6f}"))
+OTHER = [int(round(1e4 * b)) for b in C.FO_BUDGETS_ANNUAL if b != C.FO_BUDGET_MAIN]
+budgets = fo_eval.loc[[f"{v} | {b}" for b in OTHER for v in C.NAIVE_PATHS[:5]], ["realised TE", "exposure per bp of realised TE"]]
+budgets.to_csv(out("tilted_index_budgets_75_and_150"), float_format="%.8f")
+print(budgets.to_string(float_format=lambda x: f"{x:.6f}"))
+print(f"months in which the tilted index trades more than the cap: {int(measures.loc['tilted index', 'months above the turnover cap'])} of {len(months)}")
+"""),
+    md("""
+## 5. Information ratios and realised betas
+
+Each information ratio is given before costs and at the two cost levels, with its standard error from the same 2,000 block bootstrap resamples of the months; the cost is held at the full-sample figure in every resample. No test of a difference between two information ratios is made.
+"""),
+    code("""
+def cost_of(table, label):
+    return {bp: float(table.loc[label, f"cost at {bp} bp"]) for bp in COSTS}
+
+
+ir_rows = [{"portfolio": "tilted index", **N.information_ratios(a2, cost_of(measures, "tilted index"), IDX)}]
+for v in C.NAIVE_PATHS:
+    rec = fo_month[fo_month["path"] == f"{v} | {MAIN}"].set_index("month").loc[months]
+    ir_rows.append({"portfolio": f"{v} | {MAIN}", **N.information_ratios(rec["active_return"], cost_of(fo_eval, f"{v} | {MAIN}"), IDX)})
+information_ratios = pd.DataFrame(ir_rows).set_index("portfolio")
+information_ratios.to_csv(out("tilted_index_information_ratios"), float_format="%.8f")
+beta_rows = [{"portfolio": "tilted index", "realised beta": N.realised_beta(a2, bench_ex)}]
+beta_rows += [{"portfolio": f"{v} | {MAIN}", "realised beta": N.realised_beta(fo_month[fo_month["path"] == f"{v} | {MAIN}"].set_index("month").loc[months, "active_return"], bench_ex)}
+              for v in C.NAIVE_PATHS]
+realised_betas = pd.DataFrame(beta_rows)
+realised_betas.to_csv(out("tilted_index_realised_betas"), index=False, float_format="%.8f")
+print(information_ratios.to_string(float_format=lambda x: f"{x:.4f}"))
+print(realised_betas.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+"""),
+    md("""
+## 6. Attribution to the six factors
+
+The copied attribution splits each month's active return of the tilted index into its six active exposures times the factors' returns, and a residual. Each contribution is a figure per year with its standard error. The second table sets the tilted index's contributions beside the seven optimised paths' recorded ones at the budget of 100 basis points, in basis points a year.
+"""),
+    code("""
+att = A.attribute(pd.DataFrame(W, index=months, columns=weights.columns), weights.loc[months], betas, P.factors_m, index_path["active_return"])
+assert float(att["identity error"].abs().max()) <= C.ATTRIBUTION_IDENTITY_MAX_ABS_ERROR
+att.to_csv(out("tilted_index_attribution_monthly"), float_format="%.10f")
+summary = A.summarise(att)
+summary["portfolio"] = "tilted index"
+summary["targeted total (per year)"] = sum(summary[f"contribution {f} (per year)"] for f in TARGETED)
+attribution = pd.DataFrame([summary]).set_index("portfolio")
+attribution.to_csv(out("tilted_index_attribution_summary"), float_format="%.10f")
+print(attribution.T.to_string(float_format=lambda x: f"{x:.6f}"))
+recorded, _ = source_table("factor_objective_attribution")
+recorded = recorded.set_index("path").loc[[f"{v} | {MAIN}" for v in C.NAIVE_PATHS]]
+cols = [f"contribution {f} (per year)" for f in FACTORS] + ["factor total (per year)", "targeted total (per year)", "residual (per year)", "active return (per year)"]
+beside = pd.concat([attribution[cols], recorded[cols]])
+print((1e4 * beside).rename(columns=lambda c: c.replace(" (per year)", "")).to_string(float_format=lambda x: f"{x:.1f}"))
+"""),
+    md("""
+## 7. A check written after the results were known
+
+The check was written on 27 November 2026, once the figures of sections 3 to 6 were known, to read the active return correctly. It sets each difference between the tilted index's information ratio and a path's beside the two ratios' standard errors, from the table of section 5. It is a comparison of sizes, and no test is made.
+"""),
+    code("""
+# Added after the run, 27 November 2026: the check of this section.
+ir_table = pd.read_csv(out("tilted_index_information_ratios"), index_col=0)
+rows = []
+for path in ir_table.index[1:]:
+    for label, col, se in (("gross", "information ratio (gross)", "standard error (gross)"),
+                           ("at 50 bp", "information ratio at 50 bp", "standard error at 50 bp"),
+                           ("at 100 bp", "information ratio at 100 bp", "standard error at 100 bp")):
+        d = ir_table.loc["tilted index", col] - ir_table.loc[path, col]
+        rows.append({"naive portfolio": "tilted index", "path": path, "ratio": label, "naive": ir_table.loc["tilted index", col],
+                     "path value": ir_table.loc[path, col], "difference": d, "standard error, naive": ir_table.loc["tilted index", se],
+                     "standard error, path": ir_table.loc[path, se],
+                     "difference above the larger standard error": bool(d > max(ir_table.loc["tilted index", se], ir_table.loc[path, se]))})
+ir_differences = pd.DataFrame(rows)
+ir_differences.to_csv(out("tilted_index_information_ratio_differences"), index=False, float_format="%.8f")
+print(ir_differences.groupby("ratio", sort=False)["difference above the larger standard error"].sum().to_string())
+"""),
+    md("""
+## What this notebook establishes, and what it does not settle
+
+The tilted index obtains a mean factor objective of 0.022 at a realised tracking error of 119.3 basis points a year, an exposure per basis point of 0.000185. The seven optimised paths at the budget of 100 basis points obtain 0.000824 to 0.000979 per basis point, 4.5 to 5.3 times as much, and the tilted index's exposure per basis point is lower than each path's, each difference statistically significant at the 5 per cent level on the paired block bootstrap after Holm's correction across the seven, with adjusted p-values of 0.007. The tilted index's realised tracking error lies inside the paths' range, 115.6 to 150.1 basis points a year, so the comparison is made at a tracking error of the same size. The five single-estimator paths obtain 0.000478 to 0.000633 per basis point at the budget of 75 basis points and 0.001015 to 0.001073 at 150, both above the tilted index.
+
+The tilted index's exposure is small partly because of its form. One k scales all 44 industries, and the change in an industry's active weight is its weight times k times its centred score, so the largest industries reach the bound of 2 percentage points first and set k for all the others: k is set by the bound in 549 of the 566 months, most often at Banks (184 months) and Softw, computer software (138), and by the floor at zero in the other 17, all at Gold, from 1981-04 to 1984-01. Its median over the months is 0.206. This is a limit of the construction, and no other construction of a tilted index is run here.
+
+The tilted index trades less than the paths: 0.77% of the portfolio a month against 1.78% to 2.00%, and more than the cap of 2% a month in 38 of the 566 months, 14% of it in its first month. Its realised beta is 1.004, against 0.999 to 1.012 for the paths.
+
+Over the sample the tilted index earned an active return of +16.4 basis points a year before costs, against +2.3 to +15.5 for the paths, and +7.2 after a cost of 100 basis points per unit of turnover, against -20.0 to -5.9. No verdict was set on returns and no test of a difference in return was run, so these figures do not show that the tilted index earns more than an optimised path, or that it earns less. Before costs each difference in information ratio, 0.02 to 0.12, is smaller than the standard error of either ratio, 0.15 to 0.16. The check of section 7, written once the results were known, shows that after costs the gaps widen because the tilted index trades less than every path, a property of the two methods: at 100 basis points per unit of turnover, the difference exceeds the larger of the two standard errors against five of the seven paths.
+
+**What this notebook does not settle.**
+
+- The tilted index is one way to move the benchmark towards the targeted factors with no estimate of risk. A construction that scaled each industry's active weight by its score, or that capped k industry by industry, would obtain a different exposure, and none is run here.
+- The figures are those of one sample and one vintage, 202608. A later vintage reproduces the comparisons, and not every digit, because French revises history.
+- The optimised paths are read from risk-models-for-index-tracking at commit ddbb75c and one of them is rebuilt here. The others are taken as recorded, and their checks are in that repository.
+"""),
+]
+
 if __name__ == "__main__":
-    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07)]:
+    for name, cells in [("01_french_loader.ipynb", NB01), ("02_1N_vs_mean_variance.ipynb", NB02), ("03_shrinkage_and_constraints.ipynb", NB03), ("04_critical_window_and_simulation.ipynb", NB04), ("05_fat_tails.ipynb", NB05), ("06_volatility_clustering.ipynb", NB06), ("07_extended_sample.ipynb", NB07), ("08_naive_tilt.ipynb", NB08), ("09_tilted_index.ipynb", NB09)]:
         p = write(name, cells)
         print("wrote", p.relative_to(ROOT))

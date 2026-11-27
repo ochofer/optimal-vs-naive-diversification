@@ -1,0 +1,2 @@
+path,committed table,rebuilt realised TE (bp),committed realised TE (bp),difference (bp),largest monthly active return difference,largest monthly objective difference,band (bp),passes
+"sample, daily 3y | 100",factor_objective_evaluation_202608.csv,120.57125769,120.57130000,-0.00004231,0.00000000,0.00000000,0.10000000,True
