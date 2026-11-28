@@ -313,8 +313,10 @@ P["ti_rx_frac"] = rng(rxp["realised over forecast"], 2)
 P["ti_rx_index"] = plain(ti_rx.loc["tilted index", "realised over forecast"], 1)
 P["ti_rx_epb"] = plain(ti_rx.loc["tilted index", "realised exposure per bp"], 6)
 rx_up = (ti_rx.loc["tilted index", "realised exposure per bp"] - rxp["lower"]) / ti_rx.loc["tilted index", "realised exposure per bp"]   # the largest multiple each interval leaves open
+rx_dn = (ti_rx.loc["tilted index", "realised exposure per bp"] - rxp["upper"]) / ti_rx.loc["tilted index", "realised exposure per bp"]   # the smallest multiple each interval leaves open
 P["ti_rx_up_lo"], P["ti_rx_up_hi"] = plain(rx_up.min(), 1), plain(rx_up.max(), 1)
-assert (rx_up > 2).all() and (rxp["upper"] > 0).all()   # the text: the intervals are too wide to rule out such a multiple
+P["ti_rx_dn_lo"], P["ti_rx_dn_hi"] = plain(rx_dn.min(), 1), plain(rx_dn.max(), 1)
+assert (rx_up > 2).all() and (rx_dn < 1).all()   # the text: the intervals rule out neither a multiple below 1 nor one above 2
 assert all(row["exposure per bp of realised TE"] > TI["naive"]["epb"] for _, row in ti_bud.iterrows())
 P["build_date"] = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Amsterdam")).strftime("%-d %B %Y")
 

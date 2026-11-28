@@ -212,8 +212,10 @@ def build():
     P["ti_rx_index"] = f(rxi["realised over forecast"], 1)
     P["ti_rx_epb"] = f(rxi["realised exposure per bp"], 6)
     rx_up = (rxi["realised exposure per bp"] - rxp["lower"]) / rxi["realised exposure per bp"]   # the largest multiple each interval leaves open
+    rx_dn = (rxi["realised exposure per bp"] - rxp["upper"]) / rxi["realised exposure per bp"]   # the smallest multiple each interval leaves open
     P["ti_rx_up_lo"], P["ti_rx_up_hi"] = f(rx_up.min(), 1), f(rx_up.max(), 1)
-    assert (rx_up > 2).all() and (rxp["upper"] > 0).all()   # the text: the intervals are too wide to rule out such a multiple
+    P["ti_rx_dn_lo"], P["ti_rx_dn_hi"] = f(rx_dn.min(), 1), f(rx_dn.max(), 1)
+    assert (rx_up > 2).all() and (rx_dn < 1).all()   # the text: the intervals rule out neither a multiple below 1 nor one above 2
     P["ti_rx_holm"] = rng(rxp["Holm p-value"], 3) if rxp["Holm p-value"].round(3).nunique() > 1 else f(rxp["Holm p-value"].iloc[0], 3)
     P["fp_targ"] = rng(1e4 * foa.loc[fl, "targeted total (per year)"], 1, sign=True)
     P["fp_resid"] = rng(1e4 * foa.loc[fl, "residual (per year)"], 1, sign=True, by_size=True)
