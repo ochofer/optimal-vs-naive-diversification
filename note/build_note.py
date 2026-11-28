@@ -1,4 +1,4 @@
-"""Builds the note, note/B-P_note_2026-11.html and its PDF, from note/template.html and the tables committed in
+"""Builds the note, note/optimal-vs-naive-diversification_note_2026-11.html and its PDF, from note/template.html and the tables committed in
 results/202608/.
 
 Usage, from the repository root, on any machine with a clone:
@@ -21,7 +21,7 @@ import pandas as pd
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(SCRIPT_DIR)
 R = os.path.join(REPO, "results", "202608")
-NAME = "B-P_note_2026-11"
+NAME = "optimal-vs-naive-diversification_note_2026-11"
 HTML_OUT = os.path.join(SCRIPT_DIR, NAME + ".html")
 PDF_OUT = os.path.join(SCRIPT_DIR, NAME + ".pdf")
 FOOTER = ('<div style="width:100%;font:7.5pt Georgia,serif;color:#6b7280;padding:0 20mm;display:flex;justify-content:space-between">'
