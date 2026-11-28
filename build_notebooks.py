@@ -681,7 +681,7 @@ print("written:", sorted(f for f in os.listdir(C.OUTPUT_DIR) if f.startswith("re
     md("""
 ## What this notebook established, and what could be wrong
 
-Twenty-nine of the thirty Sharpe ratios tested are within 0.03 of the published values, most within 0.01, and all thirty turnover figures tested are within 25 per cent. Some tested figures repeat a portfolio: the value-weighted market is the same portfolio, all US stocks held in proportion to their market value, in each of the four datasets, and on MKT/SMB/HML minimum variance is the same with or without the ban on short sales. Counting each portfolio once, 25 of 26 Sharpe ratios are within 0.03 and 26 of 26 turnover figures within 25 per cent. The CEQ returns of the four constrained rules are within 0.0004 of the paper's on all 16 cells and within 0.0002 on 15. The Bayes-Stein shrinkage factor averages 0.33 on FF-4-factor and 0.68 on MKT/SMB/HML against the paper's 0.32 and 0.66, so the shrinkage is implemented as Jorion specified it. The paper's reading of Table 3 (its fourth and fifth observations) reproduces figure for figure in sign: constrained mean-variance and constrained Bayes-Stein have a lower Sharpe ratio than 1/N on Industry and MKT/SMB/HML and a higher one on FF-1-factor and FF-4-factor, and constrained minimum variance has a higher one than 1/N on Industry, MKT/SMB/HML and FF-4-factor and a lower one on FF-1-factor. The paper reports five differences among these rules as significant at the 5% level in its Table 3, three in favour of a constrained rule and two against it, and its p-values are one-sided where this notebook's are two-sided (the probability of a difference at least this large in either direction), so the comparison halves this notebook's values; on that footing all five reproduce (constrained Bayes-Stein above 1/N on FF-1-factor, one-sided 0.02 against the paper's 0.03; constrained minimum variance above 1/N on FF-4-factor, 0.0002 against 0.00; constrained mean-variance above 1/N on FF-1-factor, 0.03 against 0.02; constrained mean-variance below 1/N on Industry, 0.02 against 0.03, and on MKT/SMB/HML, 0.009 against 0.02). The paper's other nine one-sided values below 0.05 reproduce for the value-weighted market on all four datasets, for minimum variance on the two size-and-value datasets and for the generalised minimum-variance rule on FF-4-factor (0.000002 here against 0.00), and not for the unconstrained mean-variance and Bayes-Stein rules on FF-1-factor (0.05 and 0.07 here against 0.02), cells that carry no verdict. Three cells are below 0.05 here and not in the paper: the unconstrained mean-variance and Bayes-Stein rules on Industry (one-sided 0.007 and 0.010 against the paper's 0.17 and 0.19; two of the cells that carry no verdict, with replicated Sharpe ratios of minus 0.049 and minus 0.038 against the paper's 0.068 and 0.072) and constrained Bayes-Stein on MKT/SMB/HML (0.045 against 0.09), a sixth difference among the constrained rules, below 1/N.
+Twenty-nine of the thirty Sharpe ratios tested are within 0.03 of the published values, most within 0.01, and all twenty-six turnover figures of the portfolios that trade are within 25 per cent. Some tested figures repeat a portfolio: the value-weighted market is the same portfolio, all US stocks held in proportion to their market value, in each of the four datasets, and on MKT/SMB/HML minimum variance is the same with or without the ban on short sales. The value-weighted market trades nothing, so its four turnover figures test nothing. Counting each portfolio once, 25 of 26 Sharpe ratios are within 0.03, and 25 of 25 turnover figures of the portfolios that trade are within 25 per cent. The CEQ returns of the four constrained rules are within 0.0004 of the paper's on all 16 cells and within 0.0002 on 15. The Bayes-Stein shrinkage factor averages 0.33 on FF-4-factor and 0.68 on MKT/SMB/HML against the paper's 0.32 and 0.66, so the shrinkage is implemented as Jorion specified it. The paper's reading of Table 3 (its fourth and fifth observations) reproduces figure for figure in sign: constrained mean-variance and constrained Bayes-Stein have a lower Sharpe ratio than 1/N on Industry and MKT/SMB/HML and a higher one on FF-1-factor and FF-4-factor, and constrained minimum variance has a higher one than 1/N on Industry, MKT/SMB/HML and FF-4-factor and a lower one on FF-1-factor. The paper reports five differences among these rules as significant at the 5% level in its Table 3, three in favour of a constrained rule and two against it, and its p-values are one-sided where this notebook's are two-sided (the probability of a difference at least this large in either direction), so the comparison halves this notebook's values; on that footing all five reproduce (constrained Bayes-Stein above 1/N on FF-1-factor, one-sided 0.02 against the paper's 0.03; constrained minimum variance above 1/N on FF-4-factor, 0.0002 against 0.00; constrained mean-variance above 1/N on FF-1-factor, 0.03 against 0.02; constrained mean-variance below 1/N on Industry, 0.02 against 0.03, and on MKT/SMB/HML, 0.009 against 0.02). The paper's other nine one-sided values below 0.05 reproduce for the value-weighted market on all four datasets, for minimum variance on the two size-and-value datasets and for the generalised minimum-variance rule on FF-4-factor (0.000002 here against 0.00), and not for the unconstrained mean-variance and Bayes-Stein rules on FF-1-factor (0.05 and 0.07 here against 0.02), cells that carry no verdict. Three cells are below 0.05 here and not in the paper: the unconstrained mean-variance and Bayes-Stein rules on Industry (one-sided 0.007 and 0.010 against the paper's 0.17 and 0.19; two of the cells that carry no verdict, with replicated Sharpe ratios of minus 0.049 and minus 0.038 against the paper's 0.068 and 0.072) and constrained Bayes-Stein on MKT/SMB/HML (0.045 against 0.09), a sixth difference among the constrained rules, below 1/N.
 
 One tested Sharpe ratio is more than 0.03 from the published value: minimum variance on FF-4-factor, 0.033 against the paper's -0.018. Ten basis points of noise in the returns move it across 0.08 and the published value lies outside that range, so noise alone does not explain the difference; the data differ, as the in-sample rows on the size-and-value datasets showed in notebook 02. It is reported as a miss.
 
@@ -2026,7 +2026,7 @@ print(f"months in which the naive tilt trades more than the cap: {int(nv['months
     md("""
 ## 5. Information ratios and realised betas
 
-Each information ratio is given before costs and at the two cost levels, with its standard error from the same 2,000 block bootstrap resamples of the months; the cost is held at the full-sample figure in every resample. No test of a difference between two information ratios is made. The realised beta is the slope of each portfolio's monthly excess return on the benchmark's.
+Each information ratio is given before costs and at the two cost levels, with its standard error from the same 2,000 block bootstrap resamples of the months; the cost is held at the full-sample figure in every resample. The differences between the naive tilt's ratios and the paths' are tested in section 7. The realised beta is the slope of each portfolio's monthly excess return on the benchmark's.
 """),
     code("""
 def cost_of(table, label):
@@ -2069,24 +2069,34 @@ print((1e4 * beside).rename(columns=lambda c: c.replace(" (per year)", "")).to_s
     md("""
 ## 7. Two checks written after the results were known
 
-Both checks were written on 27 November 2026, once the figures of sections 3 to 6 were known, to read the active return correctly. The first sets each difference between the naive tilt's information ratio and a path's beside the two ratios' standard errors, from the table of section 5; it is a comparison of sizes, and no test is made. The second rebuilds the naive tilt's active return from the spread: each month the active return equals the weight removed from Coal, Oil and Util times the spread, and the cell checks the identity and reports the spread's mean and standard deviation per year, its t-ratio with the months taken as independent, and its share of positive months.
+Both checks were written once the figures of sections 3 to 6 were known, to read the active return: the first on 28 November 2026, the second on 27 November 2026. The first tests each difference between the naive tilt's information ratio and a path's, before costs and at each cost level. The two ratios are measured on the same months, so the difference is computed on each of the 2,000 resamples of section 5, with the cost held at its full-sample figure. Its paired standard error is the standard deviation of the resampled differences, and its interval and p-value follow the rule of notebook 09, with Holm's correction across the seven paths at each cost level. The second rebuilds the naive tilt's active return from the spread: each month the active return equals the weight removed from Coal, Oil and Util times the spread, and the cell checks the identity and reports the spread's mean and standard deviation per year, its t-ratio with the months taken as independent, and its share of positive months.
 """),
     code("""
-# Added after the run, 27 November 2026: the two checks of this section.
-ir_table = pd.read_csv(out("naive_tilt_information_ratios"), index_col=0)
+# Added after the run, 28 November 2026: the paired test of the information ratios.
+naive_costs = cost_of(measures, "naive tilt")
 rows = []
-for path in ir_table.index[1:]:
-    for label, col, se in (("gross", "information ratio (gross)", "standard error (gross)"),
-                           ("at 50 bp", "information ratio at 50 bp", "standard error at 50 bp"),
-                           ("at 100 bp", "information ratio at 100 bp", "standard error at 100 bp")):
-        d = ir_table.loc["naive tilt", col] - ir_table.loc[path, col]
-        rows.append({"naive portfolio": "naive tilt", "path": path, "ratio": label, "naive": ir_table.loc["naive tilt", col],
-                     "path value": ir_table.loc[path, col], "difference": d, "standard error, naive": ir_table.loc["naive tilt", se],
-                     "standard error, path": ir_table.loc[path, se],
-                     "difference above the larger standard error": bool(d > max(ir_table.loc["naive tilt", se], ir_table.loc[path, se]))})
-ir_differences = pd.DataFrame(rows)
+for label, col, bp in (("gross", "information ratio (gross)", None), ("at 50 bp", "information ratio at 50 bp", 50),
+                       ("at 100 bp", "information ratio at 100 bp", 100)):
+    naive_star = N.information_ratio_star(r1, 0.0 if bp is None else naive_costs[bp], IDX)
+    block = []
+    for v in C.NAIVE_PATHS:
+        path = f"{v} | C3 tilt only"
+        d_star = naive_star - N.information_ratio_star(active_paths.loc[months, path], 0.0 if bp is None else cost_of(tilt_rows, v)[bp], IDX)
+        lo, hi, p = N.bootstrap_difference(d_star)
+        d = information_ratios.loc["naive tilt", col] - information_ratios.loc[path, col]
+        block.append({"naive portfolio": "naive tilt", "path": path, "ratio": label, "naive": information_ratios.loc["naive tilt", col],
+                      "path value": information_ratios.loc[path, col], "difference": d, "paired standard error": float(d_star.std(ddof=1)),
+                      "lower": lo, "upper": hi, "p-value": p})
+    block = pd.DataFrame(block)
+    block["Holm p-value"] = PT.holm(block["p-value"].to_numpy())
+    rows.append(block)
+ir_differences = pd.concat(rows, ignore_index=True)
 ir_differences.to_csv(out("naive_tilt_information_ratio_differences"), index=False, float_format="%.8f")
-print(ir_differences.groupby("ratio", sort=False)["difference above the larger standard error"].sum().to_string())
+print(ir_differences.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+print(ir_differences.assign(alone=ir_differences["p-value"] < C.NAIVE_SIGNIFICANCE, holm=ir_differences["Holm p-value"] < C.NAIVE_SIGNIFICANCE)
+      .groupby("ratio", sort=False)[["alone", "holm"]].sum().to_string())
+
+# Added after the run, 27 November 2026: the split of the naive tilt's active return.
 
 Wm, Rm = weights.loc[months].copy(), returns_m.loc[months].copy()
 Wm.columns = Rm.columns = industries
@@ -2109,10 +2119,10 @@ The naive tilt realises 105.6 basis points a year of tracking error from 1979-07
 
 The naive tilt trades less. Its mean one-way turnover is 0.42% a month against 0.81% to 1.50% for the paths. It moves 11.7% of the portfolio in its first month, when it leaves the benchmark. It exceeds the turnover cap of 2% a month in 28 of the 566 months. The optimised paths exceed it only in the 2 or 3 months in which no portfolio could meet the cap and the tilt together. Its realised beta is 1.017, against 1.007 to 1.010 for the paths.
 
-Over the sample the naive tilt earned an active return of +13.5 basis points a year before costs, against +1.8 to +6.9 for the paths, and +8.5 after a cost of 100 basis points per unit of turnover, against -14.0 to -2.8. No verdict was set on returns and no test of a difference in return was run, so these figures do not show that the naive tilt earns more than an optimised path, or that it earns less. Before costs each difference in information ratio, 0.05 to 0.11, is smaller than the standard error of either ratio, 0.12 to 0.14. The two checks of section 7, written once the results were known, read the gap in two parts:
+Over the sample the naive tilt earned an active return of +13.5 basis points a year before costs, against +1.8 to +6.9 for the paths, and +8.5 after a cost of 100 basis points per unit of turnover, against -14.0 to -2.8. No verdict was set on returns. On the paired test of section 7, added after the results were known, no difference in information ratio is statistically significant at the 5 per cent level before costs: the differences are 0.05 to 0.11 with paired standard errors of 0.08 to 0.11. At 100 basis points per unit of turnover four of the seven are statistically significant tested on their own, and none after Holm's correction. These figures therefore do not show that the naive tilt earns more than an optimised path, or that it earns less. The split of section 7, written once the results were known, reads the gap in two parts:
 
 - The naive tilt's active return is, month by month, the weight removed from Coal, Oil and Util times the spread. The spread averaged +1.22% a year over the 566 months, with a standard deviation of 15.28% a year and a t-ratio of 0.55. The optimised paths hedge part of that spread away, which is also why their tracking error is lower. How much the spread earned is a property of the period.
-- After costs the gaps widen, because the naive tilt trades less than every path. That part is a property of the two methods: at 100 basis points per unit of turnover, the difference in information ratio exceeds the larger of the two standard errors against six of the seven paths.
+- After costs the gaps widen, because the naive tilt trades less than every path. That part is a property of the two methods.
 
 The naive tilt's mean active exposures to value, profitability, investment and momentum are all below zero, -0.024, -0.013, -0.013 and -0.005: moving weight from Coal, Oil and Util to the other 46 industries lowers the portfolio's betas to all four.
 
@@ -2150,7 +2160,9 @@ NB09 = [
 | Targeted factors | value, profitability, investment and momentum, the four factors whose active exposures the factor objective adds up |
 | Factor objective | each month, the sum of the portfolio's active exposures to the four targeted factors, which the optimiser makes as large as it can under the mandate and a budget |
 | Budget | the largest forecast tracking error the optimiser may take, 100 basis points a year for the seven paths compared here |
-| Exposure per basis point | the mean of the factor objective over the months divided by the realised tracking error in basis points: what each basis point of tracking error bought |
+| Forecast exposure | the factor objective as the optimiser computes it, with each industry's betas from the three years of daily returns before the month |
+| Realised exposure | the sum of the slopes on the four targeted factors when the portfolio's monthly active returns are regressed, with an intercept, on the six factors' monthly returns |
+| Exposure per basis point | the mean forecast exposure over the months, or the realised exposure, divided by the realised tracking error in basis points: what each basis point of tracking error bought |
 | Covariance estimator | a method for estimating the covariance matrix from past returns |
 | Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
 | Principal component | a combination of the industries chosen to explain as much of their total variance as one combination can |
@@ -2175,7 +2187,7 @@ NB09 = [
 | Vintage | the version of Ken French's files on the download date, named by the release of the CRSP database they were built from |
 | Provenance | the record of what was downloaded, when, with its checksum and vintage |
 
-**What this notebook does.** Under the factor objective of risk-models-for-index-tracking an optimiser spends a budget of forecast tracking error on exposure to the four targeted factors. The tilted index moves the benchmark in the same direction with no estimate of risk: each industry's weight goes up or down with its score, as far as the mandate's bound on each active weight and the floor at zero allow. This notebook measures what the optimiser's work buys: the tilted index's exposure per basis point of realised tracking error beside each of the seven optimised paths at a budget of 100 basis points a year, month by month from 1979-07 to 2026-08, with a paired block bootstrap and Holm's correction across the seven, and the tilted index's tracking error, turnover, costs, information ratio, realised beta and attribution beside theirs.
+**What this notebook does.** Under the factor objective of risk-models-for-index-tracking an optimiser spends a budget of forecast tracking error on exposure to the four targeted factors. The tilted index moves the benchmark in the same direction with no estimate of risk: each industry's weight goes up or down with its score, as far as the mandate's bound on each active weight and the floor at zero allow. This notebook measures what the optimiser's work buys: the tilted index's forecast exposure per basis point of realised tracking error beside each of the seven optimised paths at a budget of 100 basis points a year, month by month from 1979-07 to 2026-08, with a paired block bootstrap and Holm's correction across the seven, and the tilted index's tracking error, turnover, costs, information ratio, realised beta and attribution beside theirs.
 
 **Where the optimised paths come from.** The seven paths, their monthly records and their measures are read from tables of risk-models-for-index-tracking at commit ddbb75c, copied unchanged into `results/202608/source/`, and the code that built them is copied unchanged into `src/bp/source/`, each file with a first line that names its source file and the commit. `tests/test_source_copies.py` checks every copy. Before any figure of the tilted index is computed, section 1 rebuilds one optimised path from the copied code and requires it to reproduce the recorded tracking error within a band of 0.1 basis point a year.
 
@@ -2265,9 +2277,9 @@ measures.to_csv(out("tilted_index_measures"), float_format="%.10f")
 print(measures.T.to_string())
 """),
     md("""
-## 3. Exposure per basis point: the tilted index against each optimised path
+## 3. Forecast exposure per basis point: the tilted index against each optimised path
 
-For each path the cell draws the same 2,000 block bootstrap resamples of the months for the tilted index and the path together, computes the difference in exposure per basis point on each, and reports the 95 per cent percentile interval and a two-sided p-value: twice the smaller of the shares of resampled differences at or below zero and at or above zero, each counted as (count + 1) / (2,000 + 1). Holm's correction is applied across the seven.
+For each path the cell draws the same 2,000 block bootstrap resamples of the months for the tilted index and the path together, computes the difference in forecast exposure per basis point on each, and reports the 95 per cent percentile interval and a two-sided p-value: twice the smaller of the shares of resampled differences at or below zero and at or above zero, each counted as (count + 1) / (2,000 + 1). Holm's correction is applied across the seven.
 """),
     code("""
 o2, a2 = index_path["objective"].to_numpy(), index_path["active_return"].to_numpy()
@@ -2309,7 +2321,7 @@ print(f"months in which the tilted index trades more than the cap: {int(measures
     md("""
 ## 5. Information ratios and realised betas
 
-Each information ratio is given before costs and at the two cost levels, with its standard error from the same 2,000 block bootstrap resamples of the months; the cost is held at the full-sample figure in every resample. No test of a difference between two information ratios is made.
+Each information ratio is given before costs and at the two cost levels, with its standard error from the same 2,000 block bootstrap resamples of the months; the cost is held at the full-sample figure in every resample. The differences between the tilted index's ratios and the paths' are tested in section 7.
 """),
     code("""
 def cost_of(table, label):
@@ -2352,37 +2364,79 @@ beside = pd.concat([attribution[cols], recorded[cols]])
 print((1e4 * beside).rename(columns=lambda c: c.replace(" (per year)", "")).to_string(float_format=lambda x: f"{x:.1f}"))
 """),
     md("""
-## 7. A check written after the results were known
+## 7. Two checks written after the results were known
 
-The check was written on 27 November 2026, once the figures of sections 3 to 6 were known, to read the active return correctly. It sets each difference between the tilted index's information ratio and a path's beside the two ratios' standard errors, from the table of section 5. It is a comparison of sizes, and no test is made.
+Both checks were written on 28 November 2026, once the figures of sections 3 to 6 were known.
+
+The first tests each difference between the tilted index's information ratio and a path's, before costs and at each cost level. The two ratios are measured on the same months, so the difference is computed on each of the 2,000 resamples of section 5, with the cost held at its full-sample figure. Its paired standard error is the standard deviation of the resampled differences, and its interval and p-value follow the rule of section 3, with Holm's correction across the seven paths at each cost level.
+
+The second measures the factor exposure each portfolio realised. The factor objective of sections 3 and 4 is the forecast exposure: each month, the active weights times each industry's betas from the three years of daily returns before the month. The realised exposure is measured after the fact: each portfolio's 566 monthly active returns are regressed, with an intercept, on the six factors' monthly returns, and the slopes on the four targeted factors are added up. Divided by the realised tracking error in basis points, it gives the realised exposure per basis point. Each path's difference from the tilted index is tested on the same 2,000 resamples, with the regression run again on each, by the rule of section 3 and Holm's correction across the seven.
 """),
     code("""
-# Added after the run, 27 November 2026: the check of this section.
-ir_table = pd.read_csv(out("tilted_index_information_ratios"), index_col=0)
+# Added after the run, 28 November 2026: the paired test of the information ratios.
+index_costs = cost_of(measures, "tilted index")
 rows = []
-for path in ir_table.index[1:]:
-    for label, col, se in (("gross", "information ratio (gross)", "standard error (gross)"),
-                           ("at 50 bp", "information ratio at 50 bp", "standard error at 50 bp"),
-                           ("at 100 bp", "information ratio at 100 bp", "standard error at 100 bp")):
-        d = ir_table.loc["tilted index", col] - ir_table.loc[path, col]
-        rows.append({"naive portfolio": "tilted index", "path": path, "ratio": label, "naive": ir_table.loc["tilted index", col],
-                     "path value": ir_table.loc[path, col], "difference": d, "standard error, naive": ir_table.loc["tilted index", se],
-                     "standard error, path": ir_table.loc[path, se],
-                     "difference above the larger standard error": bool(d > max(ir_table.loc["tilted index", se], ir_table.loc[path, se]))})
-ir_differences = pd.DataFrame(rows)
+for label, col, bp in (("gross", "information ratio (gross)", None), ("at 50 bp", "information ratio at 50 bp", 50),
+                       ("at 100 bp", "information ratio at 100 bp", 100)):
+    index_ir_star = N.information_ratio_star(a2, 0.0 if bp is None else index_costs[bp], IDX)
+    block = []
+    for v in C.NAIVE_PATHS:
+        path = f"{v} | {MAIN}"
+        rec = fo_month[fo_month["path"] == path].set_index("month").loc[months]
+        d_star = index_ir_star - N.information_ratio_star(rec["active_return"], 0.0 if bp is None else cost_of(fo_eval, path)[bp], IDX)
+        lo, hi, p = N.bootstrap_difference(d_star)
+        d = information_ratios.loc["tilted index", col] - information_ratios.loc[path, col]
+        block.append({"naive portfolio": "tilted index", "path": path, "ratio": label, "naive": information_ratios.loc["tilted index", col],
+                      "path value": information_ratios.loc[path, col], "difference": d, "paired standard error": float(d_star.std(ddof=1)),
+                      "lower": lo, "upper": hi, "p-value": p})
+    block = pd.DataFrame(block)
+    block["Holm p-value"] = PT.holm(block["p-value"].to_numpy())
+    rows.append(block)
+ir_differences = pd.concat(rows, ignore_index=True)
 ir_differences.to_csv(out("tilted_index_information_ratio_differences"), index=False, float_format="%.8f")
-print(ir_differences.groupby("ratio", sort=False)["difference above the larger standard error"].sum().to_string())
+print(ir_differences.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+print(ir_differences.assign(alone=ir_differences["p-value"] < C.NAIVE_SIGNIFICANCE, holm=ir_differences["Holm p-value"] < C.NAIVE_SIGNIFICANCE)
+      .groupby("ratio", sort=False)[["alone", "holm"]].sum().to_string())
+
+# Added after the run, 28 November 2026: the realised exposure to the targeted factors.
+design = N.factor_design(P.factors_m.loc[months, FACTORS])
+targeted_cols = [1 + FACTORS.index(f) for f in TARGETED]
+index_rx = N.realised_exposure(a2, design, targeted_cols)
+index_rx_epb = N.realised_exposure_per_bp(a2, design, targeted_cols)
+index_rx_star = N.realised_exposure_per_bp(a2, design, targeted_cols, IDX)
+rows = [{"portfolio": "tilted index", "forecast exposure": float(o2.mean()), "realised exposure": index_rx,
+         "realised TE (bp)": 1e4 * E.realised_tracking_error(a2), "forecast exposure per bp": index_epb, "realised exposure per bp": index_rx_epb,
+         "realised over forecast": index_rx / float(o2.mean())}]
+for v in C.NAIVE_PATHS:
+    path = f"{v} | {MAIN}"
+    rec = fo_month[fo_month["path"] == path].set_index("month").loc[months]
+    op, ap = rec["objective"].to_numpy(dtype=float), rec["active_return"].to_numpy(dtype=float)
+    rx = N.realised_exposure(ap, design, targeted_cols)
+    rx_epb = N.realised_exposure_per_bp(ap, design, targeted_cols)
+    lo, hi, p = N.bootstrap_difference(index_rx_star - N.realised_exposure_per_bp(ap, design, targeted_cols, IDX))
+    rows.append({"portfolio": path, "forecast exposure": float(op.mean()), "realised exposure": rx, "realised TE (bp)": 1e4 * E.realised_tracking_error(ap),
+                 "forecast exposure per bp": float(N.exposure_per_bp(op, ap)), "realised exposure per bp": rx_epb, "realised over forecast": rx / float(op.mean()),
+                 "difference": index_rx_epb - rx_epb, "lower": lo, "upper": hi, "p-value": p})
+realised = pd.DataFrame(rows).set_index("portfolio")
+realised["forecast multiple of the tilted index"] = realised["forecast exposure per bp"] / index_epb
+realised["realised multiple of the tilted index"] = realised["realised exposure per bp"] / index_rx_epb
+realised.loc[realised.index[1:], "Holm p-value"] = PT.holm(realised["p-value"].iloc[1:].to_numpy())
+realised.to_csv(out("tilted_index_realised_exposure"), float_format="%.10f")
+print(realised.T.to_string(float_format=lambda x: f"{x:.6f}"))
+print(f"statistically significant at the 5 per cent level after Holm's correction: {int((realised['Holm p-value'] < C.NAIVE_SIGNIFICANCE).sum())} of {len(C.NAIVE_PATHS)}")
 """),
     md("""
 ## What this notebook establishes, and what it does not settle
 
-The tilted index obtains a mean factor objective of 0.022 at a realised tracking error of 119.3 basis points a year, an exposure per basis point of 0.000185. The seven optimised paths at the budget of 100 basis points obtain 0.000824 to 0.000979 per basis point, 4.5 to 5.3 times as much, and the tilted index's exposure per basis point is lower than each path's, each difference statistically significant at the 5 per cent level on the paired block bootstrap after Holm's correction across the seven, with adjusted p-values of 0.007. The tilted index's realised tracking error lies inside the paths' range, 115.6 to 150.1 basis points a year, so the comparison is made at a tracking error of the same size. The paths of the five estimators other than RiskMetrics obtain 0.000478 to 0.000633 per basis point at the budget of 75 basis points and 0.001015 to 0.001073 at 150, both above the tilted index.
+The tilted index obtains a mean forecast exposure of 0.022 at a realised tracking error of 119.3 basis points a year, a forecast exposure per basis point of 0.000185. The seven optimised paths at the budget of 100 basis points obtain 0.000824 to 0.000979 per basis point, 4.5 to 5.3 times as much, and the tilted index's exposure per basis point is lower than each path's, each difference statistically significant at the 5 per cent level on the paired block bootstrap after Holm's correction across the seven, with adjusted p-values of 0.007. The tilted index's realised tracking error lies inside the paths' range, 115.6 to 150.1 basis points a year, so the comparison is made at a tracking error of the same size. The paths of the five estimators other than RiskMetrics obtain 0.000478 to 0.000633 per basis point at the budget of 75 basis points and 0.001015 to 0.001073 at 150, both above the tilted index.
+
+The forecast exposure is the quantity the optimiser makes as large as it can, computed with the same estimated betas. Measured on the returns in section 7, a check added after the results were known, the paths realise 0.40 to 0.56 of their forecast exposure and the tilted index 1.9 times its own. On realised exposure per basis point the paths obtain 1.06 to 1.48 times the tilted index's 0.000351, and no difference is statistically significant at the 5 per cent level after Holm's correction, with adjusted p-values of 1.000. The paths' residual of -28.4 to -37.4 basis points a year in the attribution, against the tilted index's -1.4, is consistent with a forecast exposure above the realised one in months when the targeted factors earned a premium.
 
 The tilted index's exposure is small partly because of its form. One k scales all 44 industries, and the change in an industry's active weight is its weight times k times its centred score, so the largest industries reach the bound of 2 percentage points first and set k for all the others: k is set by the bound in 549 of the 566 months, most often at Banks (184 months) and Softw, computer software (138), and by the floor at zero in the other 17, all at Gold, from 1981-04 to 1984-01. Its median over the months is 0.206. This is a limit of the construction, and no other construction of a tilted index is run here.
 
 The tilted index trades less than the paths: 0.77% of the portfolio a month against 1.78% to 2.00%, and more than the cap of 2% a month in 38 of the 566 months, 14% of it in its first month. Its realised beta is 1.004, against 0.999 to 1.012 for the paths.
 
-Over the sample the tilted index earned an active return of +16.4 basis points a year before costs, against +2.3 to +15.5 for the paths, and +7.2 after a cost of 100 basis points per unit of turnover, against -20.0 to -5.9. No verdict was set on returns and no test of a difference in return was run, so these figures do not show that the tilted index earns more than an optimised path, or that it earns less. Before costs each difference in information ratio, 0.02 to 0.12, is smaller than the standard error of either ratio, 0.15 to 0.16. The check of section 7, written once the results were known, shows that after costs the gaps widen because the tilted index trades less than every path, a property of the two methods: at 100 basis points per unit of turnover, the difference exceeds the larger of the two standard errors against five of the seven paths.
+Over the sample the tilted index earned an active return of +16.4 basis points a year before costs, against +2.3 to +15.5 for the paths, and +7.2 after a cost of 100 basis points per unit of turnover, against -20.0 to -5.9. No verdict was set on returns. On the paired test of section 7, added after the results were known, no difference in information ratio is statistically significant at the 5 per cent level at any cost: before costs the differences are 0.02 to 0.12 with paired standard errors of 0.12 to 0.15. These figures therefore do not show that the tilted index earns more than an optimised path, or that it earns less. After costs the gaps widen because the tilted index trades less than every path, a property of the two methods.
 
 **What this notebook does not settle.**
 

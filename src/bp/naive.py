@@ -12,6 +12,10 @@ industry, with no covariance estimate:
 run_path holds a naive portfolio month by month as evaluation.run_path holds an optimised one: the path starts as the
 benchmark, rebalances to the month's weights every month, and measures its one-way turnover against its previous weights
 drifted by the previous month's returns. The remaining functions compute the measures the two notebooks report.
+
+The exposure that factor_objective measures is the forecast one: the active weights times each industry's betas from the
+three years of daily returns before the month. realised_exposure measures it after the fact, from the portfolio's own
+monthly active returns regressed on the six factors' monthly returns.
 """
 from __future__ import annotations
 
@@ -164,3 +168,36 @@ def information_ratios(active, costs: dict, idx: np.ndarray) -> dict:
         row[f"information ratio at {c} bp"] = (12.0 * a.mean() - cost) / te
         row[f"standard error at {c} bp"] = float(((g_star - cost) / te_star).std(ddof=1))
     return row
+
+
+def information_ratio_star(active, cost: float, idx: np.ndarray) -> np.ndarray:
+    """The information ratio on each resample idx, net of the cost per year held at its full-sample figure: the resampled
+    ratios whose standard deviation information_ratios reports."""
+    a_star = np.asarray(active, dtype=float)[idx]
+    return (12.0 * a_star.mean(axis=1) - cost) / (a_star.std(axis=1, ddof=1) * np.sqrt(12.0))
+
+
+def factor_design(factors) -> np.ndarray:
+    """The design of the regression of a monthly active return on the factors: a column of ones, then each factor's
+    monthly return in the order given."""
+    f = np.asarray(factors, dtype=float)
+    return np.column_stack([np.ones(len(f)), f])
+
+
+def realised_exposure(active, design: np.ndarray, targeted) -> float:
+    """The realised exposure to the targeted factors: the sum of their slopes in the least-squares regression of the
+    monthly active return on the design. targeted holds the design's column numbers of the targeted factors."""
+    b = np.linalg.lstsq(design, np.asarray(active, dtype=float), rcond=None)[0]
+    return float(b[list(targeted)].sum())
+
+
+def realised_exposure_per_bp(active, design: np.ndarray, targeted, idx: np.ndarray | None = None):
+    """The realised exposure over 10,000 times the realised tracking error, on the months as they are or, given idx, on each
+    resample of them, with the regression run again on the resampled months."""
+    a = np.asarray(active, dtype=float)
+    if idx is None:
+        return realised_exposure(a, design, targeted) / (1e4 * a.std(ddof=1) * np.sqrt(12.0))
+    out = np.empty(len(idx))
+    for d, j in enumerate(idx):
+        out[d] = realised_exposure(a[j], design[j], targeted) / (1e4 * a[j].std(ddof=1) * np.sqrt(12.0))
+    return out

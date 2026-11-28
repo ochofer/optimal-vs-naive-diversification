@@ -130,10 +130,13 @@ def build():
     P["nt_net"] = s(1e4 * meas["net active return at 100 bp"], 1)
     P["nt_paths_net"] = rng(1e4 * roll["net active return at 100 bp"], 1, sign=True)
     g = irdn[irdn["ratio"] == "gross"]
-    assert not g["difference above the larger standard error"].any()
+    assert (g["p-value"] >= 0.05).all()                      # the text: none statistically significant before costs
     P["nt_irgap"] = rng(g["difference"], 2)
-    P["nt_irse"] = rng(pd.concat([irn["standard error (gross)"]]), 2)
-    P["nt_ir_exceed"] = ["none", "one", "two", "three", "four", "five", "six", "seven"][int(irdn[irdn["ratio"] == "at 100 bp"]["difference above the larger standard error"].sum())]
+    P["nt_ir_pse"] = rng(g["paired standard error"], 2)
+    h = irdn[irdn["ratio"] == "at 100 bp"]
+    P["nt_ir_100_alone"] = ["none", "one", "two", "three", "four", "five", "six", "seven"][int((h["p-value"] < 0.05).sum())]
+    P["nt_ir_100_holm"] = ["none", "one", "two", "three", "four", "five", "six", "seven"][int((h["Holm p-value"] < 0.05).sum())]
+    assert (irdn["Holm p-value"] >= 0.05).all()              # the text: none after Holm's correction, at any cost
     P["spread_mean"] = s(100 * spread["mean per year"], 2)
     P["spread_sd"] = f(100 * spread["standard deviation per year"], 2)
     P["spread_t"] = f(spread["t-ratio"], 2)
@@ -195,10 +198,20 @@ def build():
     P["ti_net"] = s(1e4 * meas2["net active return at 100 bp"], 1)
     P["ti_paths_net"] = rng(1e4 * paths2["net active return at 100 bp"], 1, sign=True)
     g2 = irdt[irdt["ratio"] == "gross"]
-    assert not g2["difference above the larger standard error"].any()
     P["ti_irgap"] = rng(g2["difference"], 2)
-    P["ti_irse"] = rng(irt["standard error (gross)"], 2)
-    P["ti_ir_exceed"] = ["none", "one", "two", "three", "four", "five", "six", "seven"][int(irdt[irdt["ratio"] == "at 100 bp"]["difference above the larger standard error"].sum())]
+    P["ti_ir_pse"] = rng(g2["paired standard error"], 2)
+    assert (irdt["p-value"] >= 0.05).all()                   # the text: under the factor objective none, at any cost
+    rx = read("tilted_index_realised_exposure_202608.csv", index_col=0)
+    rxp, rxi = rx.loc[fl], rx.loc["tilted index"]
+    assert (rxp["Holm p-value"] >= 0.05).all()               # the text: no difference in realised exposure is significant
+    assert abs(rxi["forecast exposure per bp"] - meas2["exposure per bp of realised TE"]) < 5e-9   # the tables print 8 to 10 decimals
+    assert (abs(rxp["forecast exposure per bp"] - paths2["exposure per bp of realised TE"]) < 5e-9).all()
+    P["ti_rratio_lo"], P["ti_rratio_hi"] = f(rxp["realised multiple of the tilted index"].min(), 1), f(rxp["realised multiple of the tilted index"].max(), 1)
+    P["ti_rratio2_lo"], P["ti_rratio2_hi"] = f(rxp["realised multiple of the tilted index"].min(), 2), f(rxp["realised multiple of the tilted index"].max(), 2)
+    P["ti_rx_frac"] = rng(rxp["realised over forecast"], 2)
+    P["ti_rx_index"] = f(rxi["realised over forecast"], 1)
+    P["ti_rx_epb"] = f(rxi["realised exposure per bp"], 6)
+    P["ti_rx_holm"] = rng(rxp["Holm p-value"], 3) if rxp["Holm p-value"].round(3).nunique() > 1 else f(rxp["Holm p-value"].iloc[0], 3)
     P["fp_targ"] = rng(1e4 * foa.loc[fl, "targeted total (per year)"], 1, sign=True)
     P["fp_resid"] = rng(1e4 * foa.loc[fl, "residual (per year)"], 1, sign=True, by_size=True)
     P["ti_targ"] = s(1e4 * att2["targeted total (per year)"], 1)
@@ -230,26 +243,31 @@ def build():
         " results/202608/naive_tilt_paired_tests_202608.csv and naive_tilt_returns_and_costs_202608.csv, notebook 08.")
     rows = []
     for v in PATHS:
-        b, p = boot.loc[f"{v} | 100"], paths2.loc[f"{v} | 100"]
+        b, p, r = boot.loc[f"{v} | 100"], paths2.loc[f"{v} | 100"], rxp.loc[f"{v} | 100"]
         rows.append([LABEL[v], f(1e4 * p["realised TE"], 1), f(p["mean objective"], 3), f(p["exposure per bp of realised TE"], 6),
                      f(b["difference"], 6), f"{f(b['lower'], 6)} to {f(b['upper'], 6)}", f(b["Holm p-value"], 3),
+                     f(r["realised exposure per bp"], 6), f(r["Holm p-value"], 3),
                      f(100 * p["turnover (one-way)"], 2), s(1e4 * p["active return (gross)"], 1), s(1e4 * p["net active return at 100 bp"], 1)])
     rows.append(["Tilted index", f(1e4 * meas2["realised TE"], 1), f(meas2["mean objective"], 3), f(meas2["exposure per bp of realised TE"], 6),
-                 "", "", "", f(100 * meas2["turnover (one-way)"], 2), s(1e4 * meas2["active return (gross)"], 1),
+                 "", "", "", f(rxi["realised exposure per bp"], 6), "", f(100 * meas2["turnover (one-way)"], 2), s(1e4 * meas2["active return (gross)"], 1),
                  s(1e4 * meas2["net active return at 100 bp"], 1)])
     P["table5"] = table(
         "Table 5. The tilted index and the seven optimised paths under the factor objective, budget 100 basis points a year, "
         "July 1979 to August 2026 (566 months)",
-        ["Covariance estimate", "Realised tracking error, bp a year", "Mean factor objective", "Exposure per bp",
-         "Tilted index minus path", "95% interval", "Holm p-value", "One-way turnover, % a month", "Active return, bp a year",
-         "Net of 100 bp per unit of turnover, bp a year"], rows,
+        ["Covariance estimate", "Realised tracking error, bp a year", "Mean forecast exposure", "Forecast exposure per bp",
+         "Tilted index minus path", "95% interval", "Holm p-value", "Realised exposure per bp<sup>a</sup>", "Holm p-value<sup>a</sup>",
+         "One-way turnover, % a month", "Active return, bp a year", "Net of 100 bp per unit of turnover, bp a year"], rows,
         "Each path is an optimised portfolio of the companion study under the factor objective, made with one of six covariance estimators or as the robust portfolio built from five of them. The "
-        "factor objective is the sum of the active exposures to value, profitability, investment and momentum, and its mean is "
-        "over the 566 months. The exposure per basis point divides it by the realised tracking error in "
-        "basis points. The difference and its 95 per cent interval come from 2,000 circular block bootstrap resamples of the "
-        "months in blocks of 12, the same months drawn for both portfolios, and the p-value is two-sided. The Holm p-value "
-        "corrects the seven comparisons. Active returns are simulated and annualised. " + src +
-        " results/202608/tilted_index_bootstrap_202608.csv and tilted_index_beside_paths_202608.csv, notebook 09.")
+        "forecast exposure is the factor objective, the sum of the active exposures to value, profitability, investment and momentum "
+        "computed with the betas of the three years before each month, and its mean is over the 566 months. The forecast exposure "
+        "per basis point divides it by the realised tracking error in basis points. The difference and its 95 per cent interval "
+        "come from 2,000 circular block bootstrap resamples of the months in blocks of 12, the same months drawn for both "
+        "portfolios, and the p-value is two-sided. The Holm p-value corrects the seven comparisons. "
+        "<sup>a</sup> Added after the results were known: the realised exposure, the sum of the slopes on the four factors in a "
+        "regression of the 566 monthly active returns on the six factors' monthly returns, per basis point of realised tracking "
+        "error, and the Holm p-value of the tilted index minus the path, from the same resamples. Active returns are simulated "
+        "and annualised. " + src + " results/202608/tilted_index_bootstrap_202608.csv, tilted_index_beside_paths_202608.csv "
+        "and tilted_index_realised_exposure_202608.csv, notebook 09.")
 
     def att_row(label, ir, att, targeted):
         return [label, f"{f(ir['information ratio (gross)'], 3)} ({f(ir['standard error (gross)'], 3)})",

@@ -166,3 +166,31 @@ def test_measures():
         bp = int(round(c * 1e4))
         assert m[f"net active return at {bp} bp"] == pytest.approx(12.0 * active.mean() - 12.0 * turnover.mean() * c, rel=1e-12)
     assert m["realised beta"] == pytest.approx(np.polyfit(bench, bench + active, 1)[0], rel=1e-10)
+
+
+def test_information_ratio_star_matches_the_standard_errors():
+    rng = np.random.default_rng(11)
+    active = rng.normal(0.0001, 0.003, 566)
+    idx = N.resample_indices(566)
+    costs = {50: 0.004, 100: 0.008}
+    row = N.information_ratios(active, costs, idx)
+    assert np.std(N.information_ratio_star(active, 0.0, idx), ddof=1) == pytest.approx(row["standard error (gross)"], rel=1e-12)
+    for c, cost in costs.items():
+        assert np.std(N.information_ratio_star(active, cost, idx), ddof=1) == pytest.approx(row[f"standard error at {c} bp"], rel=1e-12)
+
+
+def test_realised_exposure_recovers_known_slopes():
+    rng = np.random.default_rng(13)
+    f = rng.normal(0.0, 0.03, (566, 6))
+    slopes = np.array([0.01, -0.02, 0.03, 0.05, -0.01, 0.02])
+    active = 0.0002 + f @ slopes
+    design = N.factor_design(f)
+    targeted = [3, 4, 5, 6]
+    assert N.realised_exposure(active, design, targeted) == pytest.approx(slopes[2:].sum(), abs=1e-12)
+    te_bp = 1e4 * active.std(ddof=1) * np.sqrt(12.0)
+    assert N.realised_exposure_per_bp(active, design, targeted) == pytest.approx(slopes[2:].sum() / te_bp, rel=1e-10)
+    idx = N.resample_indices(566)[:5]
+    star = N.realised_exposure_per_bp(active, design, targeted, idx)
+    for d in range(5):
+        j = idx[d]
+        assert star[d] == pytest.approx(slopes[2:].sum() / (1e4 * active[j].std(ddof=1) * np.sqrt(12.0)), rel=1e-9)
