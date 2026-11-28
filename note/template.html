@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Optimal versus naive diversification: a replication, and the same question under an index mandate</title>
+<meta name="description" content="The note of the study: a replication of DeMiguel, Garlappi and Uppal (2009) on Ken French&#x27;s data, and the same question under an index mandate on French&#x27;s 49 industries, an optimiser against two naive portfolios, with the tables and the design in full.">
+<link rel="icon" href="https://www.carlohofer.com/images/favicon.svg" type="image/svg+xml">
+<style>
+@page { size: A4; margin: 22mm 20mm 22mm 20mm; }
+body { font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.38; color: #262b33; margin: 0; background: #ffffff; }
+.paper { max-width: 170mm; margin: 0 auto; padding: 0 16px; }
+@font-face { font-family: "EB Garamond"; src: url("https://www.carlohofer.com/assets/fonts/EBGaramond-var-latin.woff2") format("woff2"); font-weight: 400 800; font-display: swap; }
+.ch-band { background: linear-gradient(90deg, #121a2c 0%, #172238 60%, #1a263b 100%); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.ch-band__in { max-width: 1180px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+.ch-word { font-family: "EB Garamond", Garamond, Georgia, serif; font-weight: 500; text-transform: uppercase; letter-spacing: .22em; color: #ece6d9; text-decoration: none; font-size: 17px; }
+.ch-nav a { color: rgba(236,230,217,.78); text-decoration: none; font-size: 15px; margin-left: 20px; }
+.ch-nav a:hover { color: #ece6d9; }
+.ch-back { max-width: 170mm; margin: 14px auto 18px; padding: 0 16px; font-size: 14px; color: #5d6470; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.ch-back a { color: #1f3a60; }
+.ch-foot { background: #f5f5f5; border-top: 1px solid #dddddd; color: #5d6470; font-size: 14px; margin-top: 40px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+.ch-foot > div { max-width: 1180px; margin: 0 auto; padding: 20px 16px 32px; }
+.ch-foot a { color: #1f3a60; }
+@media (max-width: 600px) { .ch-band__in { height: 48px; } .ch-nav a:not(:first-child) { display: none; } }
+.ch-word, .ch-nav a { white-space: nowrap; }
+@media (max-width: 359px) { .ch-word { font-size: 15px; letter-spacing: .12em; } .ch-nav a { font-size: 13px; margin-left: 12px; } }
+@media screen { .paper { font-size: 11.5pt; } }
+@media print { .ch-band, .ch-back, .ch-foot { display: none; } .paper { max-width: 170mm; padding: 0; } }
+h1 { font-size: 15.5pt; font-weight: normal; margin: 0 0 4pt 0; line-height: 1.25; }
+.byline { font-size: 10pt; margin: 0 0 14pt 0; color: #5d6470; }
+h2 { font-size: 11.5pt; margin: 16pt 0 5pt 0; font-weight: bold; }
+h3 { font-size: 10.5pt; margin: 10pt 0 3pt 0; font-weight: bold; font-style: italic; }
+p { margin: 0 0 7pt 0; text-align: justify; }
+.abstract { font-size: 9.5pt; margin: 0 8mm 10pt 8mm; }
+table.num { border-collapse: collapse; width: 100%; font-size: 8pt; margin: 8pt 0 2pt 0; }
+.tblock { break-inside: avoid; page-break-inside: avoid; }
+table.num caption { caption-side: top; text-align: left; font-size: 8.8pt; margin-bottom: 3pt; font-weight: bold; }
+table.num th:first-child { text-align: left; }
+table.num td.l { width: 24%; }
+table.num th { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2pt 3pt; font-weight: normal; font-style: italic; text-align: right; vertical-align: bottom; }
+table.num th[colspan] { text-align: center; border-top: 1px solid #000; }
+table.num td { padding: 1.4pt 3pt; text-align: right; white-space: nowrap; }
+table.num td.l { text-align: left; white-space: normal; }
+table.num td.sub { font-style: italic; padding-top: 4pt; }
+table.num tbody tr:last-child td { border-bottom: 1px solid #000; }
+p.tn { font-size: 8pt; text-align: left; margin: 2pt 0 10pt 0; line-height: 1.3; }
+.termshead { font-size: 8.8pt; margin: 0 0 2pt 0; font-weight: bold; }
+dl.terms { font-size: 8.4pt; line-height: 1.32; margin: 0 0 9pt 0; }
+h2, h3 { break-after: avoid; page-break-after: avoid; }
+dl.terms > div { margin: 0 0 1.6pt 0; padding-left: 1.2em; text-indent: -1.2em; }
+dl.terms dt { display: inline; font-weight: bold; }
+dl.terms dt::after { content: ": "; font-weight: normal; }
+dl.terms dd { display: inline; margin: 0; }
+.refs p { font-size: 9.3pt; text-indent: -6mm; padding-left: 6mm; text-align: left; margin-bottom: 3pt; }
+sup { font-size: 70%; }
+@media screen {
+  table.num { font-size: 12px; }
+  table.num caption { font-size: 13px; position: sticky; left: 0; z-index: 1; background: #ffffff; }
+  p.tn { font-size: 12px; }
+  .refs p { overflow-wrap: anywhere; }
+  .tw { position: relative; }
+  .tscroll { overflow-x: auto; }
+  .tw.more::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff); pointer-events: none; }
+  table.num thead tr:first-child th:first-child, table.num tbody td.l { position: sticky; left: 0; background: #ffffff; }
+}
+@media screen and (max-width: 674px) { table.num caption { width: calc(100vw - 32px); box-sizing: border-box; } table.num td.l { min-width: 11em; } }
+</style>
+<script data-goatcounter="https://carlohofer.goatcounter.com/count" async src="https://gc.zgo.at/count.v5.js" crossorigin="anonymous" integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ"></script>
+<script>
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || !window.goatcounter || !window.goatcounter.count) return;
+    var u = new URL(a.href, location.href);
+    var pdf = /\.pdf$/i.test(u.pathname);
+    if (!pdf && u.hostname === location.hostname) return;
+    window.goatcounter.count({
+      path: pdf ? 'PDF ' + u.hostname + u.pathname : 'Link ' + (u.hostname || u.protocol) + u.pathname,
+      title: a.textContent.trim(),
+      event: true
+    });
+  });
+</script>
+</head>
+<body>
+<header class="ch-band"><div class="ch-band__in">
+  <a class="ch-word" href="https://www.carlohofer.com/">Carlo Hofer</a>
+  <nav class="ch-nav"><a href="https://www.carlohofer.com/projects/">Investment research</a><a href="https://www.carlohofer.com/projects/rules-based-portfolio/">Portfolio</a><a href="https://www.carlohofer.com/publications/">Publications</a><a href="https://www.carlohofer.com/cv/">Academic CV</a></nav>
+</div></header>
+<p class="ch-back"><a href="https://www.carlohofer.com/projects/optimal-vs-naive-diversification/">&larr; Optimal versus naive diversification</a> &middot; <a href="https://www.carlohofer.com/projects/">Investment research</a></p>
+<div class="paper">
+<h1>Optimal versus naive diversification: a replication, and the same question under an index mandate</h1>
+<p class="byline">Carlo Hofer. November 2026. Code and notebooks: github.com/ochofer/optimal-vs-naive-diversification.</p>
+
+<p class="abstract">DeMiguel, Garlappi and Uppal (2009) find that no optimised portfolio they test is consistently better than naive 1/N out of sample. I replicate their study and ask the same question under an index mandate. The replication matches the paper, with 29 of 30 tested Sharpe ratios within 0.03 of the published values, and in the 261 months since its sample no optimising rule beats 1/N by a margin statistically significant at the 5 per cent level on the Jobson-Korkie test. On 49 US industries from 1979 to 2026, an optimiser realises {{nt_diff_lo0}} to {{nt_diff_hi0}} basis points a year less tracking error than a naive portfolio with the same tilt away from Coal, Oil and Utilities. Spending a budget of tracking error on four factors, it obtains {{ti_ratio_lo}} to {{ti_ratio_hi}} times the factor exposure per basis point of a naive factor-tilted index. Each difference is statistically significant at the 5 per cent level after Holm's correction.</p>
+
+<p class="termshead">Terms of this study</p>
+<dl class="terms">
+<div><dt>1/N</dt><dd>the rule that holds every asset at the same weight and rebalances to it each month.</dd></div>
+<div><dt>Benchmark</dt><dd>the cap-weighted portfolio of the 49 industries that the fund tracks.</dd></div>
+<div><dt>Tilt</dt><dd>holding Coal, Oil and Utilities at no more than half their benchmark weight.</dd></div>
+<div><dt>Mandate</dt><dd>the rules the fund's portfolio obeys, set out in Section 2.</dd></div>
+<div><dt>Path</dt><dd>the month-by-month sequence of portfolios built by one method, each from data before its month.</dd></div>
+<div><dt>Naive tilt</dt><dd>the index with Coal, Oil and Utilities held at half their index weight and the removed weight spread over the other 46 industries in proportion to their index weights, rebalanced to that target every month, with no risk model.</dd></div>
+<div><dt>Tilted index</dt><dd>the index under the mandate's tilt and exclusions, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the 2-point limit and a floor of zero allow, rebalanced every month, with no risk model.</dd></div>
+<div><dt>The two naive portfolios</dt><dd>the naive tilt and the tilted index together.</dd></div>
+<div><dt>Factor</dt><dd>a return series that moves many assets at once. The six here are the market, size, value, profitability, investment and momentum (Fama and French, 2015; Carhart, 1997).</dd></div>
+<div><dt>Active exposure</dt><dd>the portfolio's exposure to a factor minus the benchmark's.</dd></div>
+<div><dt>Factor score</dt><dd>the sum of an industry's exposures to value, profitability, investment and momentum, the four targeted factors.</dd></div>
+<div><dt>Factor objective</dt><dd>the sum of the portfolio's active exposures to value, profitability, investment and momentum.</dd></div>
+<div><dt>Budget</dt><dd>the largest forecast tracking error the optimiser may take while it makes the factor objective as large as it can.</dd></div>
+<div><dt>Exposure per basis point</dt><dd>the mean factor objective over the months divided by the realised tracking error in basis points a year.</dd></div>
+<div><dt>Attribution</dt><dd>the split of each month's active return into the contributions of six factors and a residual, the part the factors do not explain.</dd></div>
+<div><dt>Vintage</dt><dd>the version of French's files, named by the CRSP database they were built from.</dd></div>
+</dl>
+<p class="termshead">Standard terms</p>
+<dl class="terms">
+<div><dt>Excess return</dt><dd>a return minus the one-month Treasury bill rate.</dd></div>
+<div><dt>Sharpe ratio</dt><dd>the mean monthly excess return divided by its standard deviation.</dd></div>
+<div><dt>Turnover</dt><dd>the sum of the absolute weight changes at a rebalance. One-way turnover is half of it, the share of the portfolio sold.</dd></div>
+<div><dt>Estimation window</dt><dd>the months of returns a rule sees when it forms its weights, 120 in the paper.</dd></div>
+<div><dt>Jobson-Korkie test</dt><dd>the test of whether two Sharpe ratios differ, with Memmel's correction, as the paper uses it.</dd></div>
+<div><dt>Active weight</dt><dd>the portfolio's weight in an industry minus the benchmark's.</dd></div>
+<div><dt>Active return</dt><dd>the portfolio's return minus the benchmark's.</dd></div>
+<div><dt>Tracking error</dt><dd>the standard deviation of the monthly active return, times the square root of 12. It is forecast before the month and realised after it.</dd></div>
+<div><dt>Basis point</dt><dd>a hundredth of a percentage point.</dd></div>
+<div><dt>Covariance estimate</dt><dd>the table of the variances and covariances of the industries' returns, from which the optimiser forecasts tracking error.</dd></div>
+<div><dt>Information ratio</dt><dd>the active return per year divided by the realised tracking error.</dd></div>
+<div><dt>Paired variance test</dt><dd>the test of Ledoit and Wolf (2011) of whether two portfolios, measured on the same months, have the same tracking error.</dd></div>
+<div><dt>Block bootstrap</dt><dd>resampling the months in blocks of twelve consecutive months, so that each resample keeps the months of a block together.</dd></div>
+<div><dt>Holm's correction</dt><dd>an adjustment of p-values for the number of comparisons read together (Holm, 1979).</dd></div>
+</dl>
+
+<h2>1. Introduction</h2>
+
+<p>Whether an optimised portfolio beats the naive 1/N rule is an old question in portfolio construction, and DeMiguel, Garlappi and Uppal (2009) gave the answer that has become the reference point. On seven datasets, none of fourteen optimising rules beat 1/N consistently out of sample, which they attribute to estimation error: with 120 months of returns, the error in the estimated means and covariances costs more than optimising gains (Michaud, 1989; Jagannathan and Ma, 2003). An index fund faces the same choice in a narrower form. Its mandate fixes most of the portfolio and asks for no return forecast, and what the fund decides is where to put the weight the mandate moves away from the benchmark. It can let an optimiser place that weight with a covariance estimate, or place it by a fixed rule. The question this poses is therefore DeMiguel, Garlappi and Uppal's: whether optimising does better than a naive portfolio once the mandate is set.</p>
+
+<p>The closest existing evidence compares covariance estimators with one another. Dom, Howard, Jansen and Lohre (2025) compare covariance estimators for the minimum-variance portfolio of the 500 largest US stocks and find that most of the differences between them disappear once the portfolio is long-only with a cap on each stock's weight. A companion study (Hofer, 2026) makes the same comparison under a tracking-error mandate on French's 49 industries and finds that the choice of estimator changes the tracking error by about a tenth. DeMiguel, Garlappi and Uppal's question asks instead for the comparison with a portfolio that meets the same rules without any estimate, and that comparison bears on whether a fund needs a risk model at all.</p>
+
+<p>This note does two things. First, it replicates the comparison of optimised portfolios with 1/N in DeMiguel, Garlappi and Uppal (2009) on the four datasets from French's library for which the paper prints tables, and extends it to the 261 months since their sample. Second, it asks their question under a mandate on French's 49 industries, in two settings, each with a naive portfolio built for it. Under the tilt, the optimiser holds the long-only portfolio with the smallest forecast tracking error, and the naive tilt holds Coal, Oil and Utilities at half their weight and spreads what it removes in proportion to the benchmark. Under the factor objective, the optimiser spends a budget of 100 basis points a year of forecast tracking error on exposure to value, profitability, investment and momentum, and the tilted index moves each industry's weight with its factor score as far as the mandate's bound allows. The optimised paths are the companion study's, seven in each setting: one for each of six covariance estimators, and one for a robust portfolio built from five of them. Each naive portfolio is judged on what the optimiser it is set beside is built to deliver, the realised tracking error under the tilt and the exposure per basis point of realised tracking error under the factor objective, so that taking more risk does not count as obtaining more exposure.</p>
+
+<p>French's 49 industries are well suited to test this question, for two reasons. First, the data are public and every figure here is computed on a recorded version of French's files, so every figure can be rebuilt. Second, the tilt moves a large and changing amount of weight, between {{removed_lo}} and {{removed_hi}} per cent of the portfolio over the sample, so where that weight goes makes a measurable difference to the tracking error. The tracking error the optimised paths reach, about 1 per cent a year, is the ex-ante limit of Robeco's Global Developed Enhanced Index Equities strategy (Robeco, 2024, p. 19).</p>
+
+<p>Empirically, the replication matches the paper: 29 of the 30 Sharpe ratios tested are within 0.03 of the published values, and all 30 turnover figures tested are within 25 per cent. In the 261 months since the paper, no optimising rule's Sharpe ratio exceeds 1/N's by a margin that is statistically significant at the 5 per cent level on the Jobson-Korkie test. Under the mandate, the optimiser does better than the naive portfolios on what it is built to do. Under the tilt, the naive tilt realises {{nt_te}} basis points a year of tracking error, {{nt_diff_lo0}} to {{nt_diff_hi0}} basis points more than each of the seven paths. Under the factor objective, the paths obtain {{ti_ratio_lo}} to {{ti_ratio_hi}} times the tilted index's exposure per basis point. Each of these differences is statistically significant at the 5 per cent level after Holm's correction across the seven paths. Both naive portfolios earned more active return over the sample, and no test was run on that difference.</p>
+
+<h2>2. Data and design</h2>
+
+<p>All data come from Ken French's library and are downloaded when the code runs. Every figure here is computed on the files French built from the CRSP database of August 2026. Returns are monthly excess returns. The mandate also uses the daily returns of the 49 industries and of the factors.</p>
+
+<p>The replication runs the paper's nine rules on its four datasets: Industry (ten industries and the market), MKT/SMB/HML (the three Fama-French factors), FF-1-factor (20 size and book-to-market portfolios and the market) and FF-4-factor (the same 20 portfolios with four factors). Each month a rule forms its weights from the previous 120 months and holds them for one month, over the paper's sample from July 1963 to November 2004, which gives 377 out-of-sample months. The rules are 1/N, sample mean-variance, mean-variance with the means shrunk towards a common value (Bayes-Stein, Jorion, 1986), minimum variance, the value-weighted market, the versions of mean-variance, Bayes-Stein and minimum variance that allow no negative weight, and minimum variance with every weight at least 1/(2N). A replicated figure counts as a match when it is within a set margin of the published one: each Sharpe ratio within 0.03, each turnover figure within 25 per cent, and the top three rules of each dataset in the published order. A Sharpe ratio is tested only where the paper's own turnover for the rule is below 100 times that of 1/N, because above that level ten basis points of noise added to every return move the rule's Sharpe ratio by 0.12 to 0.25. This leaves 30 tested Sharpe ratios and 30 tested turnover figures. The margins were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results, and the notebooks mark the two checks in Section 3.5 made after the results were known. The paper's analytical result (its Proposition 1) and its simulation (its Table 6) are rerun as well, and the nine rules are then run on every month to August 2026. A rule's Sharpe ratio is compared with 1/N's using the Jobson-Korkie test with Memmel's correction, two-sided, as in the paper (Jobson and Korkie, 1981; Memmel, 2003).</p>
+
+<p>The mandate's benchmark is the cap-weighted portfolio of the 49 industries, each industry weighted by its number of firms times its average firm size from French's files. It tracks French's market return within 46.7 basis points a year over the 686 months from July 1969 (Hofer, 2026). Every portfolio under the mandate is long-only, holds each industry outside the tilt within 2 percentage points of its benchmark weight, and holds Coal, Oil and Utilities at no more than half their benchmark weight. The optimised portfolios also trade at most 2 per cent of the portfolio a month one way, relaxed only in the months in which the optimiser could not meet that limit together with the other rules, {{nt_relaxed}} of the 566 months under the tilt and {{ti_relaxed}} under the factor objective. Under the factor objective the mandate adds two rules, tobacco and weapons excluded and the portfolio's beta to the benchmark at one. The evaluation runs each month from July 1979 to August 2026, 566 months.</p>
+
+<p>The optimised paths come from the companion study, read from its committed tables, and the code that built them is copied unchanged into this repository. In each setting the notebook first rebuilds one path from that code, the sample covariance on three years of daily returns, and checks that it matches the recorded path. Six covariance estimators are used, each built only from data before the month: the sample covariance, Ledoit-Wolf shrinkage (Ledoit and Wolf, 2004), a six-factor model and a principal-component model, each from three years of daily returns; the sample covariance of 120 monthly returns; and RiskMetrics, an exponentially weighted covariance of five years of daily returns. The seventh path is a robust portfolio built from the first five estimators at once. Under the tilt, the optimiser chooses the weights with the smallest forecast tracking error. Under the factor objective, it chooses the weights with the largest factor objective whose forecast tracking error stays within the budget of 100 basis points a year. An industry's exposures come from a regression of its daily excess returns on the six factors over the three years before the month.</p>
+
+<p>The two naive portfolios use no covariance estimate. The naive tilt takes each month's benchmark weights, halves Coal, Oil and Utilities, and scales the other 46 up by the same multiple so that the weights sum to one. The tilted index starts from the same tilt with tobacco and weapons excluded, the removed weight spread over the other 44 industries in proportion to their benchmark weights. It then multiplies each of the 44 weights by one plus k times the industry's centred score, the factor score minus the average score of the 44 weighted by those weights. The multiple k is one number for all 44, the largest at which every active weight stays within 2 percentage points and no weight falls below zero. An industry whose score is above the weighted average gains weight and one below it loses weight, and the weights still sum to one. Both naive portfolios start as the benchmark in July 1979, as the optimised paths do, and rebalance to their target every month. Their turnover is measured against their own weights as the previous month's returns have moved them, and they are held neither to the turnover limit nor, in the tilted index's case, to a beta of one.</p>
+
+<p>Under the tilt, the naive tilt's realised tracking error is compared with each path's with the paired variance test, in its bootstrap form with blocks of twelve months and 2,000 resamples, and with Holm's correction across the seven comparisons. Under the factor objective, the difference in exposure per basis point is computed on 2,000 block bootstrap resamples of the months, the same months drawn for the tilted index and the path, which gives its 95 per cent interval and a two-sided p-value, and Holm's correction is applied across the seven. Information ratios are given before costs and net of 50 and 100 basis points per unit of one-way turnover, each with a standard error from the same resamples. Finally, each month's active return is split into the contributions of the six factors and a residual.</p>
+
+<h2>3. Results</h2>
+
+<h3>3.1 The replication</h3>
+
+<p>Table 1 reports the out-of-sample Sharpe ratios beside the paper's. Of the 30 Sharpe ratios tested, 29 are within 0.03 of the published values and 27 within 0.01, and the Sharpe ratios of 1/N, which involves no estimation, are within 0.001 of the paper's on three of the four datasets. The one more than 0.03 away is minimum variance on FF-4-factor, 0.033 against the paper's -0.018. Noise does not account for it, since ten basis points of noise move this Sharpe ratio over a range of 0.08 that does not reach the published value. The in-sample portfolio, which involves no estimation, differs from the paper's by 0.06 and 0.04 on the two datasets built from the size and book-to-market portfolios, which is consistent with French having revised those portfolios since the paper. The ranking of the top three rules holds on two datasets. On the other two, the rules that swap places are 0.002 to 0.007 apart in the paper, well inside the margin of 0.03. The six differences between a constrained rule and 1/N that the paper reports as significant at the 5 per cent level all reproduce on its one-sided test.</p>
+
+<p>Table 2 reports turnover, and all 30 turnover figures tested are within 25 per cent of the published ones. The paper's analytical result and its simulation also reproduce: the estimation window at which mean-variance starts to beat 1/N on average matches all 13 values the paper states, and 77 of the 81 Sharpe ratios of its simulation are within 0.03. In two further simulated markets, one with fat-tailed returns and one with volatility that clusters over time, the comparison with 1/N is essentially unchanged.</p>
+
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 1. Out-of-sample Sharpe ratios, 1973-07 to 2004-11 (377 months), this study beside DeMiguel, Garlappi and Uppal (2009, Table 3)</caption>
+<thead><tr><th rowspan=2>Rule</th><th colspan=2>Industry</th><th colspan=2>MKT/SMB/HML</th><th colspan=2>FF-1-factor</th><th colspan=2>FF-4-factor</th></tr>
+<tr><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th></tr></thead><tbody>
+<tr><td class=l>mean-variance, in sample</td><td>0.2034<sup>b</sup></td><td>0.2124</td><td>0.2608<sup>b</sup></td><td>0.2851</td><td>0.4509<sup>b</sup></td><td>0.5098</td><td>0.4999<sup>b</sup></td><td>0.5364</td></tr>
+<tr><td class=l>1/N</td><td>0.1353</td><td>0.1353</td><td>0.2347</td><td>0.2240</td><td>0.1613</td><td>0.1623</td><td>0.1745</td><td>0.1753</td></tr>
+<tr><td class=l>mean-variance</td><td>-0.0494<sup>b</sup></td><td>0.0679</td><td>0.2135</td><td>0.2186</td><td>0.0513<sup>b</sup></td><td>0.0128</td><td>0.1650<sup>b</sup></td><td>0.1841</td></tr>
+<tr><td class=l>Bayes-Stein</td><td>-0.0383<sup>b</sup></td><td>0.0719</td><td>0.2541</td><td>0.2536</td><td>0.0620<sup>b</sup></td><td>0.0138</td><td>0.1672<sup>b</sup></td><td>0.1791</td></tr>
+<tr><td class=l>minimum variance</td><td>0.1537</td><td>0.1554</td><td>0.2574</td><td>0.2493</td><td>0.2496</td><td>0.2778</td><td>0.0326<sup>a</sup></td><td>-0.0183</td></tr>
+<tr><td class=l>value-weighted market</td><td>0.1163</td><td>0.1138</td><td>0.1163</td><td>0.1138</td><td>0.1163</td><td>0.1138</td><td>0.1163</td><td>0.1138</td></tr>
+<tr><td class=l>mean-variance, constrained</td><td>0.0627</td><td>0.0678</td><td>0.1093</td><td>0.1084</td><td>0.1963</td><td>0.1977</td><td>0.1978</td><td>0.2024</td></tr>
+<tr><td class=l>Bayes-Stein, constrained</td><td>0.0831</td><td>0.0819</td><td>0.1480</td><td>0.1514</td><td>0.1974</td><td>0.1955</td><td>0.2064</td><td>0.2062</td></tr>
+<tr><td class=l>minimum variance, constrained</td><td>0.1445</td><td>0.1425</td><td>0.2574</td><td>0.2493</td><td>0.1554</td><td>0.1546</td><td>0.3649</td><td>0.3580</td></tr>
+<tr><td class=l>minimum variance, generalised constraint</td><td>0.1454</td><td>0.1451</td><td>0.2552</td><td>0.2467</td><td>0.1625</td><td>0.1615</td><td>0.3080</td><td>0.3028</td></tr>
+</tbody></table></div></div>
+<p class="tn">Each figure is the Sharpe ratio of the rule's monthly out-of-sample excess returns with a 120-month estimation window. Thirty Sharpe ratios are tested, and 29 are within 0.03 of the published value. Some tested figures repeat a portfolio: the value-weighted market appears in all four datasets, and on MKT/SMB/HML minimum variance is the same with or without the ban on short sales. Counting each portfolio once, 25 of 26 Sharpe ratios are within 0.03 and 26 of 26 turnover figures within 25 per cent. <sup>a</sup> The one tested Sharpe ratio more than 0.03 from the published value. <sup>b</sup> Not tested: the paper's in-sample portfolio, built with hindsight from the whole sample, and sample mean-variance and Bayes-Stein on Industry, FF-1-factor and FF-4-factor, which trade more than 100 times as much as 1/N, so that ten basis points of noise in the returns move their Sharpe ratios by 0.12 to 0.25.</p></div>
+
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 2. Turnover, 1973-07 to 2004-11: 1/N in absolute terms (the fraction of the portfolio traded per month, counting purchases and sales), every other rule as a multiple of 1/N, this study beside DeMiguel, Garlappi and Uppal (2009, Table 5)</caption>
+<thead><tr><th rowspan=2>Rule</th><th colspan=2>Industry</th><th colspan=2>MKT/SMB/HML</th><th colspan=2>FF-1-factor</th><th colspan=2>FF-4-factor</th></tr>
+<tr><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th><th>this study</th><th>DGU</th></tr></thead><tbody>
+<tr><td class=l>1/N</td><td>0.0221</td><td>0.0216</td><td>0.0237</td><td>0.0237</td><td>0.0164</td><td>0.0162</td><td>0.0200</td><td>0.0198</td></tr>
+<tr><td class=l>mean-variance</td><td>2,347<sup>b</sup></td><td>606,594</td><td>2.50</td><td>2.83</td><td>10,112<sup>b</sup></td><td>10,466</td><td>678.03<sup>b</sup></td><td>3,553</td></tr>
+<tr><td class=l>Bayes-Stein</td><td>1,952<sup>b</sup></td><td>10,621</td><td>1.52</td><td>1.85</td><td>5,516<sup>b</sup></td><td>11,796</td><td>795.93<sup>b</sup></td><td>3,418</td></tr>
+<tr><td class=l>minimum variance</td><td>20.99</td><td>21.65</td><td>1.02</td><td>1.11</td><td>44.95</td><td>45.47</td><td>6.16</td><td>6.83</td></tr>
+<tr><td class=l>value-weighted market</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td><td>0.00</td></tr>
+<tr><td class=l>mean-variance, constrained</td><td>7.70</td><td>7.17</td><td>3.86</td><td>4.12</td><td>19.07</td><td>17.53</td><td>16.46</td><td>13.82</td></tr>
+<tr><td class=l>Bayes-Stein, constrained</td><td>6.63</td><td>7.22</td><td>3.45</td><td>3.65</td><td>16.11</td><td>17.32</td><td>13.65</td><td>13.07</td></tr>
+<tr><td class=l>minimum variance, constrained</td><td>2.34</td><td>2.58</td><td>1.02</td><td>1.11</td><td>4.20</td><td>3.93</td><td>1.63</td><td>1.76</td></tr>
+<tr><td class=l>minimum variance, generalised constraint</td><td>1.49</td><td>1.52</td><td>1.00</td><td>1.09</td><td>1.95</td><td>1.78</td><td>1.66</td><td>1.70</td></tr>
+</tbody></table></div></div>
+<p class="tn">Thirty turnover figures are tested, and all 30 are within 25 per cent of the published value. <sup>b</sup> Not tested: the paper's figure exceeds 100 times that of 1/N, and the figure moves by orders of magnitude when a single month's covariance matrix is close to singular, i.e., when its inverse multiplies small errors by thousands. The value-weighted market trades nothing by construction.</p></div>
+
+<h3>3.2 The months since the paper</h3>
+
+<p>Table 3 compares the paper's period with the 261 months from December 2004 to August 2026. In the new months no optimising rule's Sharpe ratio exceeds 1/N's by a margin that is statistically significant at the 5 per cent level on the two-sided Jobson-Korkie test, on any dataset. To be statistically significant, a margin would have to be about 0.02 to 0.18, depending on the dataset and the rule. The one Sharpe ratio above 1/N's at that level is the value-weighted market's on MKT/SMB/HML, which is not an optimising rule, and five are below 1/N's, all of them minimum-variance rules on the two factor datasets. Minimum variance, the best optimising rule of the paper's period, falls to -0.015 on MKT/SMB/HML and -0.034 on FF-4-factor, against 0.113 and 0.148 for 1/N. Its weights load on the size and value factors, whose returns were small or negative over these years, which is consistent with its fall.</p>
+
+<div class="tblock"><div class="tw"><div class="tscroll"><table class="num"><caption>Table 3. Out-of-sample Sharpe ratios on the paper's period and on the months since, on the 202608 vintage of French's files</caption>
+<thead><tr><th rowspan=2>Rule</th><th colspan=4>1973-07 to 2004-11 (377 months)</th><th colspan=4>2004-12 to 2026-08 (261 months)</th></tr>
+<tr><th>Industry</th><th>MKT/SMB/HML</th><th>FF-1-factor</th><th>FF-4-factor</th><th>Industry</th><th>MKT/SMB/HML</th><th>FF-1-factor</th><th>FF-4-factor</th></tr></thead><tbody>
+<tr><td class=l>1/N</td><td>0.135</td><td>0.235</td><td>0.161</td><td>0.174</td><td>0.191</td><td>0.113</td><td>0.148</td><td>0.148</td></tr>
+<tr><td class=l>mean-variance</td><td>-0.049</td><td>0.213</td><td>0.051</td><td>0.165</td><td>0.042</td><td>0.176</td><td>0.176</td><td>0.102</td></tr>
+<tr><td class=l>Bayes-Stein</td><td>-0.038</td><td>0.254</td><td>0.062</td><td>0.167</td><td>0.053</td><td>0.158</td><td>0.208</td><td>0.101</td></tr>
+<tr><td class=l>minimum variance</td><td>0.154</td><td>0.257</td><td>0.250</td><td>0.033</td><td>0.168</td><td>-0.015</td><td>0.218</td><td>-0.034</td></tr>
+<tr><td class=l>value-weighted market</td><td>0.116</td><td>0.116</td><td>0.116</td><td>0.116</td><td>0.191</td><td>0.191</td><td>0.191</td><td>0.191</td></tr>
+<tr><td class=l>mean-variance, constrained</td><td>0.063</td><td>0.109</td><td>0.196</td><td>0.198</td><td>0.174</td><td>0.189</td><td>0.151</td><td>0.143</td></tr>
+<tr><td class=l>Bayes-Stein, constrained</td><td>0.083</td><td>0.148</td><td>0.197</td><td>0.206</td><td>0.190</td><td>0.188</td><td>0.159</td><td>0.146</td></tr>
+<tr><td class=l>minimum variance, constrained</td><td>0.144</td><td>0.257</td><td>0.155</td><td>0.365</td><td>0.210</td><td>-0.009</td><td>0.181</td><td>0.038</td></tr>
+<tr><td class=l>minimum variance, generalised constraint</td><td>0.145</td><td>0.255</td><td>0.163</td><td>0.308</td><td>0.210</td><td>0.042</td><td>0.165</td><td>0.149</td></tr>
+</tbody></table></div></div>
+<p class="tn">Each figure is the out-of-sample Sharpe ratio with a 120-month estimation window. In the new period, on the two-sided Jobson-Korkie test with Memmel's correction against 1/N, one Sharpe ratio is above 1/N's at the 5 per cent level, the value-weighted market's on MKT/SMB/HML, and five are below it, all minimum-variance rules on the two factor datasets.</p></div>
+
+
+<h3>3.3 Under the tilt: the naive tilt and the optimised paths</h3>
+
+<p>Table 4 sets the naive tilt beside the seven optimised paths. The naive tilt realises {{nt_te}} basis points a year of tracking error and the paths {{nt_paths_te}}, so the naive tilt realises {{nt_diff_lo}} to {{nt_diff_hi}} basis points a year more than each of them. Each difference is statistically significant at the 5 per cent level on the paired variance test after Holm's correction across the seven, with adjusted p-values of {{nt_holm_lo}} to {{nt_holm_hi}}. The smallest difference is against the sample covariance of 120 monthly returns, {{nt_min_diff}} basis points with a 95 per cent interval of {{nt_min_int}}, and the largest against RiskMetrics, {{nt_max_diff}} with an interval of {{nt_max_int}}. The monthly active returns of the naive tilt and of each path are correlated at {{nt_corr}}.</p>
+
+<p>The attribution indicates where the paths' lower tracking error comes from. Removing weight from Coal, Oil and Utilities and spreading it over the other 46 industries lowers the portfolio's exposures to value, profitability, investment and momentum. The naive tilt's four active exposures to the targeted factors sum to {{nt_x_sum}}, against {{p_x_sum}} for the paths. The paths' smaller total indicates that the optimiser offsets part of what the tilt removes, consistent with its holding more of the industries whose returns move with those of the three, which the naive tilt by construction does not do.</p>
+
+<p>The naive tilt trades less. Its mean one-way turnover is {{nt_turn}} per cent a month against {{nt_paths_turn}} for the paths. It moves {{nt_first}} per cent of the portfolio in its first month, when it leaves the benchmark. It exceeds the turnover cap of 2 per cent a month in {{nt_cap}} of the 566 months. The optimised paths exceed it only in the {{nt_relaxed}} months in which no portfolio could meet the cap and the tilt together. The naive tilt's realised beta to the benchmark is {{nt_beta}}, against {{nt_paths_beta}} for the paths.</p>
+
+{{table4}}
+
+<h3>3.4 Under the factor objective: the tilted index and the optimised paths</h3>
+
+<p>Table 5 sets the tilted index beside the seven optimised paths at the budget of 100 basis points. The tilted index obtains a mean factor objective of {{ti_obj}} at a realised tracking error of {{ti_te}} basis points a year, an exposure per basis point of {{ti_epb}}. The paths obtain {{ti_paths_obj}} at {{ti_paths_te}} basis points a year, {{ti_paths_epb}} per basis point, which is {{ti_ratio_lo}} to {{ti_ratio_hi}} times the tilted index's. Each difference is statistically significant at the 5 per cent level on the paired block bootstrap after Holm's correction across the seven, with an adjusted p-value of {{ti_holm}} for each. The tilted index's tracking error lies inside the paths' range, so the comparison is made at a tracking error of the same size. At budgets of 75 and 150 basis points the five paths run at those budgets, those of the five estimators other than RiskMetrics, obtain {{ti_b75}} and {{ti_b150}} per basis point, both above the tilted index.</p>
+
+<p>The tilted index's exposure is small partly because of its form. One multiple k scales all 44 industries, and the change in an industry's active weight is its weight times k times its centred score, so the largest industries reach the bound of 2 percentage points first and set k for all the others. The bound sets k in {{k_bound}} of the 566 months, most often at Banks ({{k_banks}} months) and Computer Software ({{k_softw}}), and the floor at zero sets it in the other {{k_floor}}, all at Gold, from {{k_floor_first}} to {{k_floor_last}}. Its median over the months is {{k_median}}. So the smaller industries use only part of the room the bound gives them.</p>
+
+<p>The tilted index trades less than the paths, {{ti_turn}} per cent of the portfolio a month against {{ti_paths_turn}}. It moves {{ti_first}} per cent of the portfolio in its first month and exceeds the turnover cap in {{ti_cap}} of the 566 months. Its realised beta is {{ti_beta}}, against {{ti_paths_beta}} for the paths.</p>
+
+{{table5}}
+
+<h3>3.5 The active returns</h3>
+
+<p>Both naive portfolios earned more active return over the sample than the paths they are set beside, before and after costs. Before costs the naive tilt earned {{nt_gross}} basis points a year against {{nt_paths_gross}} for its paths, and the tilted index {{ti_gross}} against {{ti_paths_gross}}. Net of 100 basis points per unit of one-way turnover the naive tilt earned {{nt_net}} against {{nt_paths_net}}, and the tilted index {{ti_net}} against {{ti_paths_net}}. No test of a difference in return was run, so these figures do not show that a naive portfolio earns more than an optimised path, or that it earns less. Before costs, each difference in information ratio, {{nt_irgap}} under the tilt and {{ti_irgap}} under the factor objective, is smaller than the standard error of either ratio, {{nt_irse}} and {{ti_irse}}. The gap has two parts.</p>
+
+<p>The first part is a property of the period. The naive tilt's active return is, month by month, the weight removed from Coal, Oil and Utilities times the spread between the cap-weighted return of the other 46 industries and that of the three. Over the 566 months the spread averaged {{spread_mean}} per cent a year, with a standard deviation of {{spread_sd}} per cent a year and a t-ratio of {{spread_t}}, taking the months as independent. The optimised paths hedge part of that spread away, which is also why their tracking error is lower, and how much the spread earned in this sample is a property of the period. In the attribution, the residual under the tilt, the part of the active return the six factors do not explain, is {{nt_resid}} basis points a year for the naive tilt against {{p_resid}} for the paths.</p>
+
+<p>The second part is a property of the two methods. After costs the gaps widen, because each naive portfolio trades less than every path it is set beside. At 100 basis points per unit of turnover, the difference in information ratio exceeds the larger of the two standard errors against {{nt_ir_exceed}} of the seven paths under the tilt and {{ti_ir_exceed}} of the seven under the factor objective.</p>
+
+<p>Under the factor objective the attribution shows where the paths' active return came from. The six factors contributed {{fp_ftot}} basis points a year, the four targeted factors {{fp_targ}} of it, and the residual {{fp_resid}}, which cancelled most of the factors' contribution. The tilted index's six factors contributed {{ti_ftot}}, its targeted factors {{ti_targ}}, and its residual {{ti_resid}}.</p>
+
+{{table6}}
+
+<h2>4. Discussion</h2>
+
+<p>The natural comparison is with DeMiguel, Garlappi and Uppal (2009). On their own datasets the replication indicates that their tables reproduce on a 2026 version of French's data, with one Sharpe ratio more than 0.03 away, on data French appears to have revised since, and that their conclusion holds on the 261 months since: no optimising rule beats 1/N by a margin that is statistically significant at the 5 per cent level, and minimum variance, the rule that came closest in their period, fell as the size and value factors it loaded on earned little or lost. Under an index mandate, the optimiser does better than the naive portfolios on what it is built to do. Most of their optimisers needed estimated means as well as covariances, and all of them had the whole portfolio to place. Under the mandate the optimiser needs only a covariance estimate, and only to place the share of the portfolio the mandate moves away from the benchmark, and the difference in result plausibly lies in that difference of task.</p>
+
+<p>For the holder of such a mandate, the estimates therefore suggest two things. First, under the tilt the optimiser with a risk model realises {{nt_diff_lo0}} to {{nt_diff_hi0}} basis points a year less tracking error than the naive tilt, {{nt_share_lo}} to {{nt_share_hi}} per cent of the naive tilt's {{nt_te}}. Under the factor objective it obtains {{ti_ratio_lo}} to {{ti_ratio_hi}} times the factor exposure per basis point. Second, the naive portfolios' higher active return over this sample rests, before costs, on a spread whose mean is small against its variation and, after costs, on their lower turnover.</p>
+
+<p>At the same time, the design has limits. First, each naive portfolio is one construction. The tilted index's multiple is set by its largest industries, so the exposure it obtains depends on that form, and the comparison under the factor objective is with this tilted index and not with every naive one. Second, the assets are industry portfolios, so the findings are about 49 groups of firms. A stock-level mandate holds hundreds of positions under a much tighter bound, and whether a risk model is worth as much there is a question these data cannot answer. Third, the comparison of returns rests on one sample, since the spread behind the naive tilt's return has a t-ratio of {{spread_t}} over 47 years. Finally, French revises his files, so a rerun on a later version would reproduce the comparisons and not every digit.</p>
+
+<p>Against this evidence, the claim is a narrow one. On French's 49 industries from 1979 to 2026, an optimiser with a covariance estimate realises {{nt_diff_lo0}} to {{nt_diff_hi0}} basis points a year less tracking error than a naive tilt under the same tilt, and obtains {{ti_ratio_lo}} to {{ti_ratio_hi}} times the factor exposure per basis point of a naive tilted index, each difference statistically significant at the 5 per cent level after Holm's correction. The naive portfolios' higher active return over the sample was not tested.</p>
+
+<h2>References</h2>
+<div class="refs">
+<p>Carhart, M. M. (1997). On persistence in mutual fund performance. <i>Journal of Finance</i>, 52(1), 57-82.</p>
+<p>DeMiguel, V., Garlappi, L. and Uppal, R. (2009). Optimal Versus Naive Diversification: How Inefficient is the 1/N Portfolio Strategy? <i>Review of Financial Studies</i>, 22(5), 1915-1953.</p>
+<p>Dom, M. S., Howard, C., Jansen, M. and Lohre, H. (2025). Beyond GMV: the relevance of covariance matrix estimation for risk-based portfolio construction. <i>Quantitative Finance</i>, 25(3), 403-419.</p>
+<p>Fama, E. F. and French, K. R. (2015). A five-factor asset pricing model. <i>Journal of Financial Economics</i>, 116(1), 1-22.</p>
+<p>French, K. R. (2026). Data library. mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html, files built from the CRSP database of August 2026.</p>
+<p>Hofer, C. (2026). Which risk model for an index mandate? Covariance estimators and tracking error on 49 US industries. Code and notebooks: github.com/ochofer/risk-models-for-index-tracking.</p>
+<p>Holm, S. (1979). A simple sequentially rejective multiple test procedure. <i>Scandinavian Journal of Statistics</i>, 6(2), 65-70.</p>
+<p>Jagannathan, R. and Ma, T. (2003). Risk reduction in large portfolios: why imposing the wrong constraints helps. <i>Journal of Finance</i>, 58(4), 1651-1683.</p>
+<p>Jobson, J. D. and Korkie, B. M. (1981). Performance hypothesis testing with the Sharpe and Treynor measures. <i>Journal of Finance</i>, 36(4), 889-908.</p>
+<p>Jorion, P. (1986). Bayes-Stein estimation for portfolio analysis. <i>Journal of Financial and Quantitative Analysis</i>, 21(3), 279-292.</p>
+<p>Ledoit, O. and Wolf, M. (2004). A well-conditioned estimator for large-dimensional covariance matrices. <i>Journal of Multivariate Analysis</i>, 88(2), 365-411.</p>
+<p>Ledoit, O. and Wolf, M. (2011). Robust performance hypothesis testing with the variance. <i>Wilmott</i>, 2011(55), 86-89.</p>
+<p>Memmel, C. (2003). Performance hypothesis testing with the Sharpe ratio. <i>Finance Letters</i>, 1(1), 21-23.</p>
+<p>Michaud, R. O. (1989). The Markowitz optimization enigma: is 'optimized' optimal? <i>Financial Analysts Journal</i>, 45(1), 31-42.</p>
+<p>Robeco (2024). The smarter alternative: Enhanced Indexing. Robeco Institutional Asset Management.</p>
+</div>
+</div>
+<footer class="ch-foot"><div>Carlo Hofer &middot; Data: Kenneth R. French Data Library &middot; <a href="https://github.com/ochofer/optimal-vs-naive-diversification">Code on GitHub</a> &middot; The PDF of this note is beside it in the repository</div></footer>
+
+<script>
+(function () {
+  "use strict";
+  // on screen, a table wider than the page scrolls inside its box; the fade at the right edge shows only while more of the table lies to the right
+  document.querySelectorAll(".tw").forEach(function (t) {
+    function upd() { var s = t.firstElementChild; t.classList.toggle("more", !!s && s.scrollWidth - s.clientWidth - s.scrollLeft > 1); }
+    if (!("ResizeObserver" in window)) { t.classList.add("more"); return; }
+    t.addEventListener("scroll", upd, true);
+    new ResizeObserver(upd).observe(t);
+    upd();
+  });
+})();
+</script>
+</body>
+</html>

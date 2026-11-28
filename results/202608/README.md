@@ -1,6 +1,6 @@
 # The tables of the write-up, vintage 202608
 
-Every figure in the README, the two notes, the companion page and the dashboard comes from a table in this folder. Each notebook downloads French's files at run time and writes its tables to `outputs/`. The copies here are the ones the write-up cites, computed on the files French built from the CRSP database of August 2026, the vintage 202608.
+Every figure in the README, the note and the dashboard comes from a table in this folder. Each notebook downloads French's files at run time and writes its tables to `outputs/`. The copies here are the ones the write-up cites, computed on the files French built from the CRSP database of August 2026, the vintage 202608.
 
 Two records sit beside the tables, `provenance_french.json`, i.e., the download date, the SHA-256 hash and the vintage of each of French's files, and `provenance_solver.json`, i.e., the name and version of the solver.
 

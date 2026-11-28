@@ -1,91 +1,78 @@
-# Optimal versus naive diversification: a replication, and the choice of covariance estimator under a tracking-error mandate
+# Optimal versus naive diversification: a replication, and the same question under an index mandate
 
-The study has three parts. Each asks its own question, and one problem links them: an optimiser takes its estimated inputs as true, so their errors shape the portfolio.
+The study asks DeMiguel, Garlappi and Uppal's question, whether an optimised portfolio does better than a naive portfolio, in two places.
 
 - **The replication.** DeMiguel, Garlappi and Uppal (2009) find that none of the optimised portfolios they test is consistently better than the naive 1/N rule out of sample, because the error in the estimated inputs costs more than optimising gains. The study replicates their comparison on Ken French's data and runs it on the 261 months since their sample.
-- **The mandate.** An index fund needs no return forecast, only a covariance estimate. The study asks whether the choice of covariance estimator still matters when a long-only portfolio must track its benchmark under a mandate, the question Dom, Howard, Jansen and Lohre (2025) ask of minimum-variance portfolios.
-- **The factor objective.** Under the same mandate, the study spends a budget of tracking error on four factors, as an enhanced index fund does, and measures the exposure obtained and what it contributed to the return.
+- **Under an index mandate.** An index fund's mandate fixes most of the portfolio and needs no return forecast, so what the fund decides is where to put the weight the mandate moves away from the benchmark. The study compares an optimiser that places it with a covariance estimate with two naive portfolios that place it by a fixed rule: the naive tilt when Coal, Oil and Utilities are held at half their benchmark weight, and the tilted index when a budget of tracking error is spent on four factors.
 
-The results are on the [dashboard](https://www.carlohofer.com/optimal-vs-naive-diversification/dashboard/B-P_dashboard.html) and in two notes, [the replication and the mandate](note/B-P_note_2026-10.pdf) and [the factor objective](note/B-P_note_moduleA_2026-11.pdf). The project page is [carlohofer.com/projects/optimal-vs-naive-diversification](https://www.carlohofer.com/projects/optimal-vs-naive-diversification/).
+The results are on the [dashboard](https://www.carlohofer.com/optimal-vs-naive-diversification/dashboard/B-P_dashboard.html) and in the [note](note/B-P_note_2026-11.pdf). The project page is [carlohofer.com/projects/optimal-vs-naive-diversification](https://www.carlohofer.com/projects/optimal-vs-naive-diversification/). The optimised portfolios and the comparison of covariance estimators behind them are the companion study's, [risk-models-for-index-tracking](https://github.com/ochofer/risk-models-for-index-tracking), which was split from this repository at commit ddbb75c on 27 November 2026, with the history before it shared.
 
 ## Findings
 
-- **The replication.** On the paper's sample, July 1963 to November 2004, 29 of the 30 out-of-sample Sharpe ratios tested are within 0.03 of the published values, 26 of 27 with the value-weighted market, one series in all four datasets, counted once, and all 30 turnover figures are within 25 per cent. The one miss, minimum variance on the FF-4-factor dataset, points to a revision of French's size and book-to-market portfolios. In the 261 months since the paper's sample, to August 2026, no optimising rule's Sharpe ratio exceeds 1/N's by a margin that is statistically significant at the 5 per cent level on the two-sided Jobson-Korkie test, on any of the four datasets.
-- **The mandate.** On French's 49 industries from July 1979 to August 2026, an optimiser holds the long-only portfolio with the smallest forecast tracking error under a mandate: each industry outside the tilt within 2 percentage points of its benchmark weight, one-way turnover of at most 2 per cent a month, Coal, Oil and Utilities at no more than half their benchmark weight, tobacco and weapons excluded, and a beta of one. The four estimators built from three years of daily returns realise 84.7 to 93.4 basis points a year of tracking error. The factor and principal-component models realise 7 to 9 basis points more than the sample covariance and shrinkage, each difference statistically significant at the 5 per cent level on a paired test with blocks of twelve months, after Holm's correction across nine comparisons. On daily returns the two structured models realise 3.4 and 4.1 basis points a year more than the sample covariance and the monthly covariance 12.7 more, and the data rule out a gain from RiskMetrics as large as the one Dom, Howard, Jansen and Lohre report. Every estimator's forecast underestimates the realised tracking error, the realised active return being 22 to 61 per cent more volatile than forecast. The tilt is associated with an active return of +2 to +7 basis points a year, which is not statistically significant at the 5 per cent level, and the data rule out a cost of more than about 21 basis points a year.
-- **The factor objective.** With a budget of 100 basis points a year of forecast tracking error spent on value, profitability, investment and momentum, the optimiser obtains 0.109 to 0.140 of combined exposure, 74 to 85 per cent of it in profitability and investment, at a realised tracking error 19 to 50 per cent above the budget. The targeted factors contributed +26.7 to +35.5 basis points a year, statistically significant at the 5 per cent level on four of the five estimators on a Newey-West standard error, and the six factors together +37 to +47. The residual, i.e., the part of the active return the factors do not explain, was −31 to −37, so no path's active return is statistically significant at that level.
+- **The replication.** On the paper's sample, July 1963 to November 2004, the replication matches the paper: 29 of the 30 Sharpe ratios tested are within 0.03 of the published values, and all 30 turnover figures tested are within 25 per cent. The one Sharpe ratio more than 0.03 away, minimum variance on the FF-4-factor dataset, is consistent with French having revised his size and book-to-market portfolios since the paper. In the 261 months since the paper's sample, to August 2026, no optimising rule's Sharpe ratio exceeds 1/N's by a margin that is statistically significant at the 5 per cent level on the two-sided Jobson-Korkie test, on any of the four datasets.
+- **Under the tilt.** On French's 49 industries from July 1979 to August 2026, with Coal, Oil and Utilities held at no more than half their benchmark weight, every other industry within 2 percentage points of its benchmark weight and one-way turnover of at most 2 per cent a month, the naive tilt realises 105.6 basis points a year of tracking error and the seven optimised portfolios 79.7 to 90.9: one for each of six covariance estimators, and one for a robust portfolio built from five of them. The naive tilt's tracking error is 14.7 to 25.9 basis points a year higher than each optimised portfolio's. Each difference is statistically significant at the 5 per cent level on the paired variance test of Ledoit and Wolf (2011), after Holm's correction for the seven comparisons made together.
+- **Under the factor objective.** With tobacco and weapons excluded as well, a beta of one, and a budget of 100 basis points a year of forecast tracking error spent on value, profitability, investment and momentum, the optimiser obtains 0.000824 to 0.000979 of the factor objective per basis point of realised tracking error, and the tilted index 0.000185. The optimiser's is 4.5 to 5.3 times the tilted index's, at tracking errors of the same size. Each difference is statistically significant at the 5 per cent level on a paired bootstrap that resamples blocks of 12 months, after Holm's correction for the seven comparisons.
+- **The active returns.** Both naive portfolios earned more active return over the sample than the optimised portfolios they are compared with, before and after costs. Before costs the naive tilt earned +13.5 basis points a year against +1.8 to +6.9, and the tilted index +16.4 against +2.3 to +15.5. No test of these differences was run, and before costs each difference in information ratio, the active return divided by the tracking error, is smaller than the standard error of either ratio. The gap has two sources. The first is that the naive tilt's active return is, month by month, the weight removed from Coal, Oil and Utilities times the spread between the other industries' return and theirs. The spread averaged +1.22 per cent a year with a standard deviation of 15.28 per cent, the optimised portfolios hedge part of it away, and how much it earned in this sample is a property of the period. The second is the naive portfolios' lower turnover, 0.42 per cent a month against 0.81 to 1.50 under the tilt and 0.77 against 1.78 to 2.00 under the factor objective, which widens the gap after costs.
 
-## The notes, the dashboard and the companion page
+## The note and the dashboard
 
-Each note is a PDF with its HTML source beside it in `note/`. `B-P_note_2026-10.pdf` gives the replication and the mandate in full, and `B-P_note_moduleA_2026-11.pdf` the factor objective. The dashboard, `dashboard/B-P_dashboard.html`, shows the results in five views, *Summary*, *Replication*, *Tracking error*, *Factor exposure* and *Method and terms*. The last lists the committed table each exhibit is drawn from. The companion page, `companion/industry_tilts_factor_exposures.html`, explains how holding some industries below their benchmark weight creates exposures to the common factors.
+The note is a PDF with its HTML source beside it in `note/`, built by `note/build_note.py` from `note/template.html` and the committed tables. The dashboard, `dashboard/B-P_dashboard.html`, built by `dashboard/build_dashboard.py`, shows the results in five views, *Summary*, *Replication*, *Tracking error*, *Factor exposure* and *Method*. The last lists the committed tables each exhibit is drawn from.
 
 ## How to run
 
-Each notebook runs from a blank Google Colab runtime: upload it and run all cells. It writes the code it needs into `src/bp/` and downloads French's files when it runs, so nothing from his library is stored here. From a checkout, run `pip install -r requirements.txt`, then `python3 -m pytest tests`, then the notebooks in order. `build_notebooks.py` writes the notebooks from their text and the modules in `src/bp/`, and they are committed without outputs.
+Notebooks 01 to 07 run from a blank Google Colab runtime: upload one and run all cells. It writes the code it needs into `src/bp/` and downloads French's files when it runs, so nothing from his library is stored here. Notebooks 08 and 09 also read the code and the tables copied from the companion study, so they run from the root of a checkout. From a checkout, run `pip install -r requirements.txt`, then `python3 -m pytest tests`, then the notebooks in order. `build_notebooks.py` writes the notebooks from their text and the modules in `src/bp/`, and they are committed without outputs.
 
-Each notebook writes its tables to `outputs/`, with a record of each file's download date, hash and CRSP vintage. The tables the notes and the dashboard cite are committed in `results/202608/`, computed on the files French built from the CRSP database of August 2026. The figures of notebooks 04, 05, 06 and 09 are not in committed tables and come from rerunning those notebooks. To rebuild the dashboard, run `cp results/202608/* outputs/` and then `python3 dashboard/build_dashboard.py` from the repository root. The build stops unless each table matches its committed copy. French revises his files, so a run on a later vintage reproduces the comparisons and not every digit.
-
-`checks/crsp_direct_test.py` checks the benchmark against the CRSP monthly stock file, where that file is held under a WRDS subscription. Only its aggregate results are committed, and no notebook depends on it.
+Each notebook writes its tables to `outputs/`, with a record of each file's download date, hash and CRSP vintage. The tables the note and the dashboard cite are committed in `results/202608/`, computed on the files French built from the CRSP database of August 2026. The figures of notebooks 04, 05 and 06 are not in committed tables and come from rerunning those notebooks. To rebuild the note and the dashboard, run `python3 note/build_note.py` and `python3 dashboard/build_dashboard.py` from the repository root. The note's PDF also needs Playwright with Chromium and pypdf, and `--no-pdf` builds its HTML alone. The dashboard's build stops unless each table it reads is the file at the current commit. French revises his files, so a run on a later vintage reproduces the comparisons and not every digit.
 
 ## What is fixed in advance
 
-The bands of the replication, the sample boundaries and every setting of the mandate and the factor objective are in `src/bp/constants.py`, each with its source, and the paper's published figures are in `src/bp/dgu_published.py`. Each notebook opens with the expectations it tests, written before its code ran, and marks the comparisons added after the results were known.
+The margins of the replication, the sample boundaries and every setting of the two comparisons are in `src/bp/constants.py`, each with its source. The margins were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results. The paper's published figures are in `src/bp/dgu_published.py`. Notebooks 01 to 07 open with the expectations they test, written before their code ran. Notebooks 08 and 09 report their comparisons as results, and mark the two checks made after the results were known.
 
 ## The notebooks
 
-One idea per notebook, run in order: the replication in 01 to 07, the mandate in 08 to 13 and 17 to 19, and the factor objective in 14 to 16.
+One idea per notebook, run in order: the replication in 01 to 07, and the comparisons under the mandate in 08 and 09.
 
 | Notebook | What it does |
 |---|---|
-| 01 `french_loader` | Loads French's six monthly files, records their vintage, and checks the counts the paper's Table 2 implies |
+| 01 `french_loader` | Loads French's monthly and daily files, records their vintage, and checks the counts the paper's Table 2 implies |
 | 02 `1N_vs_mean_variance` | Runs 1/N and sample mean-variance through the rolling evaluation, beside the paper's Tables 3 to 5 |
-| 03 `shrinkage_and_constraints` | Adds Bayes-Stein, minimum variance and the constrained rules, and compares all nine with the paper: 29 of 30 Sharpe ratios, 26 of 27 with the value-weighted market, one series in all four datasets, counted once, and 30 of 30 turnover figures within their bands |
-| 04 `critical_window_and_simulation` | Reproduces the paper's Proposition 1 (all 13 values) and its simulation (77 of 81 cells within 0.03) |
+| 03 `shrinkage_and_constraints` | Adds Bayes-Stein, minimum variance and the constrained rules, and compares all nine with the paper: 29 of the 30 Sharpe ratios tested within 0.03 of the published values, and all 30 turnover figures tested within 25 per cent |
+| 04 `critical_window_and_simulation` | Reproduces the paper's Proposition 1 (all 13 values) and its simulation (77 of 81 Sharpe ratios within 0.03) |
 | 05 `fat_tails` | Reruns the simulation with fat-tailed returns: the estimated rules lose at most 0.002 in Sharpe ratio |
 | 06 `volatility_clustering` | Reruns the simulation with volatility that clusters over time: the comparison with 1/N does not change |
 | 07 `extended_sample` | Runs the nine rules on every month to August 2026 and compares the 261 months since the paper with its period |
-| 08 `cap_weight_check` | Builds the benchmark from the 49 industries' cap weights and checks that it tracks French's market return within 47 basis points a year |
-| 09 `principal_components` | Finds the principal components of the 49 industries and shows that the first is the market, with a correlation of 0.956 with the benchmark |
-| 10 `covariance_estimators` | Compares the four estimators on monthly and daily data, by their forecasts and by their minimum-variance portfolios |
-| 11 `optimiser` | Builds the constrained tracking-error optimiser and checks it against known answers and an independent solver |
-| 12 `rolling_evaluation` | Runs every estimator month by month, 1979 to 2026: realised tracking error, forecast bias, active return and trading |
-| 13 `factor_attribution` | Splits each month's active return into the contributions of six factors and a residual |
-| 14 `factor_objective` | Sets up the factor objective: the largest exposure to four factors within a budget of forecast tracking error |
-| 15 `factor_objective_evaluation` | Runs the nineteen paths of the factor objective month by month and judges six of its seven expectations |
-| 16 `factor_objective_attribution` | Splits the factor objective's active return into factor contributions and a residual, and judges the seventh expectation |
-| 17 `paired_tests` | Compares the realised tracking errors of two paths with the paired variance test of Ledoit and Wolf (2011) |
-| 18 `daily_tracking_error` | Measures every path's tracking error on daily returns and repeats the paired tests on them |
-| 19 `structured_models` | Gives the two structured models back the residual covariance between industries, and runs the four daily estimators on shorter windows |
+| 08 `naive_tilt` | Runs the naive tilt month by month, 1979 to 2026, and compares its realised tracking error, turnover, returns and factor exposures with the seven optimised portfolios under the tilt |
+| 09 `tilted_index` | Runs the tilted index month by month and compares its factor exposure per basis point of tracking error, turnover, returns and attribution with the seven optimised portfolios under the factor objective |
 
 ## Terms
 
 - **1/N**: the rule that holds every asset at the same weight and rebalances to it each month.
 - **Sharpe ratio**: the mean monthly excess return divided by its standard deviation.
-- **Band**: the distance from a published figure within which a replicated figure counts as a match, its width fixed before the code ran.
 - **Tracking error**: the standard deviation of the monthly difference between the portfolio's return and the benchmark's, times the square root of 12. It is forecast before the month and realised after it.
 - **Active return**: the portfolio's return minus the benchmark's.
 - **Mandate**: the rules the portfolio obeys, set out under Findings.
 - **Tilt**: holding Coal, Oil and Utilities at no more than half their benchmark weight.
-- **Bias statistic**: the standard deviation of the realised active return divided by its forecast, 1 for an accurate forecast and above 1 when the forecast is too low.
+- **Optimised portfolio**: the portfolio an optimiser holds month by month, under the tilt or under the factor objective, with one of six covariance estimators or as a robust portfolio built from five of them.
+- **Factor objective**: the sum of the portfolio's active exposures to value, profitability, investment and momentum.
 - **Residual**: the part of the active return the six factors do not explain.
 - **Naive tilt**: the index with Coal, Oil and Utilities held at half their index weight and the removed weight spread over the other 46 industries in proportion to their index weights, rebalanced to that target every month, with no risk model.
-- **Tilted index**: the index under the mandate's tilt and exclusions, with each of the other 44 industries' weights scaled up or down in proportion to its factor score as far as the 2-point limit and a floor of zero allow, rebalanced every month, with no risk model.
+- **Tilted index**: the index under the mandate's tilt and exclusions, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the 2-point limit and a floor of zero allow, rebalanced every month, with no risk model.
 - **The two naive portfolios**: the naive tilt and the tilted index together.
 
-Each note opens with the full list of the terms it uses.
+The note opens with the full list of the terms it uses.
 
 ## Layout
 
 ```
 build_notebooks.py      writes notebooks/ from their text and the modules in src/bp/
 src/bp/                 the code: French's files, the datasets, the nine rules, the backtest, the simulations,
-                        the benchmark, the covariance estimators, the optimiser, the evaluation,
-                        the attribution, the paired test and the daily returns
+                        and the two naive portfolios
+src/bp/source/          the code of the optimised portfolios, copied unchanged from the companion study
 notebooks/              one idea per notebook, run in order, committed without outputs
-results/202608/         the tables the notes and the dashboard cite, with the record of French's files and the solver
-note/                   the two notes, as PDF and HTML
-dashboard/              the dashboard, its template, its build script and its static figures
-companion/              the companion page, its template and its build script
-checks/                 the direct test against CRSP with its aggregate results, and a pilot of the daily test on made-up data
+results/202608/         the tables the note and the dashboard cite, with the record of French's files and the solver
+results/202608/source/  the optimised portfolios' tables, copied unchanged from the companion study
+note/                   the note, as PDF and HTML, its template and its build script
+dashboard/              the dashboard, its template and its build script
 tests/                  known-answer tests that run without a network connection
 outputs/                written when the notebooks run, and not committed
 index.html, .nojekyll   the GitHub Pages site, which opens the dashboard
@@ -93,6 +80,8 @@ LICENSE                 the MIT licence
 ```
 
 ## Other projects
+
+**Which risk model for an index mandate? Covariance estimators and tracking error on 49 US industries.** Runs a long-only index-tracking mandate on Ken French's 49 US industries from 1979 to 2026 with six covariance estimators. The factor and principal-component models realise 7 to 9 basis points a year more tracking error than the sample covariance's 84.7, each difference statistically significant at the 5 per cent level after Holm's correction. On minimum-variance portfolios, by which Dom, Howard, Jansen and Lohre (2025) judge estimators, the same two models realise 0.95 to 1.58 percentage points a year more volatility when weights may be negative, and within 0.06 points of the sample covariance when they may not. [Code](https://github.com/ochofer/risk-models-for-index-tracking)
 
 **Climate risk as an equity signal.** An ownership graph linking 328 ownership entities in the US and developed Europe, 302 of them listed companies with a price series, to 5,115 asset holdings, built from Global Energy Monitor's free tracker. Of 19 apparent ownership changes drawn at random and checked by hand, 12 had no corporate event behind them. [Page](https://www.carlohofer.com/projects/climate-risk-equity-signal/), [note](https://github.com/ochofer/paper1-hazard-exposure-data/releases/download/note-v1.4/what-a-vintage-difference-measures.pdf), [code](https://github.com/ochofer/paper1-hazard-exposure-data)
 

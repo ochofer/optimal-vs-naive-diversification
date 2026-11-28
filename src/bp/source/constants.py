@@ -3,7 +3,7 @@ The values of src/bp/constants.py at commit ddbb75c of the repository risk-model
 copies in this folder import. This file holds every name the copies read and no other, each at its value at that
 commit, with its line number there beside it; constants.SOURCE_CONSTANTS_SHA256 in the parent package is the hash of
 that file. Where the source wrote a value as an expression of other names, the value is written out. No module outside
-this folder reads this file: the comparisons with the naive rules read their settings from src/bp/constants.py.
+this folder reads this file: the comparisons with the two naive portfolios read their settings from src/bp/constants.py.
 tests/test_source_copies.py checks the names against the copies' text and, in a checkout that holds the commit, each
 value and line number against the file at the commit.
 """
