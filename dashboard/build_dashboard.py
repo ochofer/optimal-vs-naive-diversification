@@ -1,4 +1,4 @@
-"""Builds the dashboard, dashboard/B-P_dashboard.html, from the tables committed in results/<vintage>/ and from
+"""Builds the dashboard, dashboard/index.html, from the tables committed in results/<vintage>/ and from
 dashboard/template.html.
 
 Usage, from the repository root, after the tables are committed:
@@ -29,7 +29,7 @@ import pandas as pd
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(SCRIPT_DIR)
-OUT = os.path.join(SCRIPT_DIR, "B-P_dashboard.html")
+OUT = os.path.join(SCRIPT_DIR, "index.html")
 GITHUB = "https://github.com/ochofer/optimal-vs-naive-diversification"
 SOURCE_REPO = "https://github.com/ochofer/risk-models-for-index-tracking"
 SOURCE_COMMIT = "ddbb75c46ff0b4622522aa0a0156427a200ac6cb"
