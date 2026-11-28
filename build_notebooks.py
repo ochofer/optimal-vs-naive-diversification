@@ -698,7 +698,7 @@ The specification question matters beyond these numbers. The equation in a paper
 
 NB04 = [
     md("""
-# 04. The amount of data mean-variance needs: DGU's analytical result and their simulation
+# 04. The amount of data mean-variance needs: DeMiguel, Garlappi and Uppal's analytical result and their simulation
 
 **Terms used in this notebook.**
 
@@ -1446,7 +1446,7 @@ pd.DataFrame(gap_rows).set_index(["N", "market", "M"])["gap"].unstack("M").round
     md("""
 ## Why the effect is small: what perfect knowledge would be worth
 
-This check was added after the run to explain the result; it is not one of the pre-registered expectations. In the clustered market the true covariance of every month is known, so two ceilings can be computed. First, a minimum-variance rule that knew the current covariance exactly and re-solved its weights every month, against the same rule holding the fixed weights of the unconditional covariance: the most that any relative-weight rule could gain from tracking the regime. Second, the factor itself scaled up and down by the inverse of its current variance, normalised to the same average exposure, against the factor held fixed: the gain from changing the size of the whole position while its composition stays fixed. The paper's rules are all of the first kind; they decide how to split wealth between assets and stay fully invested.
+This check was added after the run to explain the result; it is not one of the expectations written before the run. In the clustered market the true covariance of every month is known, so two ceilings can be computed. First, a minimum-variance rule that knew the current covariance exactly and re-solved its weights every month, against the same rule holding the fixed weights of the unconditional covariance: the most that any relative-weight rule could gain from tracking the regime. Second, the factor itself scaled up and down by the inverse of its current variance, normalised to the same average exposure, against the factor held fixed: the gain from changing the size of the whole position while its composition stays fixed. The paper's rules are all of the first kind; they decide how to split wealth between assets and stay fully invested.
 """),
     code("""
 def sr(x):
@@ -1881,7 +1881,7 @@ NB08 = [
 | Basis point | one hundredth of a percentage point; 100 basis points a year of tracking error is 1% a year |
 | Tilt | Coal, Oil and Util (utilities) held at no more than half their benchmark weight |
 | Turnover cap | an upper limit on the one-way turnover of a rebalance, 2% a month here |
-| Mandate | the rules the optimised portfolios obey in this notebook: long-only, each industry outside the tilt within 2 percentage points of its benchmark weight, the turnover cap and the tilt; risk-models-for-index-tracking calls this set "C3 tilt only" |
+| Mandate | the rules the optimised portfolios obey in this notebook: long-only, each industry outside the tilt within 2 percentage points of its benchmark weight, the turnover cap and the tilt; risk-models-for-index-tracking calls this setting the tilt alone, and labels it "C3 tilt only" in its tables |
 | Naive tilt | the portfolio this notebook builds: Coal, Oil and Util at exactly half their benchmark weight, and the weight this removes added to the other 46 industries in proportion to their benchmark weights; it uses no estimate of risk |
 | Covariance estimator | a method for estimating the covariance matrix from past returns |
 | Shrinkage | pulling an estimate part of the way towards a simpler target, which trades a little bias for less estimation error |
@@ -2428,9 +2428,9 @@ print(f"statistically significant at the 5 per cent level after Holm's correctio
     md("""
 ## What this notebook establishes, and what it does not settle
 
-The tilted index obtains a mean forecast exposure of 0.022 at a realised tracking error of 119.3 basis points a year, a forecast exposure per basis point of 0.000185. The seven optimised paths at the budget of 100 basis points obtain 0.000824 to 0.000979 per basis point, 4.5 to 5.3 times as much, and the tilted index's exposure per basis point is lower than each path's, each difference statistically significant at the 5 per cent level on the paired block bootstrap after Holm's correction across the seven, with adjusted p-values of 0.007. The tilted index's realised tracking error lies inside the paths' range, 115.6 to 150.1 basis points a year, so the comparison is made at a tracking error of the same size. The paths of the five estimators other than RiskMetrics obtain 0.000478 to 0.000633 per basis point at the budget of 75 basis points and 0.001015 to 0.001073 at 150, both above the tilted index.
+The tilted index has a mean forecast exposure of 0.022 at a realised tracking error of 119.3 basis points a year, a forecast exposure per basis point of 0.000185. The seven optimised paths at the budget of 100 basis points have 0.000824 to 0.000979 per basis point, 4.5 to 5.3 times as much, and the tilted index's exposure per basis point is lower than each path's, each difference statistically significant at the 5 per cent level on the paired block bootstrap after Holm's correction across the seven, with adjusted p-values of 0.007. The tilted index's realised tracking error lies inside the paths' range, 115.6 to 150.1 basis points a year, so the comparison is made at a tracking error of the same size. The paths of the five estimators other than RiskMetrics have 0.000478 to 0.000633 per basis point at the budget of 75 basis points and 0.001015 to 0.001073 at 150, both above the tilted index.
 
-The forecast exposure is the quantity the optimiser makes as large as it can, computed with the same estimated betas. Measured on the returns in section 7, a check added after the results were known, the paths realise 0.40 to 0.56 of their forecast exposure and the tilted index 1.9 times its own. On realised exposure per basis point the paths obtain 1.06 to 1.48 times the tilted index's 0.000351, and no difference is statistically significant at the 5 per cent level after Holm's correction, with adjusted p-values of 1.000. The paths' residual of -28.4 to -37.4 basis points a year in the attribution, against the tilted index's -1.4, is consistent with a forecast exposure above the realised one in months when the targeted factors earned a premium.
+The forecast exposure is the quantity the optimiser makes as large as it can, computed with the same estimated betas. Measured on the returns in section 7, a check added after the results were known, the paths realise 0.40 to 0.56 of their forecast exposure and the tilted index 1.9 times its own. On realised exposure per basis point the paths obtain 1.06 to 1.48 times the tilted index's 0.000351, and no difference is statistically significant at the 5 per cent level after Holm's correction, with adjusted p-values of 1.000. The 95 per cent intervals of the differences are too wide to rule out a realised multiple of about 2.2 to 2.7. The paths' residual of -28.4 to -37.4 basis points a year in the attribution, against the tilted index's -1.4, is consistent with a forecast exposure above the realised one in months when the targeted factors earned a premium.
 
 The tilted index's exposure is small partly because of its form. One k scales all 44 industries, and the change in an industry's active weight is its weight times k times its centred score, so the largest industries reach the bound of 2 percentage points first and set k for all the others: k is set by the bound in 549 of the 566 months, most often at Banks (184 months) and Softw, computer software (138), and by the floor at zero in the other 17, all at Gold, from 1981-04 to 1984-01. Its median over the months is 0.206. This is a limit of the construction, and no other construction of a tilted index is run here.
 
@@ -2440,7 +2440,7 @@ Over the sample the tilted index earned an active return of +16.4 basis points a
 
 **What this notebook does not settle.**
 
-- The tilted index is one way to move the benchmark towards the targeted factors with no estimate of risk. A construction that scaled each industry's active weight by its score, or that capped k industry by industry, would obtain a different exposure, and none is run here.
+- The tilted index is one way to move the benchmark towards the targeted factors with no estimate of risk. A construction that scaled each industry's active weight by its score, or that capped k industry by industry, would have a different exposure, and none is run here.
 - The figures are those of one sample and one vintage, 202608. A later vintage reproduces the comparisons, and not every digit, because French revises history.
 - The optimised paths are read from risk-models-for-index-tracking at commit ddbb75c and one of them is rebuilt here. The others are taken as recorded, and their checks are in that repository.
 """),

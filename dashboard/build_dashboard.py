@@ -156,7 +156,7 @@ for p in periods:
     D["ext_sharpe"][p] = {d: {rule: r(sub.loc[rule, d], 6) for rule in RULES} for d in DATASETS}
 D["ext_vs"] = [{"dataset": row.dataset, "rule": row.rule, "p": r(row._6, 4)} for row in ext_vs.itertuples()]
 
-# the naive tilt and the optimised portfolios under the tilt
+# the naive tilt and the optimised portfolios under the tilt alone
 D["nt"] = {"naive": {"te": r(1e4 * nt_meas["realised TE"], 3), "turn": r(100 * nt_meas["turnover (one-way)"], 4),
                      "gross": r(1e4 * nt_meas["active return (gross)"], 3), "net50": r(1e4 * nt_meas["net active return at 50 bp"], 3),
                      "net100": r(1e4 * nt_meas["net active return at 100 bp"], 3), "ir": irs(nt_ir.loc["naive tilt"]),
@@ -260,7 +260,7 @@ P["nt_net"] = signed(NT["naive"]["net100"], 1)
 P["nt_paths_net"] = rng([pv[v]["net100"] for v in PATHS], 1, sign=True)
 for f in TARGETED:
     P[f"nt_x_{f.lower()}"] = signed(NT["naive"]["x"][f], 3)
-    if f != "Mom":   # the text says the optimised portfolios' exposures to value, profitability and investment are smaller
+    if f != "Mom":   # the text says the optimised portfolios' exposures to value, profitability and investment are closer to zero
         assert all(abs(pv[v]["x"][f]) < abs(NT["naive"]["x"][f]) for v in PATHS)
 P["nt_cum_end"] = signed(D["cum"]["naive"][-1], 2)
 P["nt_paths_cum_end"] = rng([D["cum"]["paths"][v][-1] for v in PATHS], 2, sign=True)
@@ -312,6 +312,9 @@ P["ti_rratio2_lo"], P["ti_rratio2_hi"] = plain(rxp["realised multiple of the til
 P["ti_rx_frac"] = rng(rxp["realised over forecast"], 2)
 P["ti_rx_index"] = plain(ti_rx.loc["tilted index", "realised over forecast"], 1)
 P["ti_rx_epb"] = plain(ti_rx.loc["tilted index", "realised exposure per bp"], 6)
+rx_up = (ti_rx.loc["tilted index", "realised exposure per bp"] - rxp["lower"]) / ti_rx.loc["tilted index", "realised exposure per bp"]   # the largest multiple each interval leaves open
+P["ti_rx_up_lo"], P["ti_rx_up_hi"] = plain(rx_up.min(), 1), plain(rx_up.max(), 1)
+assert (rx_up > 2).all() and (rxp["upper"] > 0).all()   # the text: the intervals are too wide to rule out such a multiple
 assert all(row["exposure per bp of realised TE"] > TI["naive"]["epb"] for _, row in ti_bud.iterrows())
 P["build_date"] = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Amsterdam")).strftime("%-d %B %Y")
 
@@ -320,7 +323,7 @@ def kf_row(label, te, epb, turn, gross, net):
     return {"label": label, "te": te, "epb": epb, "turn": turn, "gross": gross, "net": net}
 
 
-D["kf"] = [{"group": "Under the tilt"},
+D["kf"] = [{"group": "Under the tilt alone"},
            kf_row("Naive tilt", plain(NT["naive"]["te"], 1), "", plain(NT["naive"]["turn"], 2), signed(NT["naive"]["gross"], 1), signed(NT["naive"]["net100"], 1)),
            kf_row("The seven optimised portfolios", P["nt_paths_te"], "", P["nt_paths_turn"], P["nt_paths_gross"], P["nt_paths_net"]),
            {"group": "Under the factor objective, budget 100 bp a year"},

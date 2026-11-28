@@ -43,7 +43,7 @@ def read(name, **kw):
 
 
 def f(x, d):
-    """A number with d decimals and an ASCII minus."""
+    """A number with d decimals; the page turns its minus into the true minus sign (minus_signs)."""
     return f"{x:.{d}f}"
 
 
@@ -211,6 +211,9 @@ def build():
     P["ti_rx_frac"] = rng(rxp["realised over forecast"], 2)
     P["ti_rx_index"] = f(rxi["realised over forecast"], 1)
     P["ti_rx_epb"] = f(rxi["realised exposure per bp"], 6)
+    rx_up = (rxi["realised exposure per bp"] - rxp["lower"]) / rxi["realised exposure per bp"]   # the largest multiple each interval leaves open
+    P["ti_rx_up_lo"], P["ti_rx_up_hi"] = f(rx_up.min(), 1), f(rx_up.max(), 1)
+    assert (rx_up > 2).all() and (rxp["upper"] > 0).all()   # the text: the intervals are too wide to rule out such a multiple
     P["ti_rx_holm"] = rng(rxp["Holm p-value"], 3) if rxp["Holm p-value"].round(3).nunique() > 1 else f(rxp["Holm p-value"].iloc[0], 3)
     P["fp_targ"] = rng(1e4 * foa.loc[fl, "targeted total (per year)"], 1, sign=True)
     P["fp_resid"] = rng(1e4 * foa.loc[fl, "residual (per year)"], 1, sign=True, by_size=True)
@@ -231,13 +234,13 @@ def build():
     rows.append(["Naive tilt", f(c["realised TE (bp)"], 1), "", "", "", "", f(100 * c["turnover (one-way)"], 2),
                  s(c["active return (gross) (bp)"], 1), s(c["net active return at 100 bp (bp)"], 1)])
     P["table4"] = table(
-        "Table 4. The naive tilt and the seven optimised paths under the tilt, July 1979 to August 2026 (566 months)",
+        "Table 4. The naive tilt and the seven optimised paths under the tilt alone, July 1979 to August 2026 (566 months)",
         ["Covariance estimate", "Realised tracking error, bp a year", "Naive tilt minus path, bp a year", "95% interval",
          "Holm p-value", "Correlation", "One-way turnover, % a month", "Active return, bp a year",
          "Net of 100 bp per unit of turnover, bp a year"], rows,
-        "Each path is an optimised portfolio of the companion study under the tilt, made with one of six covariance estimators or as the robust portfolio built from five of them. The difference is "
+        "Each path is an optimised portfolio of the companion study under the tilt alone, made with one of six covariance estimators or as the robust portfolio built from five of them. The difference is "
         "the naive tilt's realised tracking error minus the path's, with its 95 per cent interval from the paired variance test "
-        "of Ledoit and Wolf (2011) in its bootstrap form, blocks of 12 months and 2,000 resamples. The Holm p-value corrects the "
+        "of Ledoit and Wolf (2011) in its bootstrap form, blocks of 12 months and 2,000 resamples. The Holm p-value is corrected for the "
         "seven comparisons. The correlation is that of the two monthly active returns. Active returns are simulated and "
         "annualised, gross and net of 100 basis points per unit of one-way turnover. " + src +
         " results/202608/naive_tilt_paired_tests_202608.csv and naive_tilt_returns_and_costs_202608.csv, notebook 08.")
@@ -260,9 +263,9 @@ def build():
         "Each path is an optimised portfolio of the companion study under the factor objective, made with one of six covariance estimators or as the robust portfolio built from five of them. The "
         "forecast exposure is the factor objective, the sum of the active exposures to value, profitability, investment and momentum "
         "computed with the betas of the three years before each month, and its mean is over the 566 months. The forecast exposure "
-        "per basis point divides it by the realised tracking error in basis points. The difference and its 95 per cent interval "
+        "per basis point is the forecast exposure divided by the realised tracking error in basis points. The difference and its 95 per cent interval "
         "come from 2,000 circular block bootstrap resamples of the months in blocks of 12, the same months drawn for both "
-        "portfolios, and the p-value is two-sided. The Holm p-value corrects the seven comparisons. "
+        "portfolios, and the p-value is two-sided. The Holm p-value is corrected for the seven comparisons. "
         "<sup>a</sup> Added after the results were known: the realised exposure, the sum of the slopes on the four factors in a "
         "regression of the 566 monthly active returns on the six factors' monthly returns, per basis point of realised tracking "
         "error, and the Holm p-value of the tilted index minus the path, from the same resamples. Active returns are simulated "
@@ -277,7 +280,7 @@ def build():
                 f"{s(1e4 * att['residual (per year)'], 1)} ({f(1e4 * att['residual (standard error)'], 1)})",
                 s(1e4 * att["active return (per year)"], 1)]
 
-    rows = ["Under the tilt", att_row("Naive tilt", irn.loc["naive tilt"], attn, attn["targeted total (per year)"])]
+    rows = ["Under the tilt alone", att_row("Naive tilt", irn.loc["naive tilt"], attn, attn["targeted total (per year)"])]
     for v in PATHS:
         a = atts.loc[v]
         rows.append(att_row(LABEL[v], irn.loc[f"{v} | C3 tilt only"], a, sum(a[f"contribution {x} (per year)"] for x in TARGETED)))
@@ -294,12 +297,20 @@ def build():
         "points per unit of one-way turnover, with its standard error from 2,000 block bootstrap resamples of the months, the "
         "cost held at its full-sample figure. A contribution is the active exposure to a factor times the factor's return in the "
         "month, and the residual is the active return minus the six contributions. The standard errors of the contributions and "
-        "the residual take the months as independent. Under the tilt, the targeted factors' contribution of each path is the sum "
+        "the residual take the months as independent. Under the tilt alone, the targeted factors' contribution of each path is the sum "
         "of its four contributions. " + src + " results/202608/naive_tilt_information_ratios_202608.csv, "
         "naive_tilt_attribution_summary_202608.csv, tilted_index_information_ratios_202608.csv and "
         "tilted_index_attribution_summary_202608.csv, notebooks 08 and 09; for the paths, results/202608/source/"
         "attribution_summary_202608.csv and factor_objective_attribution_202608.csv.")
     return P
+
+
+def minus_signs(page):
+    """The true minus sign, U+2212, for every negative number in the note's text and tables: a hyphen before a digit that
+    follows a space, a tag or a bracket. Dates (1979-07), ranges of pages (57-82) and names (FF-4-factor) keep the hyphen."""
+    a = page.index('<div class="paper">')
+    b = page.index("<script>", a)
+    return page[:a] + re.sub(r"(?<=[\s>(])-(?=\d)", "\u2212", page[a:b]) + page[b:]
 
 
 def main():
@@ -311,7 +322,7 @@ def main():
     keys = set(re.findall(r"\{\{(\w+)\}\}", tpl))
     assert not keys - set(P), sorted(keys - set(P))
     assert not set(P) - keys, sorted(set(P) - keys)
-    page = re.sub(r"\{\{(\w+)\}\}", lambda m: P[m.group(1)], tpl)
+    page = minus_signs(re.sub(r"\{\{(\w+)\}\}", lambda m: P[m.group(1)], tpl))
     assert "{{" not in page and chr(0x2014) not in page
     open(HTML_OUT, "w", encoding="utf-8").write(page)
     print("written", os.path.relpath(HTML_OUT, REPO), len(page), "bytes")
