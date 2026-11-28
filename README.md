@@ -5,7 +5,7 @@ The study asks DeMiguel, Garlappi and Uppal's question, whether an optimised por
 - **The replication.** DeMiguel, Garlappi and Uppal (2009) find that none of the optimised portfolios they test is consistently better than the naive 1/N rule out of sample, because the error in the estimated inputs costs more than optimising gains. The study replicates their comparison on Ken French's data and runs it on the 261 months since their sample.
 - **Under an index mandate.** An index fund's mandate fixes most of the portfolio and needs no return forecast, so what the fund decides is where to put the weight the mandate moves away from the benchmark. The study compares an optimiser that places it with a covariance estimate with two naive portfolios that place it by a fixed rule: the naive tilt when Coal, Oil and Utilities are held at half their benchmark weight, and the tilted index when a budget of tracking error is spent on four factors.
 
-The results are on the [dashboard](https://www.carlohofer.com/optimal-vs-naive-diversification/dashboard/B-P_dashboard.html) and in the [note](note/B-P_note_2026-11.pdf). The project page is [carlohofer.com/projects/optimal-vs-naive-diversification](https://www.carlohofer.com/projects/optimal-vs-naive-diversification/). The optimised portfolios and the comparison of covariance estimators behind them are the companion study's, [risk-models-for-index-tracking](https://github.com/ochofer/risk-models-for-index-tracking).
+The results are on the [dashboard](https://www.carlohofer.com/optimal-vs-naive-diversification/dashboard/) and in the [note](note/optimal-vs-naive-diversification_note_2026-11.pdf). The project page is [carlohofer.com/projects/optimal-vs-naive-diversification](https://www.carlohofer.com/projects/optimal-vs-naive-diversification/). The optimised portfolios and the comparison of covariance estimators behind them are the companion study's, [risk-models-for-index-tracking](https://github.com/ochofer/risk-models-for-index-tracking).
 
 ## Findings
 
@@ -16,7 +16,7 @@ The results are on the [dashboard](https://www.carlohofer.com/optimal-vs-naive-d
 
 ## The note and the dashboard
 
-The note is a PDF with its HTML source beside it in `note/`, built by `note/build_note.py` from `note/template.html` and the committed tables. The dashboard, `dashboard/B-P_dashboard.html`, built by `dashboard/build_dashboard.py`, shows the results in five views, *Summary*, *Replication*, *Tracking error*, *Factor exposure* and *Method*. The last lists the committed tables each exhibit is drawn from.
+The note is a PDF with its HTML source beside it in `note/`, built by `note/build_note.py` from `note/template.html` and the committed tables. The dashboard, `dashboard/index.html`, built by `dashboard/build_dashboard.py`, shows the results in five views, *Summary*, *Replication*, *Tracking error*, *Factor exposure* and *Method*. The last lists the committed tables each exhibit is drawn from.
 
 ## How to run
 
