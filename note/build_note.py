@@ -114,7 +114,7 @@ def build():
     nt_sum = sum(meas[f"mean exposure {fac}"] for fac in TARGETED)
     p_sum = sum(atts[f"exposure {fac}"] for fac in TARGETED)
     P["nt_x_sum"], P["p_x_sum"] = f(nt_sum, 3), rng(p_sum, 3, by_size=True)
-    assert nt_sum < 0 and (p_sum < 0).all() and (p_sum.abs() < abs(nt_sum)).all()   # the text: the paths' total is smaller
+    assert nt_sum < 0 and (p_sum < 0).all() and (p_sum.abs() < abs(nt_sum)).all()   # the text: the optimised portfolios' total is closer to zero
     P["nt_turn"] = f(100 * meas["turnover (one-way)"], 2)
     P["nt_paths_turn"] = rng(100 * roll["turnover (one-way)"], 2)
     P["nt_first"] = f(100 * meas["first month turnover"], 1)
@@ -140,6 +140,7 @@ def build():
     P["spread_mean"] = s(100 * spread["mean per year"], 2)
     P["spread_sd"] = f(100 * spread["standard deviation per year"], 2)
     P["spread_t"] = f(spread["t-ratio"], 2)
+    assert abs(spread["t-ratio"]) < 1.96   # the text: the spread's mean is not statistically significant at the 5 per cent level
     P["nt_resid"] = s(1e4 * attn["residual (per year)"], 1)
     P["p_resid"] = rng(1e4 * atts["residual (per year)"], 1, sign=True)
 
@@ -236,12 +237,12 @@ def build():
     rows.append(["Naive tilt", f(c["realised TE (bp)"], 1), "", "", "", "", f(100 * c["turnover (one-way)"], 2),
                  s(c["active return (gross) (bp)"], 1), s(c["net active return at 100 bp (bp)"], 1)])
     P["table4"] = table(
-        "Table 4. The naive tilt and the seven optimised paths under the tilt alone, July 1979 to August 2026 (566 months)",
-        ["Covariance estimate", "Realised tracking error, bp a year", "Naive tilt minus path, bp a year", "95% interval",
+        "Table 4. The naive tilt and the seven optimised portfolios under the tilt alone, July 1979 to August 2026 (566 months)",
+        ["Covariance estimate", "Realised tracking error, bp a year", "Naive tilt minus optimised portfolio, bp a year", "95% interval",
          "Holm p-value", "Correlation", "One-way turnover, % a month", "Active return, bp a year",
          "Net of 100 bp per unit of turnover, bp a year"], rows,
-        "Each path is an optimised portfolio of the companion study under the tilt alone, made with one of six covariance estimators or as the robust portfolio built from five of them. The difference is "
-        "the naive tilt's realised tracking error minus the path's, with its 95 per cent interval from the paired variance test "
+        "Each optimised portfolio comes from the companion study under the tilt alone, built with one of six covariance estimators or as the robust portfolio that uses five of them. The difference is "
+        "the naive tilt's realised tracking error minus the optimised portfolio's, with its 95 per cent interval from the paired variance test "
         "of Ledoit and Wolf (2011) in its bootstrap form, blocks of 12 months and 2,000 resamples. The Holm p-value is corrected for the "
         "seven comparisons. The correlation is that of the two monthly active returns. Active returns are simulated and "
         "annualised, gross and net of 100 basis points per unit of one-way turnover. " + src +
@@ -257,12 +258,12 @@ def build():
                  "", "", "", f(rxi["realised exposure per bp"], 6), "", f(100 * meas2["turnover (one-way)"], 2), s(1e4 * meas2["active return (gross)"], 1),
                  s(1e4 * meas2["net active return at 100 bp"], 1)])
     P["table5"] = table(
-        "Table 5. The tilted index and the seven optimised paths under the factor objective, budget 100 basis points a year, "
+        "Table 5. The tilted index and the seven optimised portfolios under the factor objective, budget 100 basis points a year, "
         "July 1979 to August 2026 (566 months)",
         ["Covariance estimate", "Realised tracking error, bp a year", "Mean forecast exposure", "Forecast exposure per bp",
-         "Tilted index minus path", "95% interval", "Holm p-value", "Realised exposure per bp<sup>a</sup>", "Holm p-value<sup>a</sup>",
+         "Tilted index minus optimised portfolio", "95% interval", "Holm p-value", "Realised exposure per bp<sup>a</sup>", "Holm p-value<sup>a</sup>",
          "One-way turnover, % a month", "Active return, bp a year", "Net of 100 bp per unit of turnover, bp a year"], rows,
-        "Each path is an optimised portfolio of the companion study under the factor objective, made with one of six covariance estimators or as the robust portfolio built from five of them. The "
+        "Each optimised portfolio comes from the companion study under the factor objective, built with one of six covariance estimators or as the robust portfolio that uses five of them. The "
         "forecast exposure is the factor objective, the sum of the active exposures to value, profitability, investment and momentum "
         "computed with the betas of the three years before each month, and its mean is over the 566 months. The forecast exposure "
         "per basis point is the forecast exposure divided by the realised tracking error in basis points. The difference and its 95 per cent interval "
@@ -270,7 +271,7 @@ def build():
         "portfolios, and the p-value is two-sided. The Holm p-value is corrected for the seven comparisons. "
         "<sup>a</sup> Added after the results were known: the realised exposure, the sum of the slopes on the four factors in a "
         "regression of the 566 monthly active returns on the six factors' monthly returns, per basis point of realised tracking "
-        "error, and the Holm p-value of the tilted index minus the path, from the same resamples. Active returns are simulated "
+        "error, and the Holm p-value of the tilted index minus the optimised portfolio, from the same resamples. Active returns are simulated "
         "and annualised. " + src + " results/202608/tilted_index_bootstrap_202608.csv, tilted_index_beside_paths_202608.csv "
         "and tilted_index_realised_exposure_202608.csv, notebook 09.")
 
@@ -299,10 +300,10 @@ def build():
         "points per unit of one-way turnover, with its standard error from 2,000 block bootstrap resamples of the months, the "
         "cost held at its full-sample figure. A contribution is the active exposure to a factor times the factor's return in the "
         "month, and the residual is the active return minus the six contributions. The standard errors of the contributions and "
-        "the residual take the months as independent. Under the tilt alone, the targeted factors' contribution of each path is the sum "
+        "the residual take the months as independent. Under the tilt alone, the targeted factors' contribution of each optimised portfolio is the sum "
         "of its four contributions. " + src + " results/202608/naive_tilt_information_ratios_202608.csv, "
         "naive_tilt_attribution_summary_202608.csv, tilted_index_information_ratios_202608.csv and "
-        "tilted_index_attribution_summary_202608.csv, notebooks 08 and 09; for the paths, results/202608/source/"
+        "tilted_index_attribution_summary_202608.csv, notebooks 08 and 09; for the optimised portfolios, results/202608/source/"
         "attribution_summary_202608.csv and factor_objective_attribution_202608.csv.")
     return P
 
