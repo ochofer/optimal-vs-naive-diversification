@@ -95,6 +95,7 @@ ti_bud = table(R + f"tilted_index_budgets_75_and_150_{V}.csv", index_col=0)
 ti_ir = table(R + f"tilted_index_information_ratios_{V}.csv", index_col=0)
 ti_att = table(R + f"tilted_index_attribution_summary_{V}.csv", index_col=0).loc["tilted index"]
 ti_ird = table(R + f"tilted_index_information_ratio_differences_{V}.csv")
+ti_rx = table(R + f"tilted_index_realised_exposure_{V}.csv", index_col=0)
 roll = table(S + f"rolling_evaluation_{V}.csv")
 active = table(S + f"active_returns_{V}.csv", index_col=0)
 att_src = table(S + f"attribution_summary_{V}.csv")
@@ -181,7 +182,8 @@ D["ti"] = {"naive": {"te": r(1e4 * ti_meas["realised TE"], 3), "obj": r(ti_meas[
                      "turn": r(100 * ti_meas["turnover (one-way)"], 4), "gross": r(1e4 * ti_meas["active return (gross)"], 3),
                      "net50": r(1e4 * ti_meas["net active return at 50 bp"], 3), "net100": r(1e4 * ti_meas["net active return at 100 bp"], 3),
                      "ir": irs(ti_ir.loc["tilted index"]), "contribution": contributions(ti_att), "residual": r(1e4 * ti_att["residual (per year)"], 3),
-                     "active": r(1e4 * ti_att["active return (per year)"], 3), "targeted": r(1e4 * ti_att["targeted total (per year)"], 3)}, "paths": {}}
+                     "active": r(1e4 * ti_att["active return (per year)"], 3), "targeted": r(1e4 * ti_att["targeted total (per year)"], 3),
+                     "rx_epb": r(ti_rx.loc["tilted index", "realised exposure per bp"], 8)}, "paths": {}}
 for v in PATHS:
     b, e, a = ti_boot.loc[FL[v]], fo_eval.loc[FL[v]], fo_att.loc[FL[v]]
     D["ti"]["paths"][v] = {"te": r(1e4 * e["realised TE"], 3), "obj": r(ti_beside.loc[FL[v], "mean objective"], 5), "epb": r(b["path value"], 8),
@@ -189,7 +191,8 @@ for v in PATHS:
                            "turn": r(100 * e["turnover (one-way)"], 4), "gross": r(1e4 * e["active return (gross)"], 3),
                            "net50": r(1e4 * e["net active return at 50 bp"], 3), "net100": r(1e4 * e["net active return at 100 bp"], 3),
                            "ir": irs(ti_ir.loc[FL[v]]), "contribution": contributions(a), "residual": r(1e4 * a["residual (per year)"], 3),
-                           "active": r(1e4 * a["active return (per year)"], 3), "targeted": r(1e4 * a["targeted total (per year)"], 3)}
+                           "active": r(1e4 * a["active return (per year)"], 3), "targeted": r(1e4 * a["targeted total (per year)"], 3),
+                           "rx_epb": r(ti_rx.loc[FL[v], "realised exposure per bp"], 8), "rx_holm": r(ti_rx.loc[FL[v], "Holm p-value"], 5)}
 D["k"] = {"month": month_dates, "k": [r(x, 5) for x in ti_month["k"]], "floor": [bool(x == "floor") for x in ti_month["k set by"]],
           "at": [str(x) for x in ti_month["k set at"]]}
 D["bud"] = [{"path": i.split(" | ")[0], "budget": int(i.split(" | ")[1]), "te": r(1e4 * row["realised TE"], 3), "epb": r(row["exposure per bp of realised TE"], 8)}
@@ -226,8 +229,8 @@ NT, TI = D["nt"], D["ti"]
 P = {"vintage": V, "months": str(MONTHS), "first_w": words(FIRST), "last_w": words(LAST)}
 P["gated_pass"] = str(int((gated.verdict == "pass").sum()))
 P["gated_n"] = str(len(gated))
-P["turn_n"] = str(len(gated_t))
-assert (P["gated_pass"], P["gated_n"], P["turn_n"]) == ("29", "30", "30") and (gated_t.verdict == "pass").all()
+P["turn_n"] = str(int((gated_t.rule != "vw").sum()))   # the value-weighted market trades nothing, so its four figures test nothing
+assert (P["gated_pass"], P["gated_n"], P["turn_n"]) == ("29", "30", "26") and (gated_t.verdict == "pass").all()
 new_lo, new_hi = re.search(r"\((\d{4}-\d{2}) to (\d{4}-\d{2})\)", periods[1]).groups()
 P["new_months"] = str((pd.Period(new_hi, "M") - pd.Period(new_lo, "M")).n + 1)
 P["new_lo_w"], P["new_hi_w"] = words(new_lo), words(new_hi)
@@ -265,8 +268,12 @@ P["spread_mean"] = signed(100 * nt_spread["mean per year"], 2)
 P["spread_sd"] = plain(100 * nt_spread["standard deviation per year"], 2)
 P["spread_t"] = plain(nt_spread["t-ratio"], 2)
 g = nt_ird[nt_ird["ratio"] == "gross"]
-assert not g["difference above the larger standard error"].any()
+assert (g["p-value"] >= 0.05).all() and (nt_ird["Holm p-value"] >= 0.05).all()
 P["nt_irgap"] = rng(g["difference"], 2)
+P["nt_ir_pse"] = rng(g["paired standard error"], 2)
+h = nt_ird[nt_ird["ratio"] == "at 100 bp"]
+P["nt_ir_100_alone"] = ["none", "one", "two", "three", "four", "five", "six", "seven"][int((h["p-value"] < 0.05).sum())]
+P["nt_ir_100_holm"] = ["none", "one", "two", "three", "four", "five", "six", "seven"][int((h["Holm p-value"] < 0.05).sum())]
 
 tp = TI["paths"]
 assert all(tp[v]["holm"] < 0.05 and tp[v]["hi"] < 0 for v in PATHS)
@@ -294,8 +301,17 @@ P["fp_resid"] = rng([tp[v]["residual"] for v in PATHS], 1, sign=True, by_size=Tr
 P["ti_ftot"] = signed(1e4 * ti_att["factor total (per year)"], 1)
 P["ti_resid"] = signed(TI["naive"]["residual"], 1)
 g2 = ti_ird[ti_ird["ratio"] == "gross"]
-assert not g2["difference above the larger standard error"].any()
+assert (ti_ird["p-value"] >= 0.05).all()
 P["ti_irgap"] = rng(g2["difference"], 2)
+P["ti_ir_pse"] = rng(g2["paired standard error"], 2)
+rxp = ti_rx.loc[[FL[v] for v in PATHS]]
+assert (rxp["Holm p-value"] >= 0.05).all()
+assert all(abs(ti_rx.loc[FL[v], "forecast exposure per bp"] - tp[v]["epb"]) < 5e-9 for v in PATHS)
+P["ti_rratio_lo"], P["ti_rratio_hi"] = plain(rxp["realised multiple of the tilted index"].min(), 1), plain(rxp["realised multiple of the tilted index"].max(), 1)
+P["ti_rratio2_lo"], P["ti_rratio2_hi"] = plain(rxp["realised multiple of the tilted index"].min(), 2), plain(rxp["realised multiple of the tilted index"].max(), 2)
+P["ti_rx_frac"] = rng(rxp["realised over forecast"], 2)
+P["ti_rx_index"] = plain(ti_rx.loc["tilted index", "realised over forecast"], 1)
+P["ti_rx_epb"] = plain(ti_rx.loc["tilted index", "realised exposure per bp"], 6)
 assert all(row["exposure per bp of realised TE"] > TI["naive"]["epb"] for _, row in ti_bud.iterrows())
 P["build_date"] = datetime.datetime.now(zoneinfo.ZoneInfo("Europe/Amsterdam")).strftime("%-d %B %Y")
 
@@ -326,7 +342,7 @@ SOURCES = {
     "expo": [f"naive_tilt_measures_{V}.csv", f"source/attribution_summary_{V}.csv"],
     "turn": [f"naive_tilt_returns_and_costs_{V}.csv", f"naive_tilt_measures_{V}.csv", f"source/rolling_evaluation_{V}.csv"],
     "irt": [f"naive_tilt_information_ratios_{V}.csv", f"naive_tilt_information_ratio_differences_{V}.csv"],
-    "epb": [f"tilted_index_bootstrap_{V}.csv", f"tilted_index_beside_paths_{V}.csv", f"source/factor_objective_evaluation_{V}.csv"],
+    "epb": [f"tilted_index_bootstrap_{V}.csv", f"tilted_index_beside_paths_{V}.csv", f"tilted_index_realised_exposure_{V}.csv", f"source/factor_objective_evaluation_{V}.csv"],
     "k": [f"tilted_index_monthly_{V}.csv", f"tilted_index_k_{V}.csv", f"tilted_index_k_set_at_{V}.csv"],
     "fatt": [f"tilted_index_attribution_summary_{V}.csv", f"source/factor_objective_attribution_{V}.csv"],
     "fturn": [f"tilted_index_measures_{V}.csv", f"source/factor_objective_evaluation_{V}.csv"],

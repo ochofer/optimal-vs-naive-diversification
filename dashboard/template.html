@@ -222,9 +222,9 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <div>
 <div class="ch-kpis">
 <div class="ch-kpi"><div class="ch-kpi__label">Tracking error, naive tilt above the optimiser</div><div class="ch-kpi__value">{{nt_diff_lo0}} to {{nt_diff_hi0}}</div><div class="ch-kpi__ref">bp a year, against each of the seven optimised portfolios, each difference statistically significant at the 5 per cent level after Holm's correction</div></div>
-<div class="ch-kpi"><div class="ch-kpi__label">Factor exposure per basis point, optimiser over tilted index</div><div class="ch-kpi__value">{{ti_ratio_lo}} to {{ti_ratio_hi}}</div><div class="ch-kpi__ref">times, at a budget of 100 bp a year, each difference statistically significant at the 5 per cent level after Holm's correction</div></div>
+<div class="ch-kpi"><div class="ch-kpi__label">Forecast factor exposure per basis point, optimiser over tilted index</div><div class="ch-kpi__value">{{ti_ratio_lo}} to {{ti_ratio_hi}}</div><div class="ch-kpi__ref">times, at a budget of 100 bp a year, each difference statistically significant at the 5 per cent level after Holm's correction. Realised, measured after the results were known: {{ti_rratio_lo}} to {{ti_rratio_hi}} times, none statistically significant</div></div>
 <div class="ch-kpi"><div class="ch-kpi__label">One-way turnover, naive tilt</div><div class="ch-kpi__value">{{nt_turn}}</div><div class="ch-kpi__ref">per cent a month, against {{nt_paths_turn}} for the optimised portfolios. The tilted index trades {{ti_turn}} against {{ti_paths_turn}}</div></div>
-<div class="ch-kpi"><div class="ch-kpi__label">Replication</div><div class="ch-kpi__value">{{gated_pass}} of {{gated_n}}</div><div class="ch-kpi__ref">Sharpe ratios tested within 0.03 of the published values, and all {{turn_n}} turnover figures tested within 25 per cent</div></div>
+<div class="ch-kpi"><div class="ch-kpi__label">Replication</div><div class="ch-kpi__value">{{gated_pass}} of {{gated_n}}</div><div class="ch-kpi__ref">Sharpe ratios tested within 0.03 of the published values, and all {{turn_n}} turnover figures of the portfolios that trade within 25 per cent</div></div>
 </div>
 <nav class="ch-map ch-map--summary" aria-label="The study in three parts">
 <a class="ch-map__piece" href="#replication"><span class="ch-map__n">1</span><span class="ch-map__name">Replication</span><span class="ch-map__sub">The paper's Sharpe ratios and turnover, recomputed</span></a>
@@ -233,9 +233,9 @@ dl.terms dd { margin: 0 0 0 1rem; }
 </nav>
 <ul class="kp">
 <li>With Coal, Oil and Utilities held at half their benchmark weight, the naive tilt realises {{nt_te}} basis points a year of tracking error and the seven optimised portfolios {{nt_paths_te}}. The naive tilt's is {{nt_diff_lo}} to {{nt_diff_hi}} basis points higher than each, each difference statistically significant at the 5 per cent level on a paired test after Holm's correction across the seven.</li>
-<li>Spending a budget of 100 basis points a year of forecast tracking error on value, profitability, investment and momentum, the optimiser obtains {{ti_paths_epb}} of factor exposure per basis point of realised tracking error, and the tilted index {{ti_epb}}, at tracking errors of the same size. Each difference is statistically significant at the 5 per cent level after Holm's correction.</li>
-<li>Both naive portfolios earned more active return over the sample: before costs the naive tilt {{nt_gross}} basis points a year against {{nt_paths_gross}}, and the tilted index {{ti_gross}} against {{ti_paths_gross}}. No test of these differences was run. The gap has two sources: the spread between the other industries' return and that of the three tilted ones, which the naive tilt holds and the optimised portfolios partly hedge, and, after costs, the naive portfolios' lower turnover.</li>
-<li>The replication matches the paper: {{gated_pass}} of the {{gated_n}} Sharpe ratios tested are within 0.03 of the published values, and all {{turn_n}} turnover figures tested are within 25 per cent. In the {{new_months}} months since the paper, no optimising rule's Sharpe ratio exceeds 1/N's by a margin that is statistically significant at the 5 per cent level.</li>
+<li>Spending a budget of 100 basis points a year of forecast tracking error on value, profitability, investment and momentum, the optimiser obtains {{ti_paths_epb}} of forecast factor exposure per basis point of realised tracking error, the exposure its own estimates give, and the tilted index {{ti_epb}}, at tracking errors of the same size. Each difference is statistically significant at the 5 per cent level after Holm's correction. Measured on the returns, in a check added after the results were known, the optimiser's realised exposure per basis point is {{ti_rratio2_lo}} to {{ti_rratio2_hi}} times the tilted index's, and no difference is statistically significant.</li>
+<li>Both naive portfolios earned more active return over the sample: before costs the naive tilt {{nt_gross}} basis points a year against {{nt_paths_gross}}, and the tilted index {{ti_gross}} against {{ti_paths_gross}}. On a paired test of the information ratios added after the results were known, no difference is statistically significant at the 5 per cent level after Holm's correction, before or after costs. The gap has two sources: the spread between the other industries' return and that of the three tilted ones, which the naive tilt holds and the optimised portfolios partly hedge, as a split added after the results were known shows, and, after costs, the naive portfolios' lower turnover.</li>
+<li>The replication matches the paper: {{gated_pass}} of the {{gated_n}} Sharpe ratios tested are within 0.03 of the published values, and all {{turn_n}} turnover figures of the portfolios that trade are within 25 per cent. In the {{new_months}} months since the paper, no optimising rule's Sharpe ratio exceeds 1/N's by a margin that is statistically significant at the 5 per cent level.</li>
 </ul>
 </div>
 <aside class="ch-facts"><h3>Key facts</h3><dl>
@@ -284,7 +284,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <figure class="fig" data-key="rep" data-kind="figure" id="{{id:rep}}">
 <h2>Figure {{n:rep}} | The replication beside the paper, {{paper_lo_w}} to {{paper_hi_w}}</h2>
 <p class="cap">Each point is one rule on one dataset, the replicated value against the paper's. First panel: the Sharpe ratio, with lines 0.03 either side of the diagonal. Second panel: turnover relative to 1/N on log scales, with lines 25 per cent either side.</p>
-<p class="text">Of the paper's 40 Sharpe ratios, 30 are tested, and {{gated_pass}} fall within 0.03 of the published value. The miss, in red, is minimum variance on FF-4-factor: 0.033 against -0.018. The ten hollow points are not tested. Four are the paper's in-sample portfolio, built with hindsight. Six are sample mean-variance and Bayes-Stein on three datasets, which trade more than 100 times as much as 1/N, and ten basis points of noise in the returns move their Sharpe ratios by 0.12 to 0.25. All {{turn_n}} tested turnover figures fall within 25 per cent of the paper's.</p>
+<p class="text">Of the paper's 40 Sharpe ratios, 30 are tested, and {{gated_pass}} fall within 0.03 of the published value. The miss, in red, is minimum variance on FF-4-factor: 0.033 against -0.018. The ten hollow points are not tested. Four are the paper's in-sample portfolio, built with hindsight. Six are sample mean-variance and Bayes-Stein on three datasets, which trade more than 100 times as much as 1/N, and ten basis points of noise in the returns move their Sharpe ratios by 0.12 to 0.25. All {{turn_n}} tested turnover figures of the portfolios that trade fall within 25 per cent of the paper's.</p>
 <div class="panels">
 <div class="panel"><h4>Sharpe ratio, within 0.03</h4><div id="f11a" class="chart"></div></div>
 <div class="panel"><h4>Turnover relative to 1/N, within 25 per cent</h4><div id="f11b" class="chart"></div></div>
@@ -327,7 +327,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <figure class="fig" data-key="cum" data-kind="figure" id="{{id:cum}}">
 <h2>Figure {{n:cum}} | Cumulative active return under the tilt, {{first_w}} to {{last_w}}</h2>
 <p class="cap">The running sum of the monthly active returns, in per cent, the naive tilt (orange) and the seven optimised portfolios (grey).</p>
-<p class="text">The naive tilt's line swings more widely than the optimised portfolios', which is its higher tracking error, and over the whole sample it ends higher, at {{nt_cum_end}} per cent against {{nt_paths_cum_end}}. Its active return is the weight removed from Coal, Oil and Utilities times the spread between the other industries' return and theirs, a spread that averaged {{spread_mean}} per cent a year with a standard deviation of {{spread_sd}}, so where the line ends is a property of this period. No test of the difference in return was run.</p>
+<p class="text">The naive tilt's line swings more widely than the optimised portfolios', which is its higher tracking error, and over the whole sample it ends higher, at {{nt_cum_end}} per cent against {{nt_paths_cum_end}}. By a split added after the results were known, its active return is the weight removed from Coal, Oil and Utilities times the spread between the other industries' return and theirs, a spread that averaged {{spread_mean}} per cent a year with a standard deviation of {{spread_sd}}, so where the line ends is a property of this period. On a paired test added after the results were known, no difference in information ratio is statistically significant at the 5 per cent level after Holm's correction.</p>
 <div id="f-cum" class="chart"></div>
 <button type="button" class="tbtn" data-table="f-cum" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-cum" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees.</p>
@@ -361,7 +361,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <h2 id="{{id:irt}}">Table {{n:irt}} | Information ratios under the tilt, with their standard errors, {{first_w}} to {{last_w}}</h2>
 <p class="cap">The active return per year divided by the realised tracking error, before costs and after costs of 50 and 100 basis points per unit of one-way turnover, with the standard error in brackets.</p>
 <div class="tw"><div class="tscroll" id="table-irt"></div></div>
-<p class="basis">Simulated. The standard errors come from 2,000 resamples of the months in blocks of 12, with the cost held at its full-sample figure. Before costs each difference between the naive tilt's ratio and an optimised portfolio's, {{nt_irgap}}, is smaller than the standard error of either ratio. No test of a difference between two ratios is made.</p>
+<p class="basis">Simulated. The standard errors come from 2,000 resamples of the months in blocks of 12, with the cost held at its full-sample figure. In a test added after the results were known, each difference between the naive tilt's ratio and an optimised portfolio's is computed on the same resamples. Before costs the differences, {{nt_irgap}}, have paired standard errors of {{nt_ir_pse}}, and none is statistically significant at the 5 per cent level. At 100 basis points {{nt_ir_100_alone}} of the seven are statistically significant tested on their own, and {{nt_ir_100_holm}} after Holm's correction.</p>
 <p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, {{first_w}} to {{last_w}}, US industries, USD.</p>
 </div>
 </section>
@@ -376,12 +376,12 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <p class="lead">Under the same tilt, with tobacco and weapons excluded and a beta of one, the optimiser makes the factor objective, the sum of the portfolio's active exposures to value, profitability, investment and momentum, as large as it can while its forecast tracking error stays within 100 basis points a year. The tilted index moves each industry's weight up or down with its factor score, the sum of its exposures to the four, as far as the 2-point limit and a floor of zero allow, with no risk model and no budget.</p>
 
 <figure class="fig" data-key="epb" data-kind="figure" id="{{id:epb}}">
-<h2>Figure {{n:epb}} | Factor exposure and realised tracking error, the tilted index beside each optimised portfolio, {{first_w}} to {{last_w}}</h2>
-<p class="cap">First panel: exposure per basis point of realised tracking error, the mean factor objective divided by the realised tracking error in basis points a year. Second panel: the mean factor objective against the realised tracking error. The tilted index is orange, the optimised portfolios navy.</p>
-<p class="text">The tilted index obtains {{ti_epb}} per basis point and the optimised portfolios {{ti_paths_epb}}, {{ti_ratio_lo}} to {{ti_ratio_hi}} times as much. Each difference is statistically significant at the 5 per cent level on a paired block bootstrap after Holm's correction across the seven, with adjusted p-values of {{ti_holm}}. The tilted index's tracking error, {{ti_te}} basis points a year, lies inside the optimised portfolios' range of {{ti_paths_te}}, so the two are compared at tracking errors of the same size.</p>
+<h2>Figure {{n:epb}} | Forecast and realised factor exposure, the tilted index beside each optimised portfolio, {{first_w}} to {{last_w}}</h2>
+<p class="cap">First panel: exposure per basis point of realised tracking error, the forecast exposure in the upper bar of each pair and the realised exposure, added after the results were known, in the teal bar below it, each divided by the realised tracking error in basis points a year. Second panel: the mean forecast exposure against the realised tracking error. The tilted index is orange, the optimised portfolios navy.</p>
+<p class="text">The tilted index obtains {{ti_epb}} of forecast exposure per basis point and the optimised portfolios {{ti_paths_epb}}, {{ti_ratio_lo}} to {{ti_ratio_hi}} times as much. Each difference is statistically significant at the 5 per cent level on a paired block bootstrap after Holm's correction across the seven, with adjusted p-values of {{ti_holm}}. The tilted index's tracking error, {{ti_te}} basis points a year, lies inside the optimised portfolios' range of {{ti_paths_te}}, so the two are compared at tracking errors of the same size. Measured on the returns after the results were known, the optimised portfolios realise {{ti_rx_frac}} of their forecast exposure and the tilted index {{ti_rx_index}} times its own. Their realised exposure per basis point is {{ti_rratio2_lo}} to {{ti_rratio2_hi}} times the tilted index's {{ti_rx_epb}}, and no difference is statistically significant at the 5 per cent level after Holm's correction.</p>
 <div class="panels">
-<div class="panel"><h4>Exposure per basis point</h4><div id="f-epb-a" class="chart short"></div></div>
-<div class="panel"><h4>Factor objective against tracking error</h4><div id="f-epb-b" class="chart short"></div></div>
+<div class="panel"><h4>Forecast and realised exposure per basis point</h4><div id="f-epb-a" class="chart short"></div></div>
+<div class="panel"><h4>Forecast exposure against tracking error</h4><div id="f-epb-b" class="chart short"></div></div>
 </div>
 <button type="button" class="tbtn" data-table="f-epb" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-epb" hidden></div>
 <p class="basis">Simulated. Monthly rebalancing. Before fees. The bootstrap resamples blocks of 12 months, 2,000 times, the same months for both portfolios.</p>
@@ -411,7 +411,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <figure class="fig" data-key="fturn" data-kind="figure" id="{{id:fturn}}">
 <h2>Figure {{n:fturn}} | Turnover and active return under the factor objective, before and after trading costs, {{first_w}} to {{last_w}}</h2>
 <p class="cap">First panel: mean one-way turnover, per cent a month. Second panel: active return before costs (hollow) and after a cost of 100 basis points per unit of one-way turnover (filled), basis points a year.</p>
-<p class="text">The tilted index trades {{ti_turn}} per cent of the portfolio a month against {{ti_paths_turn}} for the optimised portfolios. Before costs it earned {{ti_gross}} basis points a year against {{ti_paths_gross}}, and after costs {{ti_net}} against {{ti_paths_net}}. No test of the difference in return was run.</p>
+<p class="text">The tilted index trades {{ti_turn}} per cent of the portfolio a month against {{ti_paths_turn}} for the optimised portfolios. Before costs it earned {{ti_gross}} basis points a year against {{ti_paths_gross}}, and after costs {{ti_net}} against {{ti_paths_net}}. On a paired test added after the results were known, no difference in information ratio is statistically significant at the 5 per cent level, at any cost.</p>
 <div class="panels">
 <div class="panel"><h4>One-way turnover, per cent a month</h4><div id="f-fturn-a" class="chart short"></div></div>
 <div class="panel"><h4>Active return, basis points a year</h4><div id="f-fturn-b" class="chart short"></div></div>
@@ -425,15 +425,15 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <h2 id="{{id:irf}}">Table {{n:irf}} | Information ratios under the factor objective, with their standard errors, {{first_w}} to {{last_w}}</h2>
 <p class="cap">The active return per year divided by the realised tracking error, before costs and after costs of 50 and 100 basis points per unit of one-way turnover, with the standard error in brackets.</p>
 <div class="tw"><div class="tscroll" id="table-irf"></div></div>
-<p class="basis">Simulated. The standard errors come from 2,000 resamples of the months in blocks of 12, with the cost held at its full-sample figure. Before costs each difference between the tilted index's ratio and an optimised portfolio's, {{ti_irgap}}, is smaller than the standard error of either ratio. No test of a difference between two ratios is made.</p>
+<p class="basis">Simulated. The standard errors come from 2,000 resamples of the months in blocks of 12, with the cost held at its full-sample figure. In a test added after the results were known, each difference between the tilted index's ratio and an optimised portfolio's is computed on the same resamples. Before costs the differences, {{ti_irgap}}, have paired standard errors of {{ti_ir_pse}}. None is statistically significant at the 5 per cent level, before or after costs.</p>
 <p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, {{first_w}} to {{last_w}}, US industries, USD.</p>
 </div>
 
 <div class="fig" data-key="bud" data-kind="table" id="{{id:bud}}-block">
-<h2 id="{{id:bud}}">Table {{n:bud}} | Exposure per basis point at budgets of 75 and 150 basis points, {{first_w}} to {{last_w}}</h2>
+<h2 id="{{id:bud}}">Table {{n:bud}} | Forecast exposure per basis point at budgets of 75 and 150 basis points, {{first_w}} to {{last_w}}</h2>
 <p class="cap">The optimised portfolios of the five estimators other than RiskMetrics, the only ones run at the two other budgets, beside the tilted index.</p>
 <div class="tw"><div class="tscroll" id="table-bud"></div></div>
-<p class="basis">Simulated. At both budgets every optimised portfolio obtains more exposure per basis point than the tilted index.</p>
+<p class="basis">Simulated. At both budgets every optimised portfolio obtains more forecast exposure per basis point than the tilted index.</p>
 <p class="src">Source: Kenneth R. French Data Library and author's calculations. Monthly, {{first_w}} to {{last_w}}, US industries, USD.</p>
 </div>
 </section>
@@ -446,7 +446,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <p><strong>The two naive portfolios.</strong> The naive tilt halves Coal, Oil and Utilities and scales the other 46 industries up by the same multiple. The tilted index excludes tobacco and weapons as well, then multiplies each of the other 44 weights by one plus k times the distance of the industry's factor score from their weighted average score, with k the largest value the 2-point limit and the floor at zero allow. Neither is held to the turnover limit, and the tilted index is not held to a beta of one.</p>
 <p><strong>What is known at each date.</strong> Every weight is formed from data before its month: the covariance estimates from the window before the month and the industries' factor exposures from the three years of daily returns before it. French's files are a single vintage, so every month's returns are as French had revised them at the download date, which a portfolio run in real time would not have had.</p>
 <p><strong>Costs.</strong> Returns are gross of fees. Trading cost is charged at 50 or 100 basis points per unit of one-way turnover where stated, after the fact.</p>
-<p><strong>Tests.</strong> Under the tilt, each pair of realised tracking errors is compared with the paired variance test of Ledoit and Wolf (2011), resampling blocks of 12 months 2,000 times. Under the factor objective, each difference in exposure per basis point is computed on 2,000 block resamples of the same months for both portfolios. Holm's correction is applied across the seven comparisons of each part. The returns carry no test. The margins of the replication were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results. The notebooks mark the two checks made after the results were known: the differences in information ratio beside their standard errors, and the split of the naive tilt's active return into the spread.</p>
+<p><strong>Tests.</strong> Under the tilt, each pair of realised tracking errors is compared with the paired variance test of Ledoit and Wolf (2011), resampling blocks of 12 months 2,000 times. Under the factor objective, each difference in forecast exposure per basis point is computed on 2,000 block resamples of the same months for both portfolios. Holm's correction is applied across the seven comparisons of each part. The margins of the replication were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results. On all 36 out-of-sample Sharpe ratios, 31 are within 0.03. Three checks were added after the results were known, and each is marked where it is used. The first tests each difference in information ratio on the same resamples, with its paired standard error and Holm's correction at each cost. The second splits the naive tilt's active return into the spread. The third measures the realised exposure, the sum of the slopes on value, profitability, investment and momentum when each portfolio's monthly active returns are regressed on the six factors' monthly returns, and tests its difference per basis point on the same resamples.</p>
 <p><strong>What the study cannot show.</strong> Each naive portfolio is one construction, and the tilted index's exposure depends on its form, since its largest industries set k for all the others. The assets are industry portfolios, so a stock-level mandate may behave differently. The comparison of returns rests on one sample, and the spread behind the naive tilt's return averaged {{spread_mean}} per cent a year with a standard deviation of {{spread_sd}}.</p>
 
 {{exhibit_table}}
@@ -480,7 +480,9 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <dt>Factor score</dt><dd>the sum of an industry's exposures to value, profitability, investment and momentum.</dd>
 <dt>Factor objective</dt><dd>the sum of the portfolio's active exposures to value, profitability, investment and momentum.</dd>
 <dt>Budget</dt><dd>the limit on the forecast tracking error of the optimiser's portfolio under the factor objective, 100 basis points a year in the main comparison.</dd>
-<dt>Exposure per basis point</dt><dd>the mean factor objective divided by the realised tracking error in basis points a year.</dd>
+<dt>Forecast exposure</dt><dd>the factor objective as the optimiser computes it, with each industry's betas from the three years before the month.</dd>
+<dt>Realised exposure</dt><dd>the sum of the slopes on value, profitability, investment and momentum when the portfolio's monthly active returns are regressed on the six factors' monthly returns.</dd>
+<dt>Exposure per basis point</dt><dd>the mean forecast exposure, or the realised exposure, divided by the realised tracking error in basis points a year.</dd>
 <dt>Information ratio</dt><dd>the active return per year divided by the realised tracking error.</dd>
 <dt>Attribution</dt><dd>the split of a month's active return into six contributions, each the active exposure to a factor times the factor's return, and a residual.</dd>
 <dt>Residual</dt><dd>the part of the active return the six factors do not explain, i.e., the active return minus the six contributions.</dd>
@@ -572,7 +574,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 
   // kf: the key figures of the two comparisons
   function table1() {
-    var h = ['<table class="num"><thead><tr><th>Portfolio</th><th>Realised tracking error, bp a year</th><th>Exposure per bp</th><th>One-way turnover, % a month</th><th>Active return, bp a year</th><th>Net of 100 bp per unit of turnover, bp a year</th></tr></thead><tbody>'];
+    var h = ['<table class="num"><thead><tr><th>Portfolio</th><th>Realised tracking error, bp a year</th><th>Forecast exposure per bp</th><th>One-way turnover, % a month</th><th>Active return, bp a year</th><th>Net of 100 bp per unit of turnover, bp a year</th></tr></thead><tbody>'];
     D.kf.forEach(function (r) {
       if (r.group) { h.push('<tr class="grp"><th colspan="6">' + r.group + "</th></tr>"); return; }
       h.push('<tr><th scope="row">' + r.label + "</th><td>" + r.te + "</td><td>" + r.epb + "</td><td>" + r.turn + "</td><td>" + r.gross + "</td><td>" + r.net + "</td></tr>");
@@ -674,20 +676,22 @@ dl.terms dd { margin: 0 0 0 1rem; }
   function fEpb() {
     var ps = D.paths, names = ["Tilted index"].concat(ps.map(pname)), epb = [D.ti.naive.epb].concat(ps.map(function (v) { return D.ti.paths[v].epb; }));
     var colours = [ORANGE].concat(ps.map(function () { return CH.navy; }));
-    var t1 = [{ y: names, x: epb.map(function (x) { return x * 1e4; }), type: "bar", orientation: "h", width: 0.6, marker: { color: colours }, text: epb.map(function (x) { return x.toFixed(6); }), textposition: "outside", textfont: { size: 11, color: CH.ink }, hovertemplate: "%{y}: %{text} per basis point<extra></extra>", showlegend: false }];
-    var l1 = base({ margin: { l: pick(narrow(), 110, 250), r: 56, t: 8, b: 48 }, showlegend: false });
-    l1.xaxis = axis({ value: true, title: pick(narrow(), "per bp, times 10,000", "exposure per basis point, times 10,000"), range: pick(narrow(), [0, 15], [0, 12]) });
+    var rx = [D.ti.naive.rx_epb].concat(ps.map(function (v) { return D.ti.paths[v].rx_epb; }));
+    var t1 = [{ y: names, x: epb.map(function (x) { return x * 1e4; }), type: "bar", orientation: "h", name: "forecast", marker: { color: colours }, text: epb.map(function (x) { return x.toFixed(6); }), textposition: "outside", textfont: { size: 10, color: CH.ink }, hovertemplate: "%{y}: forecast %{text} per basis point<extra></extra>" },
+      { y: names, x: rx.map(function (x) { return x * 1e4; }), type: "bar", orientation: "h", name: "realised", marker: { color: CH.cat[2] }, text: rx.map(function (x) { return x.toFixed(6); }), textposition: "outside", textfont: { size: 10, color: CH.ink }, hovertemplate: "%{y}: realised %{text} per basis point<extra></extra>" }];
+    var l1 = base({ margin: { l: pick(narrow(), 110, 250), r: 16, t: 8, b: 48 }, barmode: "group", bargap: 0.25, bargroupgap: 0.05, showlegend: false });
+    l1.xaxis = axis({ value: true, title: pick(narrow(), "per bp, times 10,000", "exposure per basis point, times 10,000"), range: pick(narrow(), [0, 16], [0, 13.5]) });
     l1.yaxis = axis({ autorange: "reversed", tickfont: { size: 11, color: CH.ink } });
     plot("f-epb-a", t1, l1);
-    var t2 = [{ x: ps.map(function (v) { return D.ti.paths[v].te; }), y: ps.map(function (v) { return D.ti.paths[v].obj; }), mode: "markers", name: "optimised portfolios", marker: filled(CH.navy), text: ps.map(pname), hovertemplate: "%{text}: %{x:.1f} bp, objective %{y:.3f}<extra></extra>" },
-      { x: [D.ti.naive.te], y: [D.ti.naive.obj], mode: "markers", name: "tilted index", marker: { color: ORANGE, size: 12 }, hovertemplate: "tilted index: %{x:.1f} bp, objective %{y:.3f}<extra></extra>" }];
+    var t2 = [{ x: ps.map(function (v) { return D.ti.paths[v].te; }), y: ps.map(function (v) { return D.ti.paths[v].obj; }), mode: "markers", name: "optimised portfolios", marker: filled(CH.navy), text: ps.map(pname), hovertemplate: "%{text}: %{x:.1f} bp, forecast exposure %{y:.3f}<extra></extra>" },
+      { x: [D.ti.naive.te], y: [D.ti.naive.obj], mode: "markers", name: "tilted index", marker: { color: ORANGE, size: 12 }, hovertemplate: "tilted index: %{x:.1f} bp, forecast exposure %{y:.3f}<extra></extra>" }];
     var l2 = base({ margin: { l: 56, r: 16, t: 8, b: 84 } });
     l2.xaxis = axis({ value: true, title: "realised tracking error, basis points a year", range: [100, 160] });
-    l2.yaxis = axis({ value: true, title: "mean factor objective", range: [0, 0.16] });
+    l2.yaxis = axis({ value: true, title: "mean forecast exposure", range: [0, 0.16] });
     l2.legend = legendAt(-0.26);
     plot("f-epb-b", t2, l2);
-    setTable("f-epb", ["Portfolio", "Realised tracking error, bp a year", "Mean factor objective", "Exposure per bp", "Tilted index minus optimised", "95% interval", "Holm p-value"],
-      [["Tilted index", fmt(D.ti.naive.te, 1), fmt(D.ti.naive.obj, 3), fmt(D.ti.naive.epb, 6), "", "", ""]].concat(ps.map(function (v) { var q = D.ti.paths[v]; return [pname(v), fmt(q.te, 1), fmt(q.obj, 3), fmt(q.epb, 6), fmt(q.diff, 6, true), fmt(q.lo, 6, true) + " to " + fmt(q.hi, 6, true), fmt(q.holm, 3)]; })));
+    setTable("f-epb", ["Portfolio", "Realised tracking error, bp a year", "Mean forecast exposure", "Forecast exposure per bp", "Tilted index minus optimised", "95% interval", "Holm p-value", "Realised exposure per bp", "Holm p-value, realised"],
+      [["Tilted index", fmt(D.ti.naive.te, 1), fmt(D.ti.naive.obj, 3), fmt(D.ti.naive.epb, 6), "", "", "", fmt(D.ti.naive.rx_epb, 6), ""]].concat(ps.map(function (v) { var q = D.ti.paths[v]; return [pname(v), fmt(q.te, 1), fmt(q.obj, 3), fmt(q.epb, 6), fmt(q.diff, 6, true), fmt(q.lo, 6, true) + " to " + fmt(q.hi, 6, true), fmt(q.holm, 3), fmt(q.rx_epb, 6), fmt(q.rx_holm, 3)]; })));
   }
 
   // k: the tilted index's multiple by month
@@ -726,7 +730,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 
   // bud: exposure per basis point at the other budgets
   function budTable() {
-    var h = ['<table class="num"><thead><tr><th>Portfolio</th><th>Budget, bp a year</th><th>Realised tracking error, bp a year</th><th>Exposure per bp</th></tr></thead><tbody>'];
+    var h = ['<table class="num"><thead><tr><th>Portfolio</th><th>Budget, bp a year</th><th>Realised tracking error, bp a year</th><th>Forecast exposure per bp</th></tr></thead><tbody>'];
     h.push('<tr><th scope="row">Tilted index</th><td>none</td><td>' + fmt(D.ti.naive.te, 1) + "</td><td>" + fmt(D.ti.naive.epb, 6) + "</td></tr>");
     D.bud.forEach(function (r) { h.push('<tr><th scope="row">' + D.plabel[r.path] + "</th><td>" + r.budget + "</td><td>" + fmt(r.te, 1) + "</td><td>" + fmt(r.epb, 6) + "</td></tr>"); });
     h.push("</tbody></table>");
