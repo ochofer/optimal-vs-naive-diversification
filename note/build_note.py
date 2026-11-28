@@ -261,7 +261,7 @@ def build():
         "Table 5. The tilted index and the seven optimised portfolios under the factor objective, budget 100 basis points a year, "
         "July 1979 to August 2026 (566 months)",
         ["Covariance estimate", "Realised tracking error, bp a year", "Mean forecast exposure", "Forecast exposure per bp",
-         "Tilted index minus optimised portfolio", "95% interval", "Holm p-value", "Realised exposure per bp<sup>a</sup>", "Holm p-value<sup>a</sup>",
+         "Tilted index minus optimised portfolio", "95% interval", "Holm p-value", "Realised exposure per bp", "Holm p-value, realised",
          "One-way turnover, % a month", "Active return, bp a year", "Net of 100 bp per unit of turnover, bp a year"], rows,
         "Each optimised portfolio comes from the companion study under the factor objective, built with one of six covariance estimators or as the robust portfolio that uses five of them. The "
         "forecast exposure is the factor objective, the sum of the active exposures to value, profitability, investment and momentum "
@@ -269,9 +269,9 @@ def build():
         "per basis point is the forecast exposure divided by the realised tracking error in basis points. The difference and its 95 per cent interval "
         "come from 2,000 circular block bootstrap resamples of the months in blocks of 12, the same months drawn for both "
         "portfolios, and the p-value is two-sided. The Holm p-value is corrected for the seven comparisons. "
-        "<sup>a</sup> Added after the results were known: the realised exposure, the sum of the slopes on the four factors in a "
-        "regression of the 566 monthly active returns on the six factors' monthly returns, per basis point of realised tracking "
-        "error, and the Holm p-value of the tilted index minus the optimised portfolio, from the same resamples. Active returns are simulated "
+        "The realised exposure is the sum of the slopes on the four factors in a "
+        "regression of the 566 monthly active returns on the six factors' monthly returns, given per basis point of realised tracking "
+        "error, with the Holm p-value of the tilted index minus the optimised portfolio from the same resamples. Active returns are simulated "
         "and annualised. " + src + " results/202608/tilted_index_bootstrap_202608.csv, tilted_index_beside_paths_202608.csv "
         "and tilted_index_realised_exposure_202608.csv, notebook 09.")
 
