@@ -102,6 +102,8 @@ sup { font-size: 70%; }
 <div><dt>Optimiser</dt><dd>the routine that chooses the portfolio's weights each month from a covariance estimate, within the mandate's rules.</dd></div>
 <div><dt>Optimised portfolio</dt><dd>the portfolio the optimiser holds month by month with one covariance estimator, or the robust portfolio built from five of them, each formed from data before its month. There are seven in each setting.</dd></div>
 <div><dt>Tilt alone</dt><dd>the first setting, in which the mandate holds the tilt without the two rules the factor objective adds.</dd></div>
+<div><dt>Bound</dt><dd>the rule that holds each industry outside the tilt within 2 percentage points of its benchmark weight.</dd></div>
+<div><dt>Turnover limit</dt><dd>the rule that each optimised portfolio trades at most 2 per cent of the portfolio a month one way.</dd></div>
 <div><dt>Naive tilt</dt><dd>the benchmark with Coal, Oil and Utilities held at half their benchmark weight and the removed weight spread over the other 46 industries in proportion to their benchmark weights, rebalanced to that target every month, with no risk model.</dd></div>
 <div><dt>Tilted index</dt><dd>the benchmark under the tilt and the exclusions of the factor objective, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the bound of 2 percentage points on each active weight and a floor of zero allow, rebalanced every month, with no risk model.</dd></div>
 <div><dt>The two naive portfolios</dt><dd>the naive tilt and the tilted index together.</dd></div>

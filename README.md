@@ -26,7 +26,7 @@ Each notebook writes its tables to `outputs/`, with a record of each file's down
 
 ## What is fixed in advance
 
-The margins of the replication, the sample boundaries and every setting of the two comparisons are in `src/bp/constants.py`, each with its source. The margins were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results. The paper's published figures are in `src/bp/dgu_published.py`. Notebooks 01 to 07 open with the expectations they test, written before their code ran. Notebooks 08 and 09 report their comparisons as results, and mark the three checks made after the results were known: the paired test of the information ratios, the split of the naive tilt's active return, and the realised exposure.
+The margins of the replication, the sample boundaries and every setting of the two comparisons are in `src/bp/constants.py`, each with its source. The margins were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results. The paper's published figures are in `src/bp/dgu_published.py`. Notebooks 01 to 07 open with the expectations they test, written before their code ran. Notebooks 08 and 09 report their comparisons as results.
 
 ## The notebooks
 
@@ -52,13 +52,15 @@ One idea per notebook, run in order: the replication in 01 to 07, and the compar
 - **Active return**: the portfolio's return minus the benchmark's.
 - **Mandate**: the rules the portfolio obeys, set out under Findings.
 - **Tilt**: holding Coal, Oil and Utilities at no more than half their benchmark weight.
+- **Tilt alone**: the first setting, in which the mandate holds the tilt without the two rules the factor objective adds.
+- **Optimiser**: the routine that chooses the portfolio's weights each month from a covariance estimate, within the mandate's rules.
 - **Optimised portfolio**: the portfolio an optimiser holds month by month, under the tilt alone or under the factor objective, with one of six covariance estimators or as a robust portfolio built from five of them.
 - **Factor objective**: the sum of the portfolio's active exposures to value, profitability, investment and momentum.
 - **Forecast exposure**: the factor objective as the optimiser computes it, with each industry's betas from the three years before the month.
 - **Realised exposure**: the sum of the slopes on the four factors when the portfolio's monthly active returns are regressed on the six factors' monthly returns.
 - **Residual**: the part of the active return the six factors do not explain.
-- **Naive tilt**: the index with Coal, Oil and Utilities held at half their index weight and the removed weight spread over the other 46 industries in proportion to their index weights, rebalanced to that target every month, with no risk model.
-- **Tilted index**: the index under the mandate's tilt and exclusions, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the 2-point limit and a floor of zero allow, rebalanced every month, with no risk model.
+- **Naive tilt**: the benchmark with Coal, Oil and Utilities held at half their benchmark weight and the removed weight spread over the other 46 industries in proportion to their benchmark weights, rebalanced to that target every month, with no risk model.
+- **Tilted index**: the benchmark under the tilt and the exclusions of the factor objective, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the bound of 2 percentage points on each active weight and a floor of zero allow, rebalanced every month, with no risk model.
 - **The two naive portfolios**: the naive tilt and the tilted index together.
 
 The note opens with the full list of the terms it uses.

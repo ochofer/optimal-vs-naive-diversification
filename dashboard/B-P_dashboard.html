@@ -279,7 +279,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <a class="ch-map__piece" href="#factor"><span class="ch-map__n">3</span><span class="ch-map__name">Factor exposure</span><span class="ch-map__sub">The optimiser against a tilted index</span></a>
 </nav>
 <p class="ch-view-lead">Whether the paper's Sharpe ratios and turnover figures reproduce, and how the rules have done since.</p>
-<p class="lead">DeMiguel, Garlappi and Uppal (2009) asked whether optimised portfolios beat 1/N out of sample and found that none of their optimising rules did so reliably. Their rules include sample mean-variance, Bayes-Stein, which shrinks the estimated means towards a common value, and minimum variance, the portfolio with the smallest estimated variance. Their Sharpe ratios and turnover figures are recomputed here on four of the five datasets the paper takes from French's library, each compared with the published value within a set margin, and the comparison is run forward to August 2026.</p>
+<p class="lead">DeMiguel, Garlappi and Uppal (2009) asked whether optimised portfolios do better than 1/N out of sample and found that none of their optimising rules did so reliably. Their rules include sample mean-variance, Bayes-Stein, which shrinks the estimated means towards a common value, and minimum variance, the portfolio with the smallest estimated variance. Their Sharpe ratios and turnover figures are recomputed here on four of the five datasets the paper takes from French's library, each compared with the published value within a set margin, and the comparison is run forward to August 2026.</p>
 
 <figure class="fig" data-key="rep" data-kind="figure" id="figure-2">
 <h2>Figure 2 | The replication beside the paper, July 1973 to November 2004</h2>
@@ -373,7 +373,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <a class="ch-map__piece" href="#factor" aria-current="step"><span class="ch-map__n">3</span><span class="ch-map__name">Factor exposure</span><span class="ch-map__sub">The optimiser against a tilted index</span></a>
 </nav>
 <p class="ch-view-lead">How much factor exposure the optimiser seeks for each basis point of tracking error, and how much its returns realise, against a tilted index.</p>
-<p class="lead">Under the same tilt, with tobacco and weapons excluded and a beta of one, the optimiser makes the factor objective, the sum of the portfolio's active exposures to value, profitability, investment and momentum, as large as it can while its forecast tracking error stays within 100 basis points a year. The tilted index moves each industry's weight up or down with its factor score, the sum of its exposures to the four, as far as the 2-point limit and a floor of zero allow, with no risk model and no budget.</p>
+<p class="lead">Under the same tilt, with tobacco and weapons excluded and a beta of one, the optimiser makes the factor objective, the sum of the portfolio's active exposures to value, profitability, investment and momentum, as large as it can while its forecast tracking error stays within 100 basis points a year. The tilted index moves each industry's weight up or down with its factor score, the sum of its exposures to the four, as far as the bound and a floor of zero allow, with no risk model and no budget.</p>
 
 <figure class="fig" data-key="epb" data-kind="figure" id="figure-8">
 <h2>Figure 8 | Forecast and realised factor exposure, the tilted index beside each optimised portfolio, July 1979 to August 2026</h2>
@@ -390,8 +390,8 @@ dl.terms dd { margin: 0 0 0 1rem; }
 
 <figure class="fig" data-key="k" data-kind="figure" id="figure-9">
 <h2>Figure 9 | How far the tilted index moves from the benchmark each month, July 1979 to August 2026</h2>
-<p class="cap">The multiple k that scales every industry's change in weight, by month. A dot marks a month in which the floor at zero set k, and every other month's k was set by the 2-point limit.</p>
-<p class="text">One k scales all 44 industries, and the change in an industry's active weight is its weight times k times the distance of its score from the average, so the largest industries reach the 2-point limit first and set k for the others. The limit set k in 549 of the 566 months, most often at Banks and Computer Software, and the floor in 17, all at Gold. The median k is 0.206, so the tilted index leaves part of the room the limit gives the smaller industries unused.</p>
+<p class="cap">The multiple k that scales every industry's change in weight, by month. A dot marks a month in which the floor at zero set k, and every other month's k was set by the bound.</p>
+<p class="text">One k scales all 44 industries, and the change in an industry's active weight is its weight times k times the distance of its score from the average, so the largest industries reach the bound first and set k for the others. The bound set k in 549 of the 566 months, most often at Banks and Computer Software, and the floor in 17, all at Gold. The median k is 0.206, so the tilted index leaves part of the room the bound gives the smaller industries unused.</p>
 <div id="f-k" class="chart short"></div>
 <button type="button" class="tbtn" data-table="f-k" aria-pressed="false">Table</button><div class="tbl tw" id="t-f-k" hidden></div>
 <p class="basis">Simulated. Each month's k is the largest at which every active weight of the 44 stays within 2 percentage points and no weight falls below zero.</p>
@@ -442,12 +442,12 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <p class="ch-view-lead">The data, what is known at each date, the costs, what the study cannot show, and the terms.</p>
 <h2>Method</h2>
 <p><strong>Universe and period.</strong> Parts 2 and 3 run on Kenneth R. French's 49 value-weighted industry portfolios and his six factors, downloaded at run time, vintage 202608, over the 566 months from July 1979 to August 2026. The benchmark is the cap-weighted combination of the 49, rebuilt from French's firm counts and average sizes. The replication uses four of the five datasets the paper takes from the library (Industry, MKT/SMB/HML, FF-1-factor, FF-4-factor), with a 120-month estimation window, so July 1973 to November 2004 out of sample, and then every month to August 2026.</p>
-<p><strong>The optimised portfolios.</strong> They come from the companion study, Which risk model for an index mandate?, whose tables and code are copied unchanged into this repository. Each month the optimiser forms the long-only weights with the smallest forecast tracking error under the tilt alone, or the largest factor objective within the budget, with one of six covariance estimators (methods that turn a window of past returns into a table of variances and covariances): the sample covariance, Ledoit-Wolf shrinkage, a six-factor model and a principal-component model on three years of daily returns, the sample covariance of 120 monthly returns, and RiskMetrics on five years of daily returns. The seventh optimised portfolio is a robust portfolio built from the first five estimators at once. Before any figure of a naive portfolio is computed, one optimised portfolio in each part is rebuilt from the copied code and checked against its recorded path.</p>
-<p><strong>The two naive portfolios.</strong> The naive tilt halves Coal, Oil and Utilities and scales the other 46 industries up by the same multiple. The tilted index excludes tobacco and weapons as well, then multiplies each of the other 44 weights by one plus k times the distance of the industry's factor score from their weighted average score, with k the largest value the 2-point limit and the floor at zero allow. Neither is held to the turnover limit, and the tilted index is not held to a beta of one.</p>
+<p><strong>The optimised portfolios.</strong> They come from the companion study, Which risk model for an index mandate?, whose tables and code are copied unchanged into this repository. Each month the optimiser forms the long-only weights with the smallest forecast tracking error under the tilt alone, or the largest factor objective within the budget, with one of six covariance estimators (methods that turn a window of past returns into a table of variances and covariances): the sample covariance, Ledoit-Wolf shrinkage, a six-factor model and a principal-component model on three years of daily returns, the sample covariance of 120 monthly returns, and RiskMetrics on five years of daily returns. The seventh optimised portfolio is a robust portfolio built from the first five estimators at once. Before any figure of a naive portfolio is computed, one optimised portfolio in each part is rebuilt from the copied code and checked against the recorded one.</p>
+<p><strong>The two naive portfolios.</strong> The naive tilt halves Coal, Oil and Utilities and scales the other 46 industries up by the same multiple. The tilted index excludes tobacco and weapons as well, then multiplies each of the other 44 weights by one plus k times the distance of the industry's factor score from their weighted average score, with k the largest value the bound and the floor at zero allow. Neither is held to the turnover limit, and the tilted index is not held to a beta of one.</p>
 <p><strong>What is known at each date.</strong> Every weight is formed from data before its month: the covariance estimates from the window before the month and the industries' factor exposures from the three years of daily returns before it. French's files are a single vintage, so every month's returns are as French had revised them at the download date, which a portfolio run in real time would not have had.</p>
 <p><strong>Costs.</strong> Returns are gross of fees. Trading cost is charged at 50 or 100 basis points per unit of one-way turnover where stated, after the fact.</p>
 <p><strong>Tests.</strong> Under the tilt alone, each pair of realised tracking errors is compared with the paired variance test of Ledoit and Wolf (2011), resampling blocks of 12 months 2,000 times. Under the factor objective, each difference in forecast exposure per basis point is computed on 2,000 block resamples of the same months for both portfolios. Holm's correction is applied across the seven comparisons of each part. The margins of the replication were fixed before the code ran, except the limit on which Sharpe ratios are tested, set after the first replication results. On all 36 out-of-sample Sharpe ratios, 31 are within 0.03. Three further analyses complete the comparisons. In the first, each difference in information ratio is tested on the same resamples, with its paired standard error and Holm's correction at each cost. In the second, the naive tilt's active return is written as the weight removed from Coal, Oil and Utilities times the spread between the other industries' return and theirs. In the third, the realised exposure is measured, the sum of the slopes on value, profitability, investment and momentum when each portfolio's monthly active returns are regressed on the six factors' monthly returns, and its difference per basis point is tested on the same resamples.</p>
-<p><strong>What the study cannot show.</strong> Each naive portfolio is one construction, and the tilted index's exposure depends on its form, since its largest industries set k for all the others. The assets are industry portfolios, so a stock-level mandate may behave differently. The comparison of returns rests on one sample, and the spread behind the naive tilt's return averaged +1.22 per cent a year with a standard deviation of 15.28 per cent a year.</p>
+<p><strong>What the study cannot show.</strong> Each naive portfolio is one construction, and the tilted index's exposure depends on how it is built, since its largest industries set k for all the others. The assets are industry portfolios, so a stock-level mandate may behave differently. The comparison of returns rests on one sample, and the spread behind the naive tilt's return averaged +1.22 per cent a year with a standard deviation of 15.28 per cent a year.</p>
 
 <h2 id="sources">Where each exhibit comes from</h2>
 <p class="cap">The committed tables each exhibit is drawn from, each linked on GitHub at the commit that last changed it, and the notebooks that write them, at that same commit. The tables in source/ are copied unchanged from the companion study, and their notebooks are linked in its repository at the commit they were copied from.</p>
@@ -483,22 +483,26 @@ dl.terms dd { margin: 0 0 0 1rem; }
 <dt>Jobson-Korkie test</dt><dd>the test of whether two Sharpe ratios differ, with Memmel's correction, as the paper uses it.</dd>
 <dt>Cap-weighted</dt><dd>weighted by market capitalisation, i.e., each company's share price times its shares outstanding.</dd>
 <dt>Value-weighted</dt><dd>the same as cap-weighted, French's word for his portfolios.</dd>
-<dt>Benchmark</dt><dd>the index the portfolio tracks, the cap-weighted combination of the 49 industries.</dd>
+<dt>Benchmark</dt><dd>the cap-weighted portfolio of the 49 industries that the fund tracks.</dd>
 <dt>Tracking error</dt><dd>the standard deviation of the monthly difference between the portfolio's return and the benchmark's, times the square root of 12. It is forecast before the month and realised after it.</dd>
 <dt>Active weight</dt><dd>an industry's weight in the portfolio minus its benchmark weight.</dd>
 <dt>Active return</dt><dd>the portfolio's return minus the benchmark's.</dd>
 <dt>Basis point</dt><dd>a hundredth of a percentage point.</dd>
 <dt>Tilt</dt><dd>holding Coal, Oil and Utilities at no more than half their benchmark weight.</dd>
+<dt>Tilt alone</dt><dd>the first setting, in which the mandate holds the tilt without the two rules the factor objective adds.</dd>
+<dt>Bound</dt><dd>the rule that holds each industry outside the tilt within 2 percentage points of its benchmark weight.</dd>
+<dt>Turnover limit</dt><dd>the rule that each optimised portfolio trades at most 2 per cent of the portfolio a month one way.</dd>
+<dt>Optimiser</dt><dd>the routine that chooses the portfolio's weights each month from a covariance estimate, within the mandate's rules.</dd>
 <dt>Covariance estimate</dt><dd>the table of the variances and covariances of the industries' returns, from which the optimiser forecasts tracking error.</dd>
 <dt>Optimised portfolio</dt><dd>the portfolio the optimiser holds month by month with one of the six covariance estimators, or as the robust portfolio built from five of them.</dd>
-<dt>Naive tilt</dt><dd>the index with Coal, Oil and Utilities held at half their index weight and the removed weight spread over the other 46 industries in proportion to their index weights, rebalanced to that target every month, with no risk model.</dd>
-<dt>Tilted index</dt><dd>the index under the mandate's tilt and exclusions, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the 2-point limit and a floor of zero allow, rebalanced every month, with no risk model.</dd>
+<dt>Naive tilt</dt><dd>the benchmark with Coal, Oil and Utilities held at half their benchmark weight and the removed weight spread over the other 46 industries in proportion to their benchmark weights, rebalanced to that target every month, with no risk model.</dd>
+<dt>Tilted index</dt><dd>the benchmark under the tilt and the exclusions of the factor objective, with each of the other 44 industries' weights changed by a percentage proportional to the distance of its factor score from their weighted average score, as far as the bound of 2 percentage points on each active weight and a floor of zero allow, rebalanced every month, with no risk model.</dd>
 <dt>The two naive portfolios</dt><dd>the naive tilt and the tilted index together.</dd>
 <dt>Factor</dt><dd>a return series that many assets move with: the market (Mkt-RF), size (SMB), value (HML), profitability (RMW), investment (CMA) and momentum (Mom) factors of Fama and French and Carhart.</dd>
 <dt>Active exposure</dt><dd>the sum over industries of the active weight times the industry's beta to the factor, i.e., the slope of its return on the factor's.</dd>
 <dt>Factor score</dt><dd>the sum of an industry's exposures to value, profitability, investment and momentum.</dd>
 <dt>Factor objective</dt><dd>the sum of the portfolio's active exposures to value, profitability, investment and momentum.</dd>
-<dt>Budget</dt><dd>the limit on the forecast tracking error of the optimiser's portfolio under the factor objective, 100 basis points a year in the main comparison.</dd>
+<dt>Budget</dt><dd>the largest forecast tracking error the optimiser may take while it makes the factor objective as large as it can, 100 basis points a year in the main comparison.</dd>
 <dt>Forecast exposure</dt><dd>the factor objective as the optimiser computes it, with each industry's betas from the three years before the month.</dd>
 <dt>Realised exposure</dt><dd>the sum of the slopes on value, profitability, investment and momentum when the portfolio's monthly active returns are regressed on the six factors' monthly returns.</dd>
 <dt>Exposure per basis point</dt><dd>the mean forecast exposure, or the realised exposure, divided by the realised tracking error in basis points a year.</dd>
@@ -717,7 +721,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
   function fK() {
     var K = D.k, fx = [], fy = [];
     K.month.forEach(function (m, i) { if (K.floor[i]) { fx.push(m); fy.push(K.k[i]); } });
-    var traces = [{ x: K.month, y: K.k, mode: "lines", line: { color: CH.navy, width: 1.4 }, name: "k, set by the 2-point limit", hovertemplate: "%{x|%b %Y}: k %{y:.3f}<extra></extra>" },
+    var traces = [{ x: K.month, y: K.k, mode: "lines", line: { color: CH.navy, width: 1.4 }, name: "k, set by the bound", hovertemplate: "%{x|%b %Y}: k %{y:.3f}<extra></extra>" },
       { x: fx, y: fy, mode: "markers", marker: { color: ORANGE, size: 6 }, name: "set by the floor at zero (Gold)", hovertemplate: "%{x|%b %Y}: k %{y:.3f}, set by the floor<extra></extra>" }];
     var layout = base({ margin: { l: 56, r: 16, t: 8, b: 72 } });
     layout.xaxis = axis({ type: "date", tickformat: "%Y" });
@@ -725,7 +729,7 @@ dl.terms dd { margin: 0 0 0 1rem; }
     layout.legend = legendAt(-0.2);
     plot("f-k", traces, layout);
     var rows = [];
-    for (var i = 11; i < K.month.length; i += 12) { rows.push([mon(K.month[i].slice(0, 7)), fmt(K.k[i], 3), K.at[i], pick(K.floor[i], "floor at zero", "2-point limit")]); }
+    for (var i = 11; i < K.month.length; i += 12) { rows.push([mon(K.month[i].slice(0, 7)), fmt(K.k[i], 3), K.at[i], pick(K.floor[i], "floor at zero", "bound")]); }
     setTable("f-k", ["Month (each July)", "k", "Set at", "Set by"], rows);
   }
 
